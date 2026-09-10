@@ -2,15 +2,12 @@ import { Property, Building } from '../types';
 
 export const WHATSAPP_NUMBER = '918750098666';
 
-// Safe unicode escape sequences to prevent any character corruption across operating systems and browsers
-const EMOJI_WAVE = '\u{1F44B}';      // 👋
-const EMOJI_BUILDING = '\u{1F3E2}';  // 🏢
-const EMOJI_LOCATION = '\u{1F4CD}';  // 📍
-const EMOJI_TAG = '\u{1F3F7}\uFE0F'; // 🏷️
-const EMOJI_RULER = '\u{1F4D0}';     // 📐
-const EMOJI_MONEY = '\u{1F4B0}';     // 💰
-const BULLET = '\u2022';             // •
-const RUPEE = '\u20B9';              // ₹
+/**
+ * Helper to build direct WhatsApp API URL
+ */
+export function buildWhatsAppUrl(message: string): string {
+  return `https://api.whatsapp.com/send?phone=${WHATSAPP_NUMBER}&text=${encodeURIComponent(message)}`;
+}
 
 /**
  * Format property category / type into a clean, human-readable label
@@ -38,7 +35,8 @@ export function formatPropertyType(property: Property): string {
 }
 
 /**
- * Generates the official formatted WhatsApp message for a property enquiry
+ * Generates the clean professional formatted WhatsApp message for a property enquiry
+ * (Free of 4-byte emoji encoding artifacts that cause diamond question mark errors)
  */
 export function generatePropertyWhatsAppMessage(property: Property, name?: string): string {
   const propertyTitle = property.title || property.reference_number || 'Commercial Property';
@@ -47,25 +45,25 @@ export function generatePropertyWhatsAppMessage(property: Property, name?: strin
   const size = property.built_up_area 
     ? `${property.built_up_area.toLocaleString('en-IN')} ${property.area_unit || 'sq.ft'}`
     : 'Available on request';
-  const price = property.price_display || (property.price ? `${RUPEE}${property.price.toLocaleString('en-IN')}` : 'Price on request');
+  const price = property.price_display || (property.price ? `₹${property.price.toLocaleString('en-IN')}` : 'Price on request');
   const clientName = name && name.trim() !== '' ? name.trim() : '[Name]';
 
-  return `Hello Shristi Estate ${EMOJI_WAVE}
+  return `Hello Shristi Estate,
 
 I am interested in the following property listed on your website:
 
-${EMOJI_BUILDING} *Property:* ${propertyTitle}
-${EMOJI_LOCATION} *Location:* ${location}
-${EMOJI_TAG} *Property Type:* ${type}
-${EMOJI_RULER} *Size:* ${size}
-${EMOJI_MONEY} *Price/Rent:* ${price}
+*Property:* ${propertyTitle}
+*Location:* ${location}
+*Property Type:* ${type}
+*Size:* ${size}
+*Price/Rent:* ${price}
 
 I would like to know more details about this property, including:
-${BULLET} Availability
-${BULLET} Final price/rent
-${BULLET} Property specifications
-${BULLET} Photos/videos
-${BULLET} Site visit availability
+- Availability
+- Final price/rent
+- Property specifications
+- Photos/videos
+- Site visit availability
 
 Please contact me regarding this property.
 
@@ -74,11 +72,11 @@ ${clientName}`;
 }
 
 /**
- * Generates full https://wa.me/ URL for a property
+ * Generates full direct WhatsApp URL for a property
  */
 export function generatePropertyWhatsAppLink(property: Property, name?: string): string {
   const message = generatePropertyWhatsAppMessage(property, name);
-  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+  return buildWhatsAppUrl(message);
 }
 
 /**
@@ -92,22 +90,22 @@ export function generateBuildingWhatsAppMessage(building: Building, name?: strin
   const price = building.rent_range || building.sale_range || 'Guidance on Request';
   const clientName = name && name.trim() !== '' ? name.trim() : '[Name]';
 
-  return `Hello Shristi Estate ${EMOJI_WAVE}
+  return `Hello Shristi Estate,
 
 I am interested in the following property listed on your website:
 
-${EMOJI_BUILDING} *Property:* ${buildingTitle}
-${EMOJI_LOCATION} *Location:* ${location}
-${EMOJI_TAG} *Property Type:* ${type}
-${EMOJI_RULER} *Size:* ${size}
-${EMOJI_MONEY} *Price/Rent:* ${price}
+*Property:* ${buildingTitle}
+*Location:* ${location}
+*Property Type:* ${type}
+*Size:* ${size}
+*Price/Rent:* ${price}
 
 I would like to know more details about this property, including:
-${BULLET} Availability
-${BULLET} Final price/rent
-${BULLET} Property specifications
-${BULLET} Photos/videos
-${BULLET} Site visit availability
+- Availability
+- Final price/rent
+- Property specifications
+- Photos/videos
+- Site visit availability
 
 Please contact me regarding this property.
 
@@ -116,11 +114,11 @@ ${clientName}`;
 }
 
 /**
- * Generates full https://wa.me/ URL for a building
+ * Generates full direct WhatsApp URL for a building
  */
 export function generateBuildingWhatsAppLink(building: Building, name?: string): string {
   const message = generateBuildingWhatsAppMessage(building, name);
-  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+  return buildWhatsAppUrl(message);
 }
 
 export interface GeneralEnquiryOptions {
@@ -133,7 +131,7 @@ export interface GeneralEnquiryOptions {
 }
 
 /**
- * Generates structured WhatsApp message for general enquiries / consultation requests
+ * Generates clean structured WhatsApp message for general enquiries / consultation requests
  */
 export function generateGeneralEnquiryMessage(options?: GeneralEnquiryOptions): string {
   const propertyTitle = options?.propertyName || 'Commercial Space Options';
@@ -143,22 +141,22 @@ export function generateGeneralEnquiryMessage(options?: GeneralEnquiryOptions): 
   const price = options?.price || 'Best Market Rate / Guidance on Request';
   const clientName = options?.clientName && options.clientName.trim() !== '' ? options.clientName.trim() : '[Name]';
 
-  return `Hello Shristi Estate ${EMOJI_WAVE}
+  return `Hello Shristi Estate,
 
 I am interested in the following property listed on your website:
 
-${EMOJI_BUILDING} *Property:* ${propertyTitle}
-${EMOJI_LOCATION} *Location:* ${location}
-${EMOJI_TAG} *Property Type:* ${type}
-${EMOJI_RULER} *Size:* ${size}
-${EMOJI_MONEY} *Price/Rent:* ${price}
+*Property:* ${propertyTitle}
+*Location:* ${location}
+*Property Type:* ${type}
+*Size:* ${size}
+*Price/Rent:* ${price}
 
 I would like to know more details about this property, including:
-${BULLET} Availability
-${BULLET} Final price/rent
-${BULLET} Property specifications
-${BULLET} Photos/videos
-${BULLET} Site visit availability
+- Availability
+- Final price/rent
+- Property specifications
+- Photos/videos
+- Site visit availability
 
 Please contact me regarding this property.
 
@@ -167,11 +165,11 @@ ${clientName}`;
 }
 
 /**
- * Generates full https://wa.me/ URL for general enquiry
+ * Generates full direct WhatsApp URL for general enquiry
  */
 export function generateGeneralEnquiryWhatsAppLink(options?: GeneralEnquiryOptions): string {
   const message = generateGeneralEnquiryMessage(options);
-  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+  return buildWhatsAppUrl(message);
 }
 
 export interface RequirementEnquiryOptions {
@@ -184,7 +182,7 @@ export interface RequirementEnquiryOptions {
 }
 
 /**
- * Generates full https://wa.me/ URL for requirement submission enquiry
+ * Generates full direct WhatsApp URL for requirement submission enquiry
  */
 export function generateRequirementWhatsAppLink(options: RequirementEnquiryOptions): string {
   const propertyTitle = `${options.category || 'Commercial'} Requirement`;
@@ -194,27 +192,27 @@ export function generateRequirementWhatsAppLink(options: RequirementEnquiryOptio
   const price = options.budget ? `Budget: ${options.budget}` : 'Market Rate / Guidance';
   const clientName = options.name && options.name.trim() !== '' ? options.name.trim() : '[Name]';
 
-  const message = `Hello Shristi Estate ${EMOJI_WAVE}
+  const message = `Hello Shristi Estate,
 
 I am interested in the following property listed on your website:
 
-${EMOJI_BUILDING} *Property:* ${propertyTitle}
-${EMOJI_LOCATION} *Location:* ${location}
-${EMOJI_TAG} *Property Type:* ${type}
-${EMOJI_RULER} *Size:* ${size}
-${EMOJI_MONEY} *Price/Rent:* ${price}
+*Property:* ${propertyTitle}
+*Location:* ${location}
+*Property Type:* ${type}
+*Size:* ${size}
+*Price/Rent:* ${price}
 
 I would like to know more details about this property, including:
-${BULLET} Availability
-${BULLET} Final price/rent
-${BULLET} Property specifications
-${BULLET} Photos/videos
-${BULLET} Site visit availability
+- Availability
+- Final price/rent
+- Property specifications
+- Photos/videos
+- Site visit availability
 
 Please contact me regarding this property.
 
 Thank you,
 ${clientName}`;
 
-  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+  return buildWhatsAppUrl(message);
 }

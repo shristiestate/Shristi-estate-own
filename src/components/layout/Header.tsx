@@ -65,11 +65,11 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSearch, onOpenEnquiry }) =
       <header 
         className={`sticky top-0 z-40 w-full transition-all duration-300 ${
           isScrolled 
-            ? 'glass-nav shadow-lg shadow-black/5 dark:shadow-black/20 py-2.5' 
-            : 'bg-white/90 dark:bg-[#070C1E]/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 py-3'
+            ? 'glass-nav shadow-lg shadow-black/5 dark:shadow-black/20 py-2 sm:py-2.5' 
+            : 'bg-white/95 dark:bg-[#070C1E]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 py-2 sm:py-3'
         }`}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 flex items-center justify-between min-h-[44px] sm:min-h-[48px]">
           {/* Logo */}
           <Logo />
 

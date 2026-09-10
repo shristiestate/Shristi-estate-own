@@ -84,7 +84,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
   const allImages = [property.primary_image, ...(property.gallery || [])];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+    <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-3 sm:py-8 space-y-6 sm:space-y-10">
       {/* Hierarchical Breadcrumbs (Section 81) */}
       <Breadcrumbs
         items={[
@@ -96,12 +96,12 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
       />
 
       {/* Main Grid: Left Gallery & Details (8 Cols) | Right Action Panel (4 Cols) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
         {/* Left Column */}
-        <div className="lg:col-span-8 space-y-8">
+        <div className="lg:col-span-8 space-y-6 sm:space-y-8">
           {/* Gallery Showcase */}
-          <div className="space-y-4">
-            <div className="relative aspect-[16/10] rounded-3xl overflow-hidden glass-card border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 shadow-xl">
+          <div className="space-y-3 sm:space-y-4">
+            <div className="relative aspect-[16/10] rounded-2xl sm:rounded-3xl overflow-hidden glass-card border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 shadow-xl">
               <img
                 src={activeImage || property.primary_image}
                 alt={property.title}
@@ -109,18 +109,18 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
               />
 
               {/* Status & ID Badge */}
-              <div className="absolute top-4 left-4 flex items-center gap-2">
-                <span className="px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider bg-brand-600 text-white shadow-md">
+              <div className="absolute top-2.5 left-2.5 sm:top-4 sm:left-4 flex items-center gap-1.5 sm:gap-2">
+                <span className="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold uppercase tracking-wider bg-brand-600 text-white shadow-md">
                   For {property.listing_type}
                 </span>
-                <span className="px-3 py-1.5 rounded-xl text-xs font-semibold backdrop-blur-md bg-slate-900/80 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                <span className="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-semibold backdrop-blur-md bg-slate-900/80 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   {property.status}
                 </span>
               </div>
 
-              <div className="absolute top-4 right-4">
-                <span className="px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-black/70 text-white backdrop-blur-md border border-white/10">
+              <div className="absolute top-2.5 right-2.5 sm:top-4 sm:right-4">
+                <span className="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-mono font-bold bg-black/70 text-white backdrop-blur-md border border-white/10">
                   ID: {property.reference_number}
                 </span>
               </div>
@@ -128,12 +128,12 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
 
             {/* Thumbnails */}
             {allImages.length > 1 && (
-              <div className="flex items-center gap-3 overflow-x-auto pb-2">
+              <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto pb-2">
                 {allImages.map((img, idx) => (
                   <button
                     key={idx}
                     onClick={() => setActiveImage(img)}
-                    className={`relative w-24 h-16 rounded-xl overflow-hidden border-2 shrink-0 transition-all ${
+                    className={`relative w-20 h-14 sm:w-24 sm:h-16 rounded-lg sm:rounded-xl overflow-hidden border-2 shrink-0 transition-all ${
                       activeImage === img ? 'border-brand-500 scale-105 shadow-md' : 'border-transparent opacity-75'
                     }`}
                   >
@@ -145,7 +145,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
           </div>
 
           {/* Property Title & Header Meta */}
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             <div className="flex items-center gap-2 text-xs font-semibold text-brand-600 dark:text-brand-400 uppercase tracking-wider">
               <span>{property.property_type}</span>
               {property.building_name && (
@@ -159,7 +159,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
               )}
             </div>
 
-            <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white font-['Outfit'] tracking-tight">
+            <h1 className="text-xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 dark:text-white font-['Outfit'] tracking-tight leading-tight">
               {property.title}
             </h1>
 

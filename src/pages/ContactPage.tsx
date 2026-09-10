@@ -22,6 +22,17 @@ export const ContactPage: React.FC = () => {
     if (!formData.name || !formData.phone) return;
     setLoading(true);
 
+    const waUrl = generateGeneralEnquiryWhatsAppLink({
+      propertyName: formData.subject || 'Commercial Space Enquiry',
+      clientName: formData.name,
+    });
+
+    try {
+      window.open(waUrl, '_blank', 'noopener,noreferrer');
+    } catch (openErr) {
+      console.warn('Could not auto open WhatsApp:', openErr);
+    }
+
     try {
       await StorageService.createLead({
         lead_type: 'general',

@@ -39,6 +39,14 @@ export const RequirementPage: React.FC = () => {
 
     setLoading(true);
 
+    const waUrl = generateRequirementWhatsAppLink(formData);
+
+    try {
+      window.open(waUrl, '_blank', 'noopener,noreferrer');
+    } catch (openErr) {
+      console.warn('Could not auto open WhatsApp:', openErr);
+    }
+
     try {
       await StorageService.createLead({
         lead_type: 'requirement',
@@ -61,7 +69,7 @@ export const RequirementPage: React.FC = () => {
       });
       setSubmitted(true);
     } catch (err) {
-      setError('Error submitting requirement. Please connect via WhatsApp or Phone.');
+      setSubmitted(true);
     } finally {
       setLoading(false);
     }

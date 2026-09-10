@@ -2,6 +2,16 @@ import { Property, Building } from '../types';
 
 export const WHATSAPP_NUMBER = '918750098666';
 
+// Safe unicode escape sequences to prevent any character corruption across operating systems and browsers
+const EMOJI_WAVE = '\u{1F44B}';      // 👋
+const EMOJI_BUILDING = '\u{1F3E2}';  // 🏢
+const EMOJI_LOCATION = '\u{1F4CD}';  // 📍
+const EMOJI_TAG = '\u{1F3F7}\uFE0F'; // 🏷️
+const EMOJI_RULER = '\u{1F4D0}';     // 📐
+const EMOJI_MONEY = '\u{1F4B0}';     // 💰
+const BULLET = '\u2022';             // •
+const RUPEE = '\u20B9';              // ₹
+
 /**
  * Format property category / type into a clean, human-readable label
  */
@@ -37,25 +47,25 @@ export function generatePropertyWhatsAppMessage(property: Property, name?: strin
   const size = property.built_up_area 
     ? `${property.built_up_area.toLocaleString('en-IN')} ${property.area_unit || 'sq.ft'}`
     : 'Available on request';
-  const price = property.price_display || (property.price ? `₹${property.price.toLocaleString('en-IN')}` : 'Price on request');
+  const price = property.price_display || (property.price ? `${RUPEE}${property.price.toLocaleString('en-IN')}` : 'Price on request');
   const clientName = name && name.trim() !== '' ? name.trim() : '[Name]';
 
-  return `Hello Shristi Estate 👋
+  return `Hello Shristi Estate ${EMOJI_WAVE}
 
 I am interested in the following property listed on your website:
 
-🏢 *Property:* ${propertyTitle}
-📍 *Location:* ${location}
-🏷️ *Property Type:* ${type}
-📐 *Size:* ${size}
-💰 *Price/Rent:* ${price}
+${EMOJI_BUILDING} *Property:* ${propertyTitle}
+${EMOJI_LOCATION} *Location:* ${location}
+${EMOJI_TAG} *Property Type:* ${type}
+${EMOJI_RULER} *Size:* ${size}
+${EMOJI_MONEY} *Price/Rent:* ${price}
 
 I would like to know more details about this property, including:
-• Availability
-• Final price/rent
-• Property specifications
-• Photos/videos
-• Site visit availability
+${BULLET} Availability
+${BULLET} Final price/rent
+${BULLET} Property specifications
+${BULLET} Photos/videos
+${BULLET} Site visit availability
 
 Please contact me regarding this property.
 
@@ -82,22 +92,22 @@ export function generateBuildingWhatsAppMessage(building: Building, name?: strin
   const price = building.rent_range || building.sale_range || 'Guidance on Request';
   const clientName = name && name.trim() !== '' ? name.trim() : '[Name]';
 
-  return `Hello Shristi Estate 👋
+  return `Hello Shristi Estate ${EMOJI_WAVE}
 
 I am interested in the following property listed on your website:
 
-🏢 *Property:* ${buildingTitle}
-📍 *Location:* ${location}
-🏷️ *Property Type:* ${type}
-📐 *Size:* ${size}
-💰 *Price/Rent:* ${price}
+${EMOJI_BUILDING} *Property:* ${buildingTitle}
+${EMOJI_LOCATION} *Location:* ${location}
+${EMOJI_TAG} *Property Type:* ${type}
+${EMOJI_RULER} *Size:* ${size}
+${EMOJI_MONEY} *Price/Rent:* ${price}
 
 I would like to know more details about this property, including:
-• Availability
-• Final price/rent
-• Property specifications
-• Photos/videos
-• Site visit availability
+${BULLET} Availability
+${BULLET} Final price/rent
+${BULLET} Property specifications
+${BULLET} Photos/videos
+${BULLET} Site visit availability
 
 Please contact me regarding this property.
 
@@ -133,22 +143,22 @@ export function generateGeneralEnquiryMessage(options?: GeneralEnquiryOptions): 
   const price = options?.price || 'Best Market Rate / Guidance on Request';
   const clientName = options?.clientName && options.clientName.trim() !== '' ? options.clientName.trim() : '[Name]';
 
-  return `Hello Shristi Estate 👋
+  return `Hello Shristi Estate ${EMOJI_WAVE}
 
 I am interested in the following property listed on your website:
 
-🏢 *Property:* ${propertyTitle}
-📍 *Location:* ${location}
-🏷️ *Property Type:* ${type}
-📐 *Size:* ${size}
-💰 *Price/Rent:* ${price}
+${EMOJI_BUILDING} *Property:* ${propertyTitle}
+${EMOJI_LOCATION} *Location:* ${location}
+${EMOJI_TAG} *Property Type:* ${type}
+${EMOJI_RULER} *Size:* ${size}
+${EMOJI_MONEY} *Price/Rent:* ${price}
 
 I would like to know more details about this property, including:
-• Availability
-• Final price/rent
-• Property specifications
-• Photos/videos
-• Site visit availability
+${BULLET} Availability
+${BULLET} Final price/rent
+${BULLET} Property specifications
+${BULLET} Photos/videos
+${BULLET} Site visit availability
 
 Please contact me regarding this property.
 
@@ -184,22 +194,22 @@ export function generateRequirementWhatsAppLink(options: RequirementEnquiryOptio
   const price = options.budget ? `Budget: ${options.budget}` : 'Market Rate / Guidance';
   const clientName = options.name && options.name.trim() !== '' ? options.name.trim() : '[Name]';
 
-  const message = `Hello Shristi Estate 👋
+  const message = `Hello Shristi Estate ${EMOJI_WAVE}
 
 I am interested in the following property listed on your website:
 
-🏢 *Property:* ${propertyTitle}
-📍 *Location:* ${location}
-🏷️ *Property Type:* ${type}
-📐 *Size:* ${size}
-💰 *Price/Rent:* ${price}
+${EMOJI_BUILDING} *Property:* ${propertyTitle}
+${EMOJI_LOCATION} *Location:* ${location}
+${EMOJI_TAG} *Property Type:* ${type}
+${EMOJI_RULER} *Size:* ${size}
+${EMOJI_MONEY} *Price/Rent:* ${price}
 
 I would like to know more details about this property, including:
-• Availability
-• Final price/rent
-• Property specifications
-• Photos/videos
-• Site visit availability
+${BULLET} Availability
+${BULLET} Final price/rent
+${BULLET} Property specifications
+${BULLET} Photos/videos
+${BULLET} Site visit availability
 
 Please contact me regarding this property.
 

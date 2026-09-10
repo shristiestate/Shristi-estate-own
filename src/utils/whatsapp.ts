@@ -1,6 +1,6 @@
 import { Property, Building } from '../types';
 
-export const WHATSAPP_NUMBER = '918750098666';
+export const WHATSAPP_NUMBER = (import.meta.env.VITE_WHATSAPP_NUMBER as string) || '918750098666';
 
 /**
  * Helper to build direct WhatsApp API URL

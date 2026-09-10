@@ -92,7 +92,7 @@ export const RequirementPage: React.FC = () => {
                 Explore Public Listings
               </Link>
               <a
-                href={`https://wa.me/919811234567?text=${encodeURIComponent(
+                href={`https://wa.me/918750098666?text=${encodeURIComponent(
                   `Hello Shristi Estate, I just submitted my requirement for ${formData.requiredArea} in ${formData.preferredLocations}.`
                 )}`}
                 target="_blank"

@@ -26,7 +26,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, onEnquire 
   const waText = encodeURIComponent(
     `Hello Shristi Estate,\nI am interested in Property ID ${property.reference_number} ${buildingText}${property.location_name}.\nPlease share the details and availability.`
   );
-  const waLink = `https://wa.me/919811234567?text=${waText}`;
+  const waLink = `https://wa.me/918750098666?text=${waText}`;
 
   return (
     <div className="glass-card glass-card-hover rounded-3xl overflow-hidden flex flex-col group border border-slate-200/90 dark:border-slate-800/90 bg-white/70 dark:bg-[#0B132B]/75 transition-all duration-300">

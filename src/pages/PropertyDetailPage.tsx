@@ -77,7 +77,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
   const waText = encodeURIComponent(
     `Hello Shristi Estate,\nI am interested in Property ID ${property.reference_number} ${buildingText}${property.location_name}.\nPlease share the details and availability.`
   );
-  const waLink = `https://wa.me/919811234567?text=${waText}`;
+  const waLink = `https://wa.me/918750098666?text=${waText}`;
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
@@ -355,11 +355,11 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
               </a>
 
               <a
-                href="tel:+919811234567"
+                href="tel:+918750098666"
                 className="w-full py-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 font-semibold text-sm flex items-center justify-center gap-2 transition-colors"
               >
                 <PhoneCall className="w-4 h-4 text-brand-500" />
-                <span>Call +91 98112 34567</span>
+                <span>Call +91 87500 98666</span>
               </a>
 
               <button

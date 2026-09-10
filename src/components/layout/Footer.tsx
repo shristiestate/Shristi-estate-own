@@ -50,55 +50,55 @@ export const Footer: React.FC = () => {
               <div className="flex flex-wrap items-center gap-2.5">
                 {/* WhatsApp */}
                 <a
-                  href="https://wa.me/919811234567?text=Hello%20Shristi%20Estate,%20I%20am%20interested%20in%20commercial%20property%20consultancy."
+                  href="https://wa.me/918750098666?text=Hello%20Shristi%20Estate,%20I%20am%20interested%20in%20commercial%20property%20consultancy."
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Chat direct on WhatsApp"
                   className="w-10 h-10 rounded-xl bg-slate-800/90 hover:bg-[#25D366] text-slate-300 hover:text-white flex items-center justify-center transition-all duration-200 shadow-md hover:shadow-lg hover:shadow-[#25D366]/30 border border-slate-700/80 hover:border-[#25D366] group"
-                  title="WhatsApp: +91 98112 34567"
+                  title="WhatsApp: +91 87500 98666"
                 >
                   <WhatsAppIcon className="w-[18px] h-[18px] transition-transform duration-200 group-hover:scale-110" />
                 </a>
 
                 {/* LinkedIn */}
                 <a
-                  href="https://www.linkedin.com/company/shristi-estate"
+                  href="https://www.linkedin.com/in/sanjeet-kumar-885615433/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label="Follow Shristi Estate on LinkedIn"
+                  aria-label="Follow Sanjeet Kumar on LinkedIn"
                   className="w-10 h-10 rounded-xl bg-slate-800/90 hover:bg-[#0A66C2] text-slate-300 hover:text-white flex items-center justify-center transition-all duration-200 shadow-md hover:shadow-lg hover:shadow-[#0A66C2]/30 border border-slate-700/80 hover:border-[#0A66C2] group"
-                  title="LinkedIn: Shristi Estate"
+                  title="LinkedIn: Sanjeet Kumar"
                 >
                   <LinkedInIcon className="w-[18px] h-[18px] transition-transform duration-200 group-hover:scale-110" />
                 </a>
 
                 {/* Instagram */}
                 <a
-                  href="https://www.instagram.com/shristiestate"
+                  href="https://www.instagram.com/shristi_estate01/"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Follow Shristi Estate on Instagram"
                   className="w-10 h-10 rounded-xl bg-slate-800/90 hover:bg-gradient-to-tr hover:from-[#F58529] hover:via-[#DD2A7B] hover:to-[#8134AF] text-slate-300 hover:text-white flex items-center justify-center transition-all duration-200 shadow-md hover:shadow-lg hover:shadow-[#DD2A7B]/30 border border-slate-700/80 hover:border-pink-500 group"
-                  title="Instagram: @shristiestate"
+                  title="Instagram: @shristi_estate01"
                 >
                   <InstagramIcon className="w-[18px] h-[18px] transition-transform duration-200 group-hover:scale-110" />
                 </a>
 
                 {/* YouTube */}
                 <a
-                  href="https://www.youtube.com/@shristiestate"
+                  href="https://www.youtube.com/channel/UC9aTbGlGuHQQb-0r1iYmc7g"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Subscribe to Shristi Estate on YouTube"
                   className="w-10 h-10 rounded-xl bg-slate-800/90 hover:bg-[#FF0000] text-slate-300 hover:text-white flex items-center justify-center transition-all duration-200 shadow-md hover:shadow-lg hover:shadow-[#FF0000]/30 border border-slate-700/80 hover:border-[#FF0000] group"
-                  title="YouTube: Video Property Tours"
+                  title="YouTube: Shristi Estate Channel"
                 >
                   <YouTubeIcon className="w-[18px] h-[18px] transition-transform duration-200 group-hover:scale-110" />
                 </a>
 
                 {/* Facebook */}
                 <a
-                  href="https://www.facebook.com/shristiestate"
+                  href="https://www.facebook.com/profile.php?id=61594054720145"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Follow Shristi Estate on Facebook"
@@ -272,8 +272,8 @@ export const Footer: React.FC = () => {
                 <Phone className="w-4 h-4 text-brand-400 shrink-0" />
                 <div>
                   <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-semibold">Direct Advisory Line</span>
-                  <a href="tel:+919811234567" className="text-xs sm:text-[13px] font-bold text-white hover:text-brand-400 transition-colors tracking-wide">
-                    +91 98112 34567
+                  <a href="tel:+918750098666" className="text-xs sm:text-[13px] font-bold text-white hover:text-brand-400 transition-colors tracking-wide">
+                    +91 87500 98666
                   </a>
                 </div>
               </div>
@@ -302,7 +302,7 @@ export const Footer: React.FC = () => {
               {/* Instant WhatsApp Helpdesk Action Button */}
               <div className="pt-1.5">
                 <a
-                  href="https://wa.me/919811234567?text=Hello%20Shristi%20Estate,%20I%20would%20like%20to%20schedule%20a%20commercial%20property%20consultation."
+                  href="https://wa.me/918750098666?text=Hello%20Shristi%20Estate,%20I%20would%20like%20to%20schedule%20a%20commercial%20property%20consultation."
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl bg-slate-800/90 hover:bg-[#25D366] text-slate-200 hover:text-white text-xs font-semibold border border-slate-700/80 hover:border-[#25D366] transition-all duration-200 shadow-sm hover:shadow-lg hover:shadow-[#25D366]/20 group"

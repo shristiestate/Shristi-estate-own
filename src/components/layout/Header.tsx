@@ -266,7 +266,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSearch, onOpenEnquiry }) =
               Enquire for Commercial Space
             </button>
             <a
-              href="https://wa.me/919811234567?text=Hello%20Shristi%20Estate,%20I%20am%20looking%20for%20commercial%20property%20in%20Noida."
+              href="https://wa.me/918750098666?text=Hello%20Shristi%20Estate,%20I%20am%20looking%20for%20commercial%20property%20in%20Noida."
               target="_blank"
               rel="noopener noreferrer"
               className="btn-whatsapp flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-center font-semibold text-sm"

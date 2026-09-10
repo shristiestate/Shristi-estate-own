@@ -139,7 +139,7 @@ export const AppContent: React.FC = () => {
       {/* STICKY BOTTOM ACTION BAR FOR MOBILE (SECTION 82) */}
       <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 p-2.5 glass-nav border-t border-slate-200/90 dark:border-slate-800/90 shadow-2xl flex items-center gap-2">
         <a
-          href="tel:+919811234567"
+          href="tel:+918750098666"
           className="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-xs font-semibold flex items-center justify-center gap-1.5 border border-slate-200 dark:border-slate-700"
         >
           <Phone className="w-3.5 h-3.5 text-brand-500" />
@@ -147,7 +147,7 @@ export const AppContent: React.FC = () => {
         </a>
 
         <a
-          href="https://wa.me/919811234567?text=Hello%20Shristi%20Estate,%20I%20am%20interested%20in%20commercial%20property%20options."
+          href="https://wa.me/918750098666?text=Hello%20Shristi%20Estate,%20I%20am%20interested%20in%20commercial%20property%20options."
           target="_blank"
           rel="noopener noreferrer"
           className="btn-whatsapp flex-1 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5"

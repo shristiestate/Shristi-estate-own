@@ -180,7 +180,7 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
               </button>
 
               <a
-                href={`https://wa.me/919811234567?text=${waText}`}
+                href={`https://wa.me/918750098666?text=${waText}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-whatsapp w-full py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2"
@@ -190,11 +190,11 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
               </a>
 
               <a
-                href="tel:+919811234567"
+                href="tel:+918750098666"
                 className="w-full py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 font-semibold text-sm flex items-center justify-center gap-2 transition-colors"
               >
                 <PhoneCall className="w-4 h-4 text-brand-500" />
-                <span>Call Commercial Specialist</span>
+                <span>Call Commercial Specialist (+91 87500 98666)</span>
               </a>
             </div>
           </div>

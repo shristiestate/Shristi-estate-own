@@ -156,7 +156,7 @@ export const EnquiryModal: React.FC<EnquiryModalProps> = ({
                 Done
               </button>
               <a
-                href={`https://wa.me/919811234567?text=${encodeURIComponent(
+                href={`https://wa.me/918750098666?text=${encodeURIComponent(
                   `Hello Shristi Estate, I just submitted an enquiry for ${property ? property.reference_number + ' - ' + property.title : 'commercial space'}. My phone is ${formData.phone}.`
                 )}`}
                 target="_blank"
@@ -235,7 +235,7 @@ export const EnquiryModal: React.FC<EnquiryModalProps> = ({
                     <input
                       type="tel"
                       required
-                      placeholder="e.g. 9811234567"
+                      placeholder="e.g. 8750098666"
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       className="glass-input w-full pl-9 pr-3 py-2.5 rounded-xl text-sm"

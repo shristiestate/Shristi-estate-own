@@ -15,6 +15,7 @@ import {
 import { Property, Lead } from '../../types';
 import { StorageService } from '../../services/storageService';
 import { WhatsAppIcon } from '../common/SocialIcons';
+import { generatePropertyWhatsAppLink, WHATSAPP_NUMBER } from '../../utils/whatsapp';
 
 interface EnquiryModalProps {
   isOpen: boolean;
@@ -156,9 +157,13 @@ export const EnquiryModal: React.FC<EnquiryModalProps> = ({
                 Done
               </button>
               <a
-                href={`https://wa.me/918750098666?text=${encodeURIComponent(
-                  `Hello Shristi Estate, I just submitted an enquiry for ${property ? property.reference_number + ' - ' + property.title : 'commercial space'}. My phone is ${formData.phone}.`
-                )}`}
+                href={
+                  property
+                    ? generatePropertyWhatsAppLink(property, formData.name)
+                    : `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
+                        `Hello Shristi Estate 👋\n\nI am interested in commercial property options listed on your website.\n\nI would like to know more details, including:\n• Availability\n• Final price/rent\n• Property specifications\n• Photos/videos\n• Site visit availability\n\nPlease contact me regarding my commercial space requirement.\n\nThank you,\n${formData.name || '[Name]'}`
+                      )}`
+                }
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-whatsapp w-full sm:w-auto px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2"

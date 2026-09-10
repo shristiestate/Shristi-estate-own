@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Property } from '../../types';
 import { WhatsAppIcon } from './SocialIcons';
+import { generatePropertyWhatsAppLink } from '../../utils/whatsapp';
 
 interface PropertyCardProps {
   property: Property;
@@ -20,13 +21,7 @@ interface PropertyCardProps {
 }
 
 export const PropertyCard: React.FC<PropertyCardProps> = ({ property, onEnquire }) => {
-  // Direct WhatsApp message formatting per spec 42:
-  // "Hello Shristi Estate, I am interested in Property ID SE-XXXX in [Building], [Location]. Please share the details and availability."
-  const buildingText = property.building_name ? `in ${property.building_name}, ` : '';
-  const waText = encodeURIComponent(
-    `Hello Shristi Estate,\nI am interested in Property ID ${property.reference_number} ${buildingText}${property.location_name}.\nPlease share the details and availability.`
-  );
-  const waLink = `https://wa.me/918750098666?text=${waText}`;
+  const waLink = generatePropertyWhatsAppLink(property);
 
   return (
     <div className="glass-card glass-card-hover rounded-3xl overflow-hidden flex flex-col group border border-slate-200/90 dark:border-slate-800/90 bg-white/70 dark:bg-[#0B132B]/75 transition-all duration-300">

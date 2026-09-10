@@ -20,6 +20,7 @@ import { Building, Property } from '../types';
 import { PropertyCard } from '../components/common/PropertyCard';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
 import { WhatsAppIcon } from '../components/common/SocialIcons';
+import { generateBuildingWhatsAppLink } from '../utils/whatsapp';
 
 interface BuildingDetailPageProps {
   onOpenEnquiry: (property?: Property) => void;
@@ -66,9 +67,7 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
     );
   }
 
-  const waText = encodeURIComponent(
-    `Hello Shristi Estate,\nI am interested in available commercial units at ${building.name}, ${building.location_name}.\nPlease share current floor availability and rates.`
-  );
+  const waLink = generateBuildingWhatsAppLink(building);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
@@ -180,7 +179,7 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
               </button>
 
               <a
-                href={`https://wa.me/918750098666?text=${waText}`}
+                href={waLink}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-whatsapp w-full py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2"

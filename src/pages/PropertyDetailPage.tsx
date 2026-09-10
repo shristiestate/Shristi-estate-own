@@ -22,6 +22,7 @@ import { StorageService } from '../services/storageService';
 import { Property, Building as BuildingType } from '../types';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
 import { WhatsAppIcon } from '../components/common/SocialIcons';
+import { generatePropertyWhatsAppLink } from '../utils/whatsapp';
 
 interface PropertyDetailPageProps {
   onOpenEnquiry: (property: Property) => void;
@@ -71,13 +72,8 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
     );
   }
 
-  // Pre-filled WhatsApp link according to section 42:
-  // "Hello Shristi Estate, I am interested in Property ID SE-XXXX in I-Thum, Sector 62, Noida. Please share the details and availability."
-  const buildingText = property.building_name ? `in ${property.building_name}, ` : '';
-  const waText = encodeURIComponent(
-    `Hello Shristi Estate,\nI am interested in Property ID ${property.reference_number} ${buildingText}${property.location_name}.\nPlease share the details and availability.`
-  );
-  const waLink = `https://wa.me/918750098666?text=${waText}`;
+  // Pre-filled WhatsApp link with structured property inquiry details
+  const waLink = generatePropertyWhatsAppLink(property);
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);

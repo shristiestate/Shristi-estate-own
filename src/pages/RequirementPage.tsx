@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Send, CheckCircle2, MessageSquare, PhoneCall, Building2, MapPin } from 'lucide-react';
 import { StorageService } from '../services/storageService';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
+import { generateRequirementWhatsAppLink } from '../utils/whatsapp';
 
 export const RequirementPage: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -92,9 +93,7 @@ export const RequirementPage: React.FC = () => {
                 Explore Public Listings
               </Link>
               <a
-                href={`https://wa.me/918750098666?text=${encodeURIComponent(
-                  `Hello Shristi Estate, I just submitted my requirement for ${formData.requiredArea} in ${formData.preferredLocations}.`
-                )}`}
+                href={generateRequirementWhatsAppLink(formData)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-whatsapp px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2"

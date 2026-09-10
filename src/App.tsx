@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useLocation, Link } from 'react-router-dom';
 import { Phone, MessageSquare, Calendar, Home, Search as SearchIcon } from 'lucide-react';
 import { WhatsAppIcon } from './components/common/SocialIcons';
+import { generateGeneralEnquiryWhatsAppLink } from './utils/whatsapp';
 import { ThemeProvider } from './context/ThemeContext';
 import { Header } from './components/layout/Header';
 import { Footer } from './components/layout/Footer';
@@ -147,7 +148,7 @@ export const AppContent: React.FC = () => {
         </a>
 
         <a
-          href="https://wa.me/918750098666?text=Hello%20Shristi%20Estate,%20I%20am%20interested%20in%20commercial%20property%20options."
+          href={generateGeneralEnquiryWhatsAppLink({ propertyName: 'Commercial Property Options' })}
           target="_blank"
           rel="noopener noreferrer"
           className="btn-whatsapp flex-1 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5"

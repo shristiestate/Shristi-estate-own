@@ -3,6 +3,7 @@ import { MapPin, Phone, Mail, Clock, MessageSquare, Send, CheckCircle2 } from 'l
 import { StorageService } from '../services/storageService';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
 import { WhatsAppIcon } from '../components/common/SocialIcons';
+import { generateGeneralEnquiryWhatsAppLink } from '../utils/whatsapp';
 
 export const ContactPage: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -119,7 +120,10 @@ export const ContactPage: React.FC = () => {
 
             <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
               <a
-                href="https://wa.me/918750098666?text=Hello%20Shristi%20Estate,%20I%20would%20like%20to%20connect%20with%20your%20commercial%20team."
+                href={generateGeneralEnquiryWhatsAppLink({
+                  propertyName: formData.subject || 'Commercial Space Enquiry',
+                  clientName: formData.name,
+                })}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-whatsapp w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2"

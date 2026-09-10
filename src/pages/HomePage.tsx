@@ -25,6 +25,7 @@ import { PropertyCard } from '../components/common/PropertyCard';
 import { BuildingCard } from '../components/common/BuildingCard';
 import { LocationCard } from '../components/common/LocationCard';
 import { WhatsAppIcon } from '../components/common/SocialIcons';
+import { generateGeneralEnquiryWhatsAppLink } from '../utils/whatsapp';
 
 interface HomePageProps {
   onOpenEnquiry: (property?: Property) => void;
@@ -159,7 +160,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenEnquiry }) => {
             </Link>
 
             <a
-              href="https://wa.me/918750098666?text=Hello%20Shristi%20Estate,%20I%20am%20looking%20for%20commercial%20space%20options."
+              href={generateGeneralEnquiryWhatsAppLink({ propertyName: 'Commercial Space in Noida / NCR' })}
               target="_blank"
               rel="noopener noreferrer"
               className="btn-whatsapp px-5 py-3 rounded-2xl font-semibold text-sm sm:text-base flex items-center gap-2"
@@ -486,7 +487,10 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenEnquiry }) => {
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <a
-                href="https://wa.me/918750098666?text=Hello%20Shristi%20Estate,%20I%20have%20a%20custom%20commercial%20space%20requirement."
+                href={generateGeneralEnquiryWhatsAppLink({
+                  propertyName: 'Custom Commercial Requirement',
+                  propertyType: 'Tailored Commercial Space',
+                })}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-whatsapp px-5 py-3 rounded-xl font-semibold text-sm flex items-center gap-2"

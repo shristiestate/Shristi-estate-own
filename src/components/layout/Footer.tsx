@@ -16,6 +16,7 @@ import {
   YouTubeIcon, 
   FacebookIcon 
 } from '../common/SocialIcons';
+import { generateGeneralEnquiryWhatsAppLink } from '../../utils/whatsapp';
 
 export const Footer: React.FC = () => {
   return (
@@ -50,7 +51,7 @@ export const Footer: React.FC = () => {
               <div className="flex flex-wrap items-center gap-2.5">
                 {/* WhatsApp */}
                 <a
-                  href="https://wa.me/918750098666?text=Hello%20Shristi%20Estate,%20I%20am%20interested%20in%20commercial%20property%20consultancy."
+                  href={generateGeneralEnquiryWhatsAppLink({ propertyName: 'Commercial Advisory & Listings' })}
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Chat direct on WhatsApp"
@@ -302,7 +303,7 @@ export const Footer: React.FC = () => {
               {/* Instant WhatsApp Helpdesk Action Button */}
               <div className="pt-1.5">
                 <a
-                  href="https://wa.me/918750098666?text=Hello%20Shristi%20Estate,%20I%20would%20like%20to%20schedule%20a%20commercial%20property%20consultation."
+                  href={generateGeneralEnquiryWhatsAppLink({ propertyName: 'Commercial Property Consultation' })}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl bg-slate-800/90 hover:bg-[#25D366] text-slate-200 hover:text-white text-xs font-semibold border border-slate-700/80 hover:border-[#25D366] transition-all duration-200 shadow-sm hover:shadow-lg hover:shadow-[#25D366]/20 group"

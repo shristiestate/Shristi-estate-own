@@ -4,6 +4,7 @@ import { StorageService } from '../services/storageService';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
 import { WhatsAppIcon } from '../components/common/SocialIcons';
 import { generateGeneralEnquiryWhatsAppLink } from '../utils/whatsapp';
+import { handleOverviewPaste } from '../utils/textFormat';
 
 export const ContactPage: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -241,7 +242,8 @@ export const ContactPage: React.FC = () => {
                     placeholder="Tell us about your space requirement, team size, desired location or questions..."
                     value={formData.message}
                     onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                    className="glass-input w-full px-3.5 py-2.5 rounded-xl text-sm"
+                    onPaste={(e) => handleOverviewPaste(e, (val) => setFormData({ ...formData, message: val }), formData.message)}
+                    className="glass-input overview-input w-full px-3.5 py-2.5 rounded-xl text-sm"
                   />
                 </div>
 

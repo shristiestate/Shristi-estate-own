@@ -83,9 +83,9 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
           <h1 className="text-3xl sm:text-5xl font-extrabold font-['Outfit'] tracking-tight">
             {meta.title}
           </h1>
-          <p className="text-base sm:text-lg text-slate-300 leading-relaxed">
+          <div className="overview-text text-base sm:text-lg text-slate-300 leading-relaxed">
             {meta.description}
-          </p>
+          </div>
 
           <div className="pt-2 flex items-center gap-4 text-xs sm:text-sm text-slate-300">
             <span><strong>{properties.length}</strong> Available Spaces</span>

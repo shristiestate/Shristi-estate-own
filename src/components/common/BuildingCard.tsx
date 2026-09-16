@@ -44,7 +44,7 @@ export const BuildingCard: React.FC<BuildingCardProps> = ({ building }) => {
 
       {/* Building Specifications */}
       <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
-        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed">
+        <p className="overview-card-text text-xs sm:text-sm text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed">
           {building.description}
         </p>
 

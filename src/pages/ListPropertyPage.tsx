@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { StorageService } from '../services/storageService';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
+import { handleOverviewPaste } from '../utils/textFormat';
 
 export const ListPropertyPage: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -312,11 +313,12 @@ export const ListPropertyPage: React.FC = () => {
                   Property Description, Furnishing, Power & Amenities
                 </label>
                 <textarea
-                  rows={3}
+                  rows={5}
                   placeholder="e.g. 5th floor, 24 workstations, 2 director cabins, 100% power backup, 2 covered car parkings..."
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="glass-input w-full px-3.5 py-2.5 rounded-xl text-sm"
+                  onPaste={(e) => handleOverviewPaste(e, (val) => setFormData({ ...formData, description: val }), formData.description)}
+                  className="glass-input overview-input w-full px-3.5 py-2.5 rounded-xl text-sm"
                 />
               </div>
 

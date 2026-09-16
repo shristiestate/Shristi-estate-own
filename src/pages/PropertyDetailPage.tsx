@@ -243,9 +243,9 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
             <h2 className="text-xl font-bold text-slate-900 dark:text-white font-['Outfit']">
               Commercial Overview & Highlights
             </h2>
-            <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line">
+            <div className="overview-text text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
               {property.description}
-            </p>
+            </div>
 
             {/* Features list */}
             {property.features && property.features.length > 0 && (
@@ -286,9 +286,9 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
                 </Link>
               </div>
 
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+              <div className="overview-text text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
                 {building.description}
-              </p>
+              </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs pt-2">
                 <div>

@@ -82,9 +82,9 @@ export const LocationPage: React.FC<LocationPageProps> = ({ onOpenEnquiry }) => 
           <h1 className="text-3xl sm:text-5xl font-extrabold font-['Outfit'] tracking-tight">
             Commercial Property in {location.name}
           </h1>
-          <p className="text-base sm:text-lg text-slate-300 leading-relaxed">
+          <div className="overview-text text-base sm:text-lg text-slate-300 leading-relaxed">
             {location.description}
-          </p>
+          </div>
 
           <div className="pt-2 flex items-center gap-4 text-xs sm:text-sm text-slate-300">
             <span><strong>{buildings.length}</strong> Commercial Towers / Projects</span>
@@ -164,9 +164,9 @@ export const LocationPage: React.FC<LocationPageProps> = ({ onOpenEnquiry }) => 
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white font-['Outfit']">
             Commercial Advantages of {location.name}
           </h2>
-          <p className="text-sm text-slate-600 dark:text-slate-300 mt-2 leading-relaxed">
+          <div className="overview-text text-sm text-slate-600 dark:text-slate-300 mt-2 leading-relaxed">
             {location.name} stands as one of the most prominent commercial micro-markets within {location.city}. Benefiting from comprehensive arterial road networks, reliable industrial power grids, and close proximity to public rapid transit hubs.
-          </p>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">

@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { StorageService } from '../services/storageService';
 import { Property, Building, Location, Lead, LeadStatus, PropertyStatus } from '../types';
+import { handleOverviewPaste } from '../utils/textFormat';
 
 export const AdminPage: React.FC = () => {
   // Simple administrative authorization
@@ -1569,7 +1570,7 @@ export const AdminPage: React.FC = () => {
                         <div className="font-semibold text-slate-800 dark:text-slate-200 line-clamp-1">
                           {lead.property_title || lead.building_name || 'Custom Space Requirement'}
                         </div>
-                        <p className="text-[11px] text-slate-500 line-clamp-2 mt-0.5">
+                        <p className="overview-card-text text-[11px] text-slate-500 line-clamp-2 mt-0.5">
                           {lead.message}
                         </p>
                       </td>
@@ -1671,7 +1672,7 @@ export const AdminPage: React.FC = () => {
                 </div>
 
                 <div className="p-5 space-y-3">
-                  <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed">
+                  <p className="overview-card-text text-xs text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed">
                     {loc.description}
                   </p>
 
@@ -2308,11 +2309,12 @@ export const AdminPage: React.FC = () => {
               <div>
                 <label className="block text-xs font-semibold mb-1">Description & Key Highlights</label>
                 <textarea
-                  rows={3}
+                  rows={5}
                   value={currentProperty.description}
                   onChange={(e) => setCurrentProperty({ ...currentProperty, description: e.target.value })}
+                  onPaste={(e) => handleOverviewPaste(e, (val) => setCurrentProperty({ ...currentProperty, description: val }), currentProperty.description)}
                   placeholder="Describe workstations, cabins, view, and immediate availability..."
-                  className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                  className="glass-input overview-input w-full px-3 py-2.5 rounded-xl text-sm"
                 />
               </div>
 
@@ -2664,11 +2666,12 @@ export const AdminPage: React.FC = () => {
               <div>
                 <label className="block text-xs font-semibold mb-1">Building Overview & Features</label>
                 <textarea
-                  rows={3}
+                  rows={5}
                   value={currentBuilding.description}
                   onChange={(e) => setCurrentBuilding({ ...currentBuilding, description: e.target.value })}
+                  onPaste={(e) => handleOverviewPaste(e, (val) => setCurrentBuilding({ ...currentBuilding, description: val }), currentBuilding.description)}
                   placeholder="Overview of commercial amenities, tenant profile, and accessibility..."
-                  className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                  className="glass-input overview-input w-full px-3 py-2.5 rounded-xl text-sm"
                 />
               </div>
 
@@ -2844,11 +2847,12 @@ export const AdminPage: React.FC = () => {
               <div>
                 <label className="block text-xs font-semibold mb-1">Sector Overview & Commercial Advantages</label>
                 <textarea
-                  rows={3}
+                  rows={5}
                   value={currentLocation.description}
                   onChange={(e) => setCurrentLocation({ ...currentLocation, description: e.target.value })}
+                  onPaste={(e) => handleOverviewPaste(e, (val) => setCurrentLocation({ ...currentLocation, description: val }), currentLocation.description)}
                   placeholder="Overview of institutional corporate hub, metro connectivity, power infrastructure..."
-                  className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                  className="glass-input overview-input w-full px-3 py-2.5 rounded-xl text-sm"
                 />
               </div>
 

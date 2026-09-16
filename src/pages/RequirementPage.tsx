@@ -4,6 +4,7 @@ import { Send, CheckCircle2, MessageSquare, PhoneCall, Building2, MapPin } from 
 import { StorageService } from '../services/storageService';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
 import { generateRequirementWhatsAppLink } from '../utils/whatsapp';
+import { handleOverviewPaste } from '../utils/textFormat';
 
 export const RequirementPage: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -275,11 +276,12 @@ export const RequirementPage: React.FC = () => {
                   Business / Industrial Use & Seating Plan
                 </label>
                 <textarea
-                  rows={3}
+                  rows={4}
                   placeholder="e.g. Software development agency with 40 workstations, need 2 cabins, or pharmaceutical storage with 30ft ceiling..."
                   value={formData.businessUse}
                   onChange={(e) => setFormData({ ...formData, businessUse: e.target.value })}
-                  className="glass-input w-full px-3.5 py-2.5 rounded-xl text-sm"
+                  onPaste={(e) => handleOverviewPaste(e, (val) => setFormData({ ...formData, businessUse: val }), formData.businessUse)}
+                  className="glass-input overview-input w-full px-3.5 py-2.5 rounded-xl text-sm"
                 />
               </div>
 

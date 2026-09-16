@@ -147,3 +147,43 @@
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(100, 116, 139, 0.8);
 }
+
+/* Overview & Long-Text Whitespace Preservation & Natural Spacing */
+@layer utilities {
+  .overview-text,
+  .whitespace-preserved-text {
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    text-align: left !important;
+    text-justify: auto;
+    word-spacing: normal;
+    letter-spacing: normal;
+    -webkit-hyphens: none;
+    hyphens: none;
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+
+  /* Line-clamped cards with preserved whitespace and natural left-aligned word spacing */
+  .overview-card-text {
+    text-align: left !important;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    word-spacing: normal;
+    letter-spacing: normal;
+    white-space: pre-wrap;
+  }
+
+  /* Overview Textarea Inputs */
+  .overview-input {
+    white-space: pre-wrap;
+    text-align: left !important;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    word-spacing: normal;
+    letter-spacing: normal;
+    font-family: inherit;
+    line-height: 1.625;
+  }
+}

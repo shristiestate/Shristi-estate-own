@@ -207,9 +207,9 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
             <h2 className="text-xl font-bold text-slate-900 dark:text-white font-['Outfit']">
               Building Overview & Specifications
             </h2>
-            <p className="text-sm text-slate-600 dark:text-slate-300 mt-3 leading-relaxed">
+            <div className="overview-text text-sm text-slate-600 dark:text-slate-300 mt-3 leading-relaxed">
               {building.description}
-            </p>
+            </div>
           </div>
 
           <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">

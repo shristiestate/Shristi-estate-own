@@ -16,6 +16,7 @@ import { Property, Lead } from '../../types';
 import { StorageService } from '../../services/storageService';
 import { WhatsAppIcon } from '../common/SocialIcons';
 import { generatePropertyWhatsAppLink, generateGeneralEnquiryWhatsAppLink } from '../../utils/whatsapp';
+import { handleOverviewPaste } from '../../utils/textFormat';
 
 interface EnquiryModalProps {
   isOpen: boolean;
@@ -340,11 +341,12 @@ export const EnquiryModal: React.FC<EnquiryModalProps> = ({
                   Specific Requirements or Questions (Optional)
                 </label>
                 <textarea
-                  rows={2}
+                  rows={3}
                   placeholder="e.g. Expected team size, move-in timeframe, budget parameters..."
                   value={formData.message}
                   onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                  className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                  onPaste={(e) => handleOverviewPaste(e, (val) => setFormData({ ...formData, message: val }), formData.message)}
+                  className="glass-input overview-input w-full px-3 py-2 rounded-xl text-sm"
                 />
               </div>
 

@@ -27,7 +27,8 @@ import {
   UploadCloud,
   Copy,
   FileImage,
-  ArrowLeftRight
+  ArrowLeftRight,
+  Phone
 } from 'lucide-react';
 import { StorageService } from '../services/storageService';
 import { Property, Building, Location, Lead, LeadStatus, PropertyStatus } from '../types';
@@ -938,21 +939,21 @@ export const AdminPage: React.FC = () => {
   });
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-5 sm:space-y-8">
       {/* Top Header & Quick Metrics */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-slate-200 dark:border-slate-800 pb-4 sm:pb-6">
         <div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
               Commercial Content & Inventory Editor
             </span>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+            <span className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
               <ShieldCheck className="w-3 h-3" />
               Supabase Live Cloud DB
             </span>
           </div>
-          <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white font-['Outfit'] mt-1">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white font-['Outfit'] mt-1">
             Admin Management Desk
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">
@@ -960,11 +961,11 @@ export const AdminPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
           <button
             onClick={loadAllData}
             disabled={loading}
-            className="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-900/80 hover:bg-brand-50 dark:hover:bg-brand-950/60 hover:border-brand-300 dark:hover:border-brand-800 text-slate-700 dark:text-slate-200 hover:text-brand-600 dark:text-brand-400 font-semibold text-xs flex items-center gap-2 transition-all shadow-sm active:scale-95 group cursor-pointer"
+            className="flex-1 sm:flex-none justify-center px-3.5 py-2.5 sm:py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-900/80 hover:bg-brand-50 dark:hover:bg-brand-950/60 hover:border-brand-300 dark:hover:border-brand-800 text-slate-700 dark:text-slate-200 hover:text-brand-600 dark:text-brand-400 font-semibold text-xs flex items-center gap-2 transition-all shadow-sm active:scale-95 group cursor-pointer"
             title="Sync & Update Live Data from Supabase Cloud"
           >
             <RefreshCw className={`w-3.5 h-3.5 transition-transform ${loading ? 'animate-spin text-brand-500' : 'group-hover:rotate-180 duration-500'}`} />
@@ -972,7 +973,7 @@ export const AdminPage: React.FC = () => {
           </button>
           <button
             onClick={handleLogout}
-            className="px-4 py-2 rounded-xl text-xs font-semibold border border-rose-500/30 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 transition-colors"
+            className="px-4 py-2.5 sm:py-2 rounded-xl text-xs font-semibold border border-rose-500/30 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 transition-colors"
           >
             Sign Out
           </button>
@@ -981,11 +982,11 @@ export const AdminPage: React.FC = () => {
 
       {/* METRICS DASHBOARD (SECTION 48) */}
       {/* OPTIMIZED METRIC BUTTONS & QUICK SHORTCUTS */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-4">
         {/* Properties Button */}
         <button
           onClick={() => setActiveTab('properties')}
-          className={`glass-card rounded-2xl p-4.5 sm:p-5 text-left transition-all duration-300 group relative overflow-hidden flex flex-col justify-between border cursor-pointer select-none active:scale-[0.98] ${
+          className={`glass-card rounded-2xl p-3.5 sm:p-5 text-left transition-all duration-300 group relative overflow-hidden flex flex-col justify-between border cursor-pointer select-none active:scale-[0.98] ${
             activeTab === 'properties'
               ? 'border-brand-500/80 dark:border-brand-400/80 bg-brand-50/90 dark:bg-brand-950/40 shadow-lg shadow-brand-500/15 ring-2 ring-brand-500/25'
               : 'border-slate-200/90 dark:border-slate-800/90 bg-white/70 dark:bg-slate-900/70 hover:border-brand-500/40 hover:-translate-y-1 hover:shadow-xl dark:hover:shadow-black/40'
@@ -999,30 +1000,30 @@ export const AdminPage: React.FC = () => {
 
           <div>
             <div className="flex items-center justify-between">
-              <div className="w-10 h-10 rounded-xl bg-brand-500/10 dark:bg-brand-500/15 border border-brand-500/25 text-brand-600 dark:text-brand-400 flex items-center justify-center group-hover:scale-110 group-hover:border-brand-500/40 transition-all duration-300 shadow-inner">
-                <Building2 className="w-5 h-5" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-brand-500/10 dark:bg-brand-500/15 border border-brand-500/25 text-brand-600 dark:text-brand-400 flex items-center justify-center group-hover:scale-110 group-hover:border-brand-500/40 transition-all duration-300 shadow-inner">
+                <Building2 className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              <div className="flex items-center gap-1 text-[11px] font-semibold text-slate-400 dark:text-slate-400 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+              <div className="flex items-center gap-1 text-[10px] sm:text-[11px] font-semibold text-slate-400 dark:text-slate-400 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
                 <span>Manage</span>
-                <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                <ArrowUpRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
               </div>
             </div>
 
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400 block mt-3.5">
+            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400 block mt-2.5 sm:mt-3.5">
               Properties
             </span>
-            <div className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white mt-0.5 font-['Outfit'] tracking-tight leading-none">
+            <div className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white mt-0.5 font-['Outfit'] tracking-tight leading-none">
               {properties.length}
             </div>
           </div>
 
-          <div className="mt-3.5 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
-            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+          <div className="mt-2.5 sm:mt-3.5 pt-2 sm:pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] sm:text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               <span>{properties.filter(p => p.status === 'Available' || p.status === 'Ready to Move').length} Active</span>
             </div>
             {activeTab === 'properties' && (
-              <span className="text-[10px] font-bold text-brand-600 dark:text-brand-400 uppercase tracking-wider">Active</span>
+              <span className="text-[9px] sm:text-[10px] font-bold text-brand-600 dark:text-brand-400 uppercase tracking-wider">Active</span>
             )}
           </div>
         </button>
@@ -1030,7 +1031,7 @@ export const AdminPage: React.FC = () => {
         {/* Buildings Button */}
         <button
           onClick={() => setActiveTab('buildings')}
-          className={`glass-card rounded-2xl p-4.5 sm:p-5 text-left transition-all duration-300 group relative overflow-hidden flex flex-col justify-between border cursor-pointer select-none active:scale-[0.98] ${
+          className={`glass-card rounded-2xl p-3.5 sm:p-5 text-left transition-all duration-300 group relative overflow-hidden flex flex-col justify-between border cursor-pointer select-none active:scale-[0.98] ${
             activeTab === 'buildings'
               ? 'border-cyan-500/80 dark:border-cyan-400/80 bg-cyan-50/90 dark:bg-cyan-950/40 shadow-lg shadow-cyan-500/15 ring-2 ring-cyan-500/25'
               : 'border-slate-200/90 dark:border-slate-800/90 bg-white/70 dark:bg-slate-900/70 hover:border-cyan-500/40 hover:-translate-y-1 hover:shadow-xl dark:hover:shadow-black/40'
@@ -1043,30 +1044,30 @@ export const AdminPage: React.FC = () => {
 
           <div>
             <div className="flex items-center justify-between">
-              <div className="w-10 h-10 rounded-xl bg-cyan-500/10 dark:bg-cyan-500/15 border border-cyan-500/25 text-cyan-600 dark:text-cyan-400 flex items-center justify-center group-hover:scale-110 group-hover:border-cyan-500/40 transition-all duration-300 shadow-inner">
-                <Layers className="w-5 h-5" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-cyan-500/10 dark:bg-cyan-500/15 border border-cyan-500/25 text-cyan-600 dark:text-cyan-400 flex items-center justify-center group-hover:scale-110 group-hover:border-cyan-500/40 transition-all duration-300 shadow-inner">
+                <Layers className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              <div className="flex items-center gap-1 text-[11px] font-semibold text-slate-400 dark:text-slate-400 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
+              <div className="flex items-center gap-1 text-[10px] sm:text-[11px] font-semibold text-slate-400 dark:text-slate-400 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
                 <span>Manage</span>
-                <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                <ArrowUpRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
               </div>
             </div>
 
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400 block mt-3.5">
+            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400 block mt-2.5 sm:mt-3.5">
               Buildings
             </span>
-            <div className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white mt-0.5 font-['Outfit'] tracking-tight leading-none">
+            <div className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white mt-0.5 font-['Outfit'] tracking-tight leading-none">
               {buildings.length}
             </div>
           </div>
 
-          <div className="mt-3.5 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
-            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-[11px] font-semibold text-cyan-600 dark:text-cyan-400">
+          <div className="mt-2.5 sm:mt-3.5 pt-2 sm:pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-[10px] sm:text-[11px] font-semibold text-cyan-600 dark:text-cyan-400">
               <span className="w-1.5 h-1.5 rounded-full bg-cyan-500" />
               <span>In {locations.length} Sectors</span>
             </div>
             {activeTab === 'buildings' && (
-              <span className="text-[10px] font-bold text-cyan-600 dark:text-cyan-400 uppercase tracking-wider">Active</span>
+              <span className="text-[9px] sm:text-[10px] font-bold text-cyan-600 dark:text-cyan-400 uppercase tracking-wider">Active</span>
             )}
           </div>
         </button>
@@ -1077,7 +1078,7 @@ export const AdminPage: React.FC = () => {
             setActiveTab('leads');
             setLeadStatusFilter('All');
           }}
-          className={`glass-card rounded-2xl p-4.5 sm:p-5 text-left transition-all duration-300 group relative overflow-hidden flex flex-col justify-between border cursor-pointer select-none active:scale-[0.98] ${
+          className={`glass-card rounded-2xl p-3.5 sm:p-5 text-left transition-all duration-300 group relative overflow-hidden flex flex-col justify-between border cursor-pointer select-none active:scale-[0.98] ${
             activeTab === 'leads' && leadStatusFilter === 'All'
               ? 'border-blue-500/80 dark:border-blue-400/80 bg-blue-50/90 dark:bg-blue-950/40 shadow-lg shadow-blue-500/15 ring-2 ring-blue-500/25'
               : 'border-slate-200/90 dark:border-slate-800/90 bg-white/70 dark:bg-slate-900/70 hover:border-blue-500/40 hover:-translate-y-1 hover:shadow-xl dark:hover:shadow-black/40'
@@ -1090,30 +1091,30 @@ export const AdminPage: React.FC = () => {
 
           <div>
             <div className="flex items-center justify-between">
-              <div className="w-10 h-10 rounded-xl bg-blue-500/10 dark:bg-blue-500/15 border border-blue-500/25 text-blue-600 dark:text-blue-400 flex items-center justify-center group-hover:scale-110 group-hover:border-blue-500/40 transition-all duration-300 shadow-inner">
-                <MessageSquare className="w-5 h-5" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-blue-500/10 dark:bg-blue-500/15 border border-blue-500/25 text-blue-600 dark:text-blue-400 flex items-center justify-center group-hover:scale-110 group-hover:border-blue-500/40 transition-all duration-300 shadow-inner">
+                <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              <div className="flex items-center gap-1 text-[11px] font-semibold text-slate-400 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+              <div className="flex items-center gap-1 text-[10px] sm:text-[11px] font-semibold text-slate-400 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                 <span>Leads</span>
-                <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                <ArrowUpRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
               </div>
             </div>
 
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400 block mt-3.5">
+            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400 block mt-2.5 sm:mt-3.5">
               Total Inquiries
             </span>
-            <div className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white mt-0.5 font-['Outfit'] tracking-tight leading-none">
+            <div className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white mt-0.5 font-['Outfit'] tracking-tight leading-none">
               {leads.length}
             </div>
           </div>
 
-          <div className="mt-3.5 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
-            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-[11px] font-semibold text-blue-600 dark:text-blue-400">
+          <div className="mt-2.5 sm:mt-3.5 pt-2 sm:pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-[10px] sm:text-[11px] font-semibold text-blue-600 dark:text-blue-400">
               <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
               <span>{leads.filter(l => l.status === 'New').length} New Unread</span>
             </div>
             {activeTab === 'leads' && leadStatusFilter === 'All' && (
-              <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Active</span>
+              <span className="text-[9px] sm:text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Active</span>
             )}
           </div>
         </button>
@@ -1124,7 +1125,7 @@ export const AdminPage: React.FC = () => {
             setActiveTab('leads');
             setLeadStatusFilter('Visit Scheduled');
           }}
-          className={`glass-card rounded-2xl p-4.5 sm:p-5 text-left transition-all duration-300 group relative overflow-hidden flex flex-col justify-between border cursor-pointer select-none active:scale-[0.98] ${
+          className={`glass-card rounded-2xl p-3.5 sm:p-5 text-left transition-all duration-300 group relative overflow-hidden flex flex-col justify-between border cursor-pointer select-none active:scale-[0.98] ${
             activeTab === 'leads' && leadStatusFilter === 'Visit Scheduled'
               ? 'border-teal-500/80 dark:border-teal-400/80 bg-teal-50/90 dark:bg-teal-950/40 shadow-lg shadow-teal-500/15 ring-2 ring-teal-500/25'
               : 'border-slate-200/90 dark:border-slate-800/90 bg-white/70 dark:bg-slate-900/70 hover:border-teal-500/40 hover:-translate-y-1 hover:shadow-xl dark:hover:shadow-black/40'
@@ -1137,30 +1138,30 @@ export const AdminPage: React.FC = () => {
 
           <div>
             <div className="flex items-center justify-between">
-              <div className="w-10 h-10 rounded-xl bg-teal-500/10 dark:bg-teal-500/15 border border-teal-500/25 text-teal-600 dark:text-teal-400 flex items-center justify-center group-hover:scale-110 group-hover:border-teal-500/40 transition-all duration-300 shadow-inner">
-                <CalendarCheck className="w-5 h-5" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-teal-500/10 dark:bg-teal-500/15 border border-teal-500/25 text-teal-600 dark:text-teal-400 flex items-center justify-center group-hover:scale-110 group-hover:border-teal-500/40 transition-all duration-300 shadow-inner">
+                <CalendarCheck className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              <div className="flex items-center gap-1 text-[11px] font-semibold text-slate-400 dark:text-slate-400 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+              <div className="flex items-center gap-1 text-[10px] sm:text-[11px] font-semibold text-slate-400 dark:text-slate-400 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
                 <span>Visits</span>
-                <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                <ArrowUpRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
               </div>
             </div>
 
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400 block mt-3.5">
+            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400 block mt-2.5 sm:mt-3.5">
               Site Visits
             </span>
-            <div className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white mt-0.5 font-['Outfit'] tracking-tight leading-none">
+            <div className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white mt-0.5 font-['Outfit'] tracking-tight leading-none">
               {leads.filter(l => l.status === 'Visit Scheduled').length}
             </div>
           </div>
 
-          <div className="mt-3.5 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
-            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-teal-500/10 border border-teal-500/20 text-[11px] font-semibold text-teal-600 dark:text-teal-400">
+          <div className="mt-2.5 sm:mt-3.5 pt-2 sm:pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-teal-500/10 border border-teal-500/20 text-[10px] sm:text-[11px] font-semibold text-teal-600 dark:text-teal-400">
               <span className="w-1.5 h-1.5 rounded-full bg-teal-500" />
-              <span>Scheduled Active</span>
+              <span>Scheduled</span>
             </div>
             {activeTab === 'leads' && leadStatusFilter === 'Visit Scheduled' && (
-              <span className="text-[10px] font-bold text-teal-600 dark:text-teal-400 uppercase tracking-wider">Active</span>
+              <span className="text-[9px] sm:text-[10px] font-bold text-teal-600 dark:text-teal-400 uppercase tracking-wider">Active</span>
             )}
           </div>
         </button>
@@ -1171,7 +1172,7 @@ export const AdminPage: React.FC = () => {
             setActiveTab('leads');
             setLeadStatusFilter('Converted');
           }}
-          className={`glass-card rounded-2xl p-4.5 sm:p-5 text-left transition-all duration-300 group relative overflow-hidden flex flex-col justify-between border cursor-pointer select-none active:scale-[0.98] col-span-2 sm:col-span-1 ${
+          className={`glass-card rounded-2xl p-3.5 sm:p-5 text-left transition-all duration-300 group relative overflow-hidden flex flex-col justify-between border cursor-pointer select-none active:scale-[0.98] col-span-2 sm:col-span-1 ${
             activeTab === 'leads' && leadStatusFilter === 'Converted'
               ? 'border-emerald-500/80 dark:border-emerald-400/80 bg-emerald-50/90 dark:bg-emerald-950/40 shadow-lg shadow-emerald-500/15 ring-2 ring-emerald-500/25'
               : 'border-slate-200/90 dark:border-slate-800/90 bg-white/70 dark:bg-slate-900/70 hover:border-emerald-500/40 hover:-translate-y-1 hover:shadow-xl dark:hover:shadow-black/40'
@@ -1184,40 +1185,40 @@ export const AdminPage: React.FC = () => {
 
           <div>
             <div className="flex items-center justify-between">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/25 text-emerald-600 dark:text-emerald-400 flex items-center justify-center group-hover:scale-110 group-hover:border-emerald-500/40 transition-all duration-300 shadow-inner">
-                <TrendingUp className="w-5 h-5" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/25 text-emerald-600 dark:text-emerald-400 flex items-center justify-center group-hover:scale-110 group-hover:border-emerald-500/40 transition-all duration-300 shadow-inner">
+                <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              <div className="flex items-center gap-1 text-[11px] font-semibold text-slate-400 dark:text-slate-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+              <div className="flex items-center gap-1 text-[10px] sm:text-[11px] font-semibold text-slate-400 dark:text-slate-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                 <span>Deals</span>
-                <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                <ArrowUpRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
               </div>
             </div>
 
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400 block mt-3.5">
+            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400 block mt-2.5 sm:mt-3.5">
               Conversions
             </span>
-            <div className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white mt-0.5 font-['Outfit'] tracking-tight leading-none">
+            <div className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white mt-0.5 font-['Outfit'] tracking-tight leading-none">
               {leads.filter(l => l.status === 'Converted').length}
             </div>
           </div>
 
-          <div className="mt-3.5 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
-            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+          <div className="mt-2.5 sm:mt-3.5 pt-2 sm:pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] sm:text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
               <span>Closed Deals</span>
             </div>
             {activeTab === 'leads' && leadStatusFilter === 'Converted' && (
-              <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Active</span>
+              <span className="text-[9px] sm:text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Active</span>
             )}
           </div>
         </button>
       </div>
 
       {/* TABS NAVIGATION */}
-      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto">
+      <div className="flex items-center gap-1.5 sm:gap-2 border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto no-scrollbar scroll-smooth -mx-3 px-3 sm:mx-0 sm:px-0">
         <button
           onClick={() => setActiveTab('properties')}
-          className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${
+          className={`px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap shrink-0 ${
             activeTab === 'properties' ? 'bg-brand-600 text-white shadow-md' : 'glass-card hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
@@ -1225,7 +1226,7 @@ export const AdminPage: React.FC = () => {
         </button>
         <button
           onClick={() => setActiveTab('buildings')}
-          className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${
+          className={`px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap shrink-0 ${
             activeTab === 'buildings' ? 'bg-brand-600 text-white shadow-md' : 'glass-card hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
@@ -1233,7 +1234,7 @@ export const AdminPage: React.FC = () => {
         </button>
         <button
           onClick={() => setActiveTab('leads')}
-          className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${
+          className={`px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap shrink-0 ${
             activeTab === 'leads' ? 'bg-brand-600 text-white shadow-md' : 'glass-card hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
@@ -1241,7 +1242,7 @@ export const AdminPage: React.FC = () => {
         </button>
         <button
           onClick={() => setActiveTab('locations')}
-          className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${
+          className={`px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap shrink-0 ${
             activeTab === 'locations' ? 'bg-brand-600 text-white shadow-md' : 'glass-card hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
@@ -1249,11 +1250,11 @@ export const AdminPage: React.FC = () => {
         </button>
         <button
           onClick={() => setActiveTab('media')}
-          className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap flex items-center gap-2 ${
+          className={`px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 sm:gap-2 ${
             activeTab === 'media' ? 'bg-brand-600 text-white shadow-md' : 'glass-card hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
-          <ImageIcon className="w-4 h-4" />
+          <ImageIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           <span>Image Uploader & Media ({allMediaItems.length})</span>
         </button>
       </div>
@@ -1261,8 +1262,8 @@ export const AdminPage: React.FC = () => {
       {/* TAB 1: PROPERTIES MANAGER WITH EDITABLE IMAGES, TARIFFS & SPECS */}
       {activeTab === 'properties' && (
         <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="relative flex-1 max-w-md">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
+            <div className="relative flex-1 max-w-md w-full">
               <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
               <input
                 type="text"
@@ -1275,14 +1276,15 @@ export const AdminPage: React.FC = () => {
 
             <button
               onClick={handleOpenAddProperty}
-              className="btn-glass-primary px-4 py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 shrink-0"
+              className="btn-glass-primary w-full sm:w-auto px-4 py-2.5 sm:py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 shrink-0 shadow-sm"
             >
               <Plus className="w-4 h-4" />
               <span>Add Commercial Property</span>
             </button>
           </div>
 
-          <div className="glass-card rounded-3xl overflow-hidden border border-slate-200/90 dark:border-slate-800 bg-white/70 dark:bg-[#0B132B]/75 shadow-md">
+          {/* Desktop & Tablet Table (>= md) */}
+          <div className="hidden md:block glass-card rounded-3xl overflow-hidden border border-slate-200/90 dark:border-slate-800 bg-white/70 dark:bg-[#0B132B]/75 shadow-md">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead className="bg-slate-100/80 dark:bg-slate-800/80 text-slate-500 font-semibold border-b border-slate-200 dark:border-slate-800">
@@ -1403,26 +1405,127 @@ export const AdminPage: React.FC = () => {
               </table>
             </div>
           </div>
+
+          {/* Mobile Property Cards (< md) */}
+          <div className="block md:hidden space-y-3">
+            {filteredProperties.map((prop) => (
+              <div 
+                key={prop.id}
+                className="glass-card rounded-2xl p-3.5 border border-slate-200/90 dark:border-slate-800 bg-white/80 dark:bg-[#0B132B]/85 shadow-sm space-y-3"
+              >
+                <div className="flex items-start gap-3">
+                  <div 
+                    className="relative rounded-xl overflow-hidden w-20 h-16 shrink-0 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 cursor-pointer"
+                    onClick={() => handleOpenEditProperty(prop)}
+                  >
+                    <img src={prop.primary_image} alt="" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                      <Edit3 className="w-3.5 h-3.5 text-white" />
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-1 mb-1">
+                      <span className="text-[10px] font-mono text-brand-500 font-bold px-1.5 py-0.5 rounded bg-brand-500/10 border border-brand-500/20">
+                        {prop.reference_number}
+                      </span>
+                      <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+                        {prop.built_up_area} {prop.area_unit}
+                      </span>
+                    </div>
+                    <h3 
+                      onClick={() => handleOpenEditProperty(prop)}
+                      className="font-bold text-xs text-slate-900 dark:text-white line-clamp-2 cursor-pointer hover:text-brand-600"
+                    >
+                      {prop.title}
+                    </h3>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5 truncate">
+                      <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                      <span className="truncate">{prop.building_name ? `${prop.building_name}, ` : ''}{prop.location_name}</span>
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800/80">
+                  <div>
+                    <span className="text-xs font-extrabold text-slate-900 dark:text-white block">
+                      {prop.price_display}
+                    </span>
+                    {prop.rate_per_sqft && (
+                      <span className="text-[10px] text-brand-600 dark:text-brand-400 font-medium">
+                        {prop.rate_per_sqft}
+                      </span>
+                    )}
+                  </div>
+                  <select
+                    value={prop.status}
+                    onChange={(e) => handlePropertyStatus(prop, e.target.value as PropertyStatus)}
+                    className="glass-input px-2.5 py-1.5 rounded-xl text-xs font-semibold cursor-pointer border border-slate-200 dark:border-slate-700"
+                  >
+                    <option value="Available">Available</option>
+                    <option value="Ready to Move">Ready to Move</option>
+                    <option value="Under Negotiation">Under Negotiation</option>
+                    <option value="Rented">Rented</option>
+                    <option value="Leased">Leased</option>
+                    <option value="Sold">Sold</option>
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 pt-1">
+                  <button
+                    onClick={() => handleOpenEditProperty(prop)}
+                    className="py-2 px-2 rounded-xl text-xs font-semibold bg-brand-600 text-white flex items-center justify-center gap-1 shadow-sm active:scale-95 transition-all"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                    <span>Update</span>
+                  </button>
+                  <Link
+                    to={`/properties/${prop.slug}`}
+                    className="py-2 px-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center gap-1 transition-colors"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span>Live View</span>
+                  </Link>
+                  <button
+                    onClick={() => handleDeleteProperty(prop.id)}
+                    className="py-2 px-2 rounded-xl text-xs font-semibold bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 border border-rose-200/50 dark:border-rose-900/30 flex items-center justify-center gap-1 active:scale-95 transition-all"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Delete</span>
+                  </button>
+                </div>
+              </div>
+            ))}
+            {filteredProperties.length === 0 && (
+              <div className="text-center py-10 glass-card rounded-2xl p-4 text-xs text-slate-400">
+                No properties matched your search.
+              </div>
+            )}
+          </div>
         </div>
       )}
 
       {/* TAB 2: BUILDINGS MANAGER WITH EDITABLE IMAGES, TARIFFS & DETAILS */}
       {activeTab === 'buildings' && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-slate-500">
-              Manage commercial buildings, hero images, rent tariffs, and available floors
-            </span>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4">
+            <div>
+              <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white font-['Outfit']">
+                Commercial Towers & IT Parks
+              </h2>
+              <p className="text-xs text-slate-500">
+                Manage commercial buildings, hero images, rent tariffs, and available floors
+              </p>
+            </div>
             <button
               onClick={handleOpenAddBuilding}
-              className="btn-glass-primary px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5"
+              className="btn-glass-primary w-full sm:w-auto px-4 py-2.5 sm:py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 shrink-0 shadow-sm"
             >
               <Plus className="w-4 h-4" />
               <span>Add Commercial Building</span>
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {buildings.map((bld) => (
               <div key={bld.id} className="glass-card rounded-3xl overflow-hidden border border-slate-200/90 dark:border-slate-800 bg-white/70 dark:bg-[#0B132B]/75 flex flex-col justify-between shadow-md group">
                 <div className="relative aspect-[16/10] overflow-hidden bg-slate-100 dark:bg-slate-800">
@@ -1453,7 +1556,7 @@ export const AdminPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="p-5 space-y-3">
+                <div className="p-4 sm:p-5 space-y-3">
                   <div className="grid grid-cols-2 gap-2 text-xs py-2 border-y border-slate-100 dark:border-slate-800">
                     <div>
                       <span className="text-slate-400 block">Tariff Range:</span>
@@ -1473,16 +1576,16 @@ export const AdminPage: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between pt-2">
+                  <div className="flex flex-wrap items-center justify-between pt-2 gap-2">
                     <button
                       onClick={() => handleOpenEditBuilding(bld)}
-                      className="px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-brand-600 to-cyan-600 hover:from-brand-500 hover:to-cyan-500 shadow-md shadow-brand-500/20 active:scale-95 flex items-center gap-1.5 transition-all group cursor-pointer"
+                      className="flex-1 sm:flex-none justify-center px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-brand-600 to-cyan-600 hover:from-brand-500 hover:to-cyan-500 shadow-md shadow-brand-500/20 active:scale-95 flex items-center gap-1.5 transition-all group cursor-pointer"
                     >
                       <Edit3 className="w-3.5 h-3.5 transition-transform group-hover:scale-110 group-hover:-rotate-12" />
                       <span>Update Specs & Tariff</span>
                     </button>
 
-                    <Link to={`/buildings/${bld.slug}`} className="text-xs text-slate-500 hover:text-brand-500 font-semibold flex items-center gap-1">
+                    <Link to={`/buildings/${bld.slug}`} className="text-xs text-slate-500 hover:text-brand-500 font-semibold flex items-center gap-1 shrink-0 py-1">
                       View Page <ExternalLink className="w-3 h-3" />
                     </Link>
                   </div>
@@ -1496,9 +1599,9 @@ export const AdminPage: React.FC = () => {
       {/* TAB 3: LEADS CRM TABLE */}
       {activeTab === 'leads' && (
         <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-2 flex-1 max-w-md">
-              <div className="relative w-full">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-1 max-w-lg w-full">
+              <div className="relative flex-1 w-full">
                 <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
                 <input
                   type="text"
@@ -1526,14 +1629,15 @@ export const AdminPage: React.FC = () => {
 
             <button
               onClick={exportLeadsCSV}
-              className="btn-glass-primary px-4 py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 shrink-0"
+              className="btn-glass-primary w-full sm:w-auto px-4 py-2.5 sm:py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 shrink-0 shadow-sm"
             >
               <Download className="w-3.5 h-3.5" />
               <span>Export CSV</span>
             </button>
           </div>
 
-          <div className="glass-card rounded-3xl overflow-hidden border border-slate-200/90 dark:border-slate-800 bg-white/70 dark:bg-[#0B132B]/75 shadow-md">
+          {/* Desktop Table (>= lg) */}
+          <div className="hidden lg:block glass-card rounded-3xl overflow-hidden border border-slate-200/90 dark:border-slate-800 bg-white/70 dark:bg-[#0B132B]/75 shadow-md">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead className="bg-slate-100/80 dark:bg-slate-800/80 text-slate-500 font-semibold border-b border-slate-200 dark:border-slate-800">
@@ -1621,26 +1725,130 @@ export const AdminPage: React.FC = () => {
               </table>
             </div>
           </div>
+
+          {/* Mobile & Tablet Leads Cards (< lg) */}
+          <div className="block lg:hidden space-y-3">
+            {filteredLeads.map((lead) => (
+              <div
+                key={lead.id}
+                className="glass-card rounded-2xl p-4 border border-slate-200/90 dark:border-slate-800 bg-white/80 dark:bg-[#0B132B]/85 shadow-sm space-y-3"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <h3 className="font-bold text-sm text-slate-900 dark:text-white">
+                        {lead.name}
+                      </h3>
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-brand-50 dark:bg-brand-950 text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-brand-800">
+                        {lead.lead_type.replace('_', ' ')}
+                      </span>
+                    </div>
+                    <div className="text-slate-500 text-xs mt-0.5 font-medium">{lead.phone}</div>
+                    {lead.email && <div className="text-slate-400 text-[11px] truncate">{lead.email}</div>}
+                    <span className="text-[10px] text-slate-400 mt-0.5 block">
+                      Source: {lead.lead_source} • {lead.created_at?.slice(0, 10)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Direct Call & WhatsApp Action Buttons for Mobile Screen */}
+                <div className="grid grid-cols-2 gap-2">
+                  <a
+                    href={`tel:${lead.phone}`}
+                    className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-semibold bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-brand-800 hover:bg-brand-100 transition-colors active:scale-95"
+                  >
+                    <Phone className="w-3.5 h-3.5" />
+                    <span>Call Client</span>
+                  </a>
+                  <a
+                    href={`https://wa.me/${lead.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
+                      `Hello ${lead.name}, thank you for contacting Shristi Estate regarding your commercial inquiry for ${lead.property_title || 'commercial real estate'}.`
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors shadow-sm active:scale-95"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5" />
+                    <span>WhatsApp</span>
+                  </a>
+                </div>
+
+                {/* Requirement / Message */}
+                {(lead.property_title || lead.message) && (
+                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800 text-xs space-y-1">
+                    {lead.property_title && (
+                      <div className="font-semibold text-slate-800 dark:text-slate-200 line-clamp-1">
+                        {lead.property_title}
+                      </div>
+                    )}
+                    {lead.message && (
+                      <p className="text-slate-500 dark:text-slate-400 text-[11px] leading-relaxed">
+                        {lead.message}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Visit Schedule info if any */}
+                {lead.preferred_visit_date && (
+                  <div className="flex items-center gap-1.5 text-xs text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/40 p-2 rounded-xl border border-teal-200 dark:border-teal-800/50">
+                    <CalendarCheck className="w-3.5 h-3.5 shrink-0" />
+                    <span className="font-medium">
+                      Site Visit: {lead.preferred_visit_date} ({lead.preferred_visit_time || 'Anytime'})
+                    </span>
+                  </div>
+                )}
+
+                {/* Status Selector */}
+                <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                  <span className="text-xs font-semibold text-slate-500">Status:</span>
+                  <select
+                    value={lead.status}
+                    onChange={(e) => handleStatusChange(lead.id, e.target.value as LeadStatus)}
+                    className="glass-input px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer border border-slate-200 dark:border-slate-700 hover:border-brand-500 transition-colors"
+                  >
+                    <option value="New">New</option>
+                    <option value="Contacted">Contacted</option>
+                    <option value="Qualified">Qualified</option>
+                    <option value="Visit Scheduled">Visit Scheduled</option>
+                    <option value="Converted">Converted</option>
+                    <option value="Not Interested">Not Interested</option>
+                    <option value="Closed">Closed</option>
+                  </select>
+                </div>
+              </div>
+            ))}
+            {filteredLeads.length === 0 && (
+              <div className="text-center py-10 glass-card rounded-2xl p-4 text-xs text-slate-400">
+                No inquiries matched this filter.
+              </div>
+            )}
+          </div>
         </div>
       )}
 
       {/* TAB 4: LOCATIONS MANAGER WITH FULL EDIT & ADD CONTROLS */}
       {activeTab === 'locations' && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-slate-500">
-              Manage commercial sectors, hero images, descriptions, and categories
-            </span>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4">
+            <div>
+              <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white font-['Outfit']">
+                Commercial Sectors & Nodes
+              </h2>
+              <p className="text-xs text-slate-500">
+                Manage commercial sectors, hero images, descriptions, and categories
+              </p>
+            </div>
             <button
               onClick={handleOpenAddLocation}
-              className="btn-glass-primary px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5"
+              className="btn-glass-primary w-full sm:w-auto px-4 py-2.5 sm:py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 shrink-0 shadow-sm"
             >
               <Plus className="w-4 h-4" />
               <span>Add Commercial Location</span>
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {locations.map((loc) => (
               <div key={loc.id} className="glass-card rounded-3xl overflow-hidden border border-slate-200/90 dark:border-slate-800 bg-white/70 dark:bg-[#0B132B]/75 flex flex-col justify-between shadow-md group">
                 <div className="relative aspect-[16/10] overflow-hidden bg-slate-100 dark:bg-slate-800">
@@ -1671,7 +1879,7 @@ export const AdminPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="p-5 space-y-3">
+                <div className="p-4 sm:p-5 space-y-3">
                   <p className="overview-card-text text-xs text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed">
                     {loc.description}
                   </p>
@@ -1682,16 +1890,16 @@ export const AdminPage: React.FC = () => {
                     <span>{loc.property_count} Properties</span>
                   </div>
 
-                  <div className="flex items-center justify-between pt-2">
+                  <div className="flex flex-wrap items-center justify-between pt-2 gap-2">
                     <button
                       onClick={() => handleOpenEditLocation(loc)}
-                      className="px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-brand-600 to-cyan-600 hover:from-brand-500 hover:to-cyan-500 shadow-md shadow-brand-500/20 active:scale-95 flex items-center gap-1.5 transition-all group cursor-pointer"
+                      className="flex-1 sm:flex-none justify-center px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-brand-600 to-cyan-600 hover:from-brand-500 hover:to-cyan-500 shadow-md shadow-brand-500/20 active:scale-95 flex items-center gap-1.5 transition-all group cursor-pointer"
                     >
                       <Edit3 className="w-3.5 h-3.5 transition-transform group-hover:scale-110 group-hover:-rotate-12" />
                       <span>Update Sector Profile</span>
                     </button>
 
-                    <Link to={`/locations/${loc.slug}`} className="text-xs text-slate-500 hover:text-brand-500 font-semibold flex items-center gap-1">
+                    <Link to={`/locations/${loc.slug}`} className="text-xs text-slate-500 hover:text-brand-500 font-semibold flex items-center gap-1 shrink-0 py-1">
                       View Page <ExternalLink className="w-3 h-3" />
                     </Link>
                   </div>
@@ -1706,7 +1914,7 @@ export const AdminPage: React.FC = () => {
       {activeTab === 'media' && (
         <div className="space-y-6">
           {/* Top Info & Upload Action Card */}
-          <div className="glass-card rounded-3xl p-6 border border-slate-200/90 dark:border-slate-800 bg-white/70 dark:bg-[#0B132B]/75 shadow-md space-y-5">
+          <div className="glass-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-slate-800 bg-white/70 dark:bg-[#0B132B]/75 shadow-md space-y-4 sm:space-y-5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
@@ -1721,11 +1929,11 @@ export const AdminPage: React.FC = () => {
               </div>
 
               {/* Upload Mode Selector */}
-              <div className="flex items-center p-1 rounded-xl bg-slate-100 dark:bg-slate-800 self-start sm:self-auto">
+              <div className="flex items-center p-1 rounded-xl bg-slate-100 dark:bg-slate-800 w-full sm:w-auto">
                 <button
                   type="button"
                   onClick={() => setMediaUploadMode('device')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  className={`flex-1 sm:flex-none justify-center flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                     mediaUploadMode === 'device'
                       ? 'bg-white dark:bg-slate-900 text-brand-600 dark:text-brand-400 shadow-sm'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -1737,7 +1945,7 @@ export const AdminPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setMediaUploadMode('url')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  className={`flex-1 sm:flex-none justify-center flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                     mediaUploadMode === 'url'
                       ? 'bg-white dark:bg-slate-900 text-brand-600 dark:text-brand-400 shadow-sm'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -1751,7 +1959,7 @@ export const AdminPage: React.FC = () => {
 
             {/* Upload Area */}
             {mediaUploadMode === 'device' ? (
-              <label className="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-brand-500 dark:hover:border-brand-400 rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer transition-colors bg-white/40 dark:bg-slate-900/40 hover:bg-brand-50/30 dark:hover:bg-brand-950/20 group">
+              <label className="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-brand-500 dark:hover:border-brand-400 rounded-2xl p-5 sm:p-6 flex flex-col items-center justify-center cursor-pointer transition-colors bg-white/40 dark:bg-slate-900/40 hover:bg-brand-50/30 dark:hover:bg-brand-950/20 group">
                 <input
                   type="file"
                   multiple
@@ -1759,13 +1967,13 @@ export const AdminPage: React.FC = () => {
                   onChange={handleMediaFileUpload}
                   className="hidden"
                 />
-                <div className="w-12 h-12 rounded-2xl bg-brand-500/10 group-hover:scale-110 text-brand-600 dark:text-brand-400 flex items-center justify-center transition-transform mb-2">
-                  <UploadCloud className="w-6 h-6" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-brand-500/10 group-hover:scale-110 text-brand-600 dark:text-brand-400 flex items-center justify-center transition-transform mb-2">
+                  <UploadCloud className="w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
-                <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                <p className="text-xs font-bold text-slate-800 dark:text-slate-200 text-center">
                   Click to select photos or drag & drop files here
                 </p>
-                <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
+                <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5 text-center">
                   Supports multiple JPG, PNG, WebP files. Uploaded photos are stored instantly in your media library.
                 </p>
               </label>
@@ -1797,12 +2005,12 @@ export const AdminPage: React.FC = () => {
             )}
 
             {/* Filter Pills */}
-            <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-              <span className="text-xs font-semibold text-slate-500">Filter Media:</span>
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <span className="text-xs font-semibold text-slate-500">Filter:</span>
               <button
                 type="button"
                 onClick={() => setMediaFilter('all')}
-                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                className={`px-2.5 sm:px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
                   mediaFilter === 'all'
                     ? 'bg-brand-500 text-white'
                     : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
@@ -1813,18 +2021,18 @@ export const AdminPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setMediaFilter('admin')}
-                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                className={`px-2.5 sm:px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
                   mediaFilter === 'admin'
                     ? 'bg-brand-500 text-white'
                     : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                 }`}
               >
-                Admin & System ({customMedia.length})
+                Admin ({customMedia.length})
               </button>
               <button
                 type="button"
                 onClick={() => setMediaFilter('landlord')}
-                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                className={`px-2.5 sm:px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
                   mediaFilter === 'landlord'
                     ? 'bg-brand-500 text-white'
                     : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
@@ -1836,7 +2044,7 @@ export const AdminPage: React.FC = () => {
           </div>
 
           {/* Media Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4">
             {filteredMediaItems.map((item) => (
               <div
                 key={item.id}
@@ -1848,8 +2056,8 @@ export const AdminPage: React.FC = () => {
                     alt={item.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
-                  <div className="absolute top-2 left-2">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-slate-900/80 text-white backdrop-blur-sm border border-white/10">
+                  <div className="absolute top-2 left-2 max-w-[70%]">
+                    <span className="px-1.5 sm:px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-bold uppercase bg-slate-900/80 text-white backdrop-blur-sm border border-white/10 truncate block">
                       {item.source}
                     </span>
                   </div>
@@ -1869,26 +2077,26 @@ export const AdminPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="p-3.5 space-y-2.5">
+                <div className="p-2.5 sm:p-3.5 space-y-2">
                   <div>
                     <h4 className="text-xs font-bold text-slate-900 dark:text-white line-clamp-1">
                       {item.title}
                     </h4>
                     <p className="text-[10px] text-slate-400 mt-0.5">
-                      Added: {item.created_at}
+                      {item.created_at}
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-800">
                     <button
                       type="button"
                       onClick={() => {
                         setCurrentProperty(prev => ({ ...prev, primary_image: item.url }));
                         setShowPropertyModal(true);
                       }}
-                      className="flex-1 py-1 px-2 rounded-lg text-[10px] font-bold bg-brand-50 dark:bg-brand-950 text-brand-600 dark:text-brand-400 hover:bg-brand-100 dark:hover:bg-brand-900 transition-colors text-center"
+                      className="flex-1 py-1.5 sm:py-1 px-2 rounded-lg text-[10px] font-bold bg-brand-50 dark:bg-brand-950 text-brand-600 dark:text-brand-400 hover:bg-brand-100 dark:hover:bg-brand-900 transition-colors text-center"
                     >
-                      Use in Property
+                      In Property
                     </button>
                     <button
                       type="button"
@@ -1896,15 +2104,15 @@ export const AdminPage: React.FC = () => {
                         setCurrentBuilding(prev => ({ ...prev, hero_image: item.url }));
                         setShowBuildingModal(true);
                       }}
-                      className="flex-1 py-1 px-2 rounded-lg text-[10px] font-bold bg-cyan-50 dark:bg-cyan-950 text-cyan-600 dark:text-cyan-400 hover:bg-cyan-100 dark:hover:bg-cyan-900 transition-colors text-center"
+                      className="flex-1 py-1.5 sm:py-1 px-2 rounded-lg text-[10px] font-bold bg-cyan-50 dark:bg-cyan-950 text-cyan-600 dark:text-cyan-400 hover:bg-cyan-100 dark:hover:bg-cyan-900 transition-colors text-center"
                     >
-                      Use in Building
+                      In Building
                     </button>
                     {item.id.startsWith('media-') && (
                       <button
                         type="button"
                         onClick={() => handleDeleteMedia(item.id)}
-                        className="p-1 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors"
+                        className="p-1 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors self-center sm:self-auto"
                         title="Delete Image"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -1932,25 +2140,25 @@ export const AdminPage: React.FC = () => {
 
       {/* PROPERTY ADD / EDIT MODAL */}
       {showPropertyModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md overflow-y-auto">
-          <div className="relative w-full max-w-2xl glass-card rounded-3xl p-6 sm:p-8 bg-white dark:bg-[#0B132B] border border-slate-200 dark:border-slate-800 shadow-2xl my-8">
+        <div className="fixed inset-0 z-50 overflow-y-auto p-2 sm:p-4 md:p-6 flex min-h-full items-start sm:items-center justify-center bg-slate-950/80 backdrop-blur-md">
+          <div className="relative w-full max-w-2xl glass-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 bg-white dark:bg-[#0B132B] border border-slate-200 dark:border-slate-800 shadow-2xl my-auto max-h-[96vh] sm:max-h-[90vh] flex flex-col">
             <button 
               onClick={() => setShowPropertyModal(false)}
-              className="absolute top-5 right-5 p-2 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+              className="absolute top-3.5 right-3.5 sm:top-5 sm:right-5 p-2 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 bg-slate-100/80 dark:bg-slate-800/80 sm:bg-transparent z-10 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <div className="mb-4">
+            <div className="mb-3 sm:mb-4 shrink-0 pr-8">
               <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
                 {isEditingProperty ? 'Edit Property Listing' : 'New Commercial Listing'}
               </span>
-              <h2 className="text-2xl font-bold font-['Outfit']">
+              <h2 className="text-xl sm:text-2xl font-bold font-['Outfit']">
                 {isEditingProperty ? `Edit: ${currentProperty.reference_number}` : 'Add Commercial Property'}
               </h2>
             </div>
             
-            <form onSubmit={handleSaveProperty} className="space-y-4">
+            <form onSubmit={handleSaveProperty} className="space-y-4 overflow-y-auto pr-1 flex-1 -mr-1">
               {/* Title & Ref */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="sm:col-span-2">
@@ -2318,18 +2526,18 @@ export const AdminPage: React.FC = () => {
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
+              <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-3 pt-3 sm:pt-4 border-t border-slate-200 dark:border-slate-800 shrink-0">
                 <button
                   type="button"
                   onClick={() => setShowPropertyModal(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800"
+                  className="px-4 py-2.5 sm:py-2 rounded-xl text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 text-center"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="px-6 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-brand-600 via-brand-500 to-cyan-600 hover:from-brand-500 hover:to-cyan-400 shadow-lg shadow-brand-500/25 active:scale-95 flex items-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed group cursor-pointer"
+                  className="px-6 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-brand-600 via-brand-500 to-cyan-600 hover:from-brand-500 hover:to-cyan-400 shadow-lg shadow-brand-500/25 active:scale-95 flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed group cursor-pointer"
                 >
                   {isSaving ? (
                     <>
@@ -2356,25 +2564,25 @@ export const AdminPage: React.FC = () => {
 
       {/* BUILDING ADD / EDIT MODAL */}
       {showBuildingModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md overflow-y-auto">
-          <div className="relative w-full max-w-2xl glass-card rounded-3xl p-6 sm:p-8 bg-white dark:bg-[#0B132B] border border-slate-200 dark:border-slate-800 shadow-2xl my-8">
+        <div className="fixed inset-0 z-50 overflow-y-auto p-2 sm:p-4 md:p-6 flex min-h-full items-start sm:items-center justify-center bg-slate-950/80 backdrop-blur-md">
+          <div className="relative w-full max-w-2xl glass-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 bg-white dark:bg-[#0B132B] border border-slate-200 dark:border-slate-800 shadow-2xl my-auto max-h-[96vh] sm:max-h-[90vh] flex flex-col">
             <button 
               onClick={() => setShowBuildingModal(false)}
-              className="absolute top-5 right-5 p-2 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+              className="absolute top-3.5 right-3.5 sm:top-5 sm:right-5 p-2 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 bg-slate-100/80 dark:bg-slate-800/80 sm:bg-transparent z-10 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <div className="mb-4">
+            <div className="mb-3 sm:mb-4 shrink-0 pr-8">
               <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
                 {isEditingBuilding ? 'Edit Commercial Building' : 'New Commercial Building'}
               </span>
-              <h2 className="text-2xl font-bold font-['Outfit']">
+              <h2 className="text-xl sm:text-2xl font-bold font-['Outfit']">
                 {isEditingBuilding ? `Edit: ${currentBuilding.name}` : 'Add Commercial Building'}
               </h2>
             </div>
 
-            <form onSubmit={handleSaveBuilding} className="space-y-4">
+            <form onSubmit={handleSaveBuilding} className="space-y-4 overflow-y-auto pr-1 flex-1 -mr-1">
               {/* Building Name & Location */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
@@ -2675,18 +2883,18 @@ export const AdminPage: React.FC = () => {
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
+              <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-3 pt-3 sm:pt-4 border-t border-slate-200 dark:border-slate-800 shrink-0">
                 <button
                   type="button"
                   onClick={() => setShowBuildingModal(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800"
+                  className="px-4 py-2.5 sm:py-2 rounded-xl text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 text-center"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="px-6 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-brand-600 via-brand-500 to-cyan-600 hover:from-brand-500 hover:to-cyan-400 shadow-lg shadow-brand-500/25 active:scale-95 flex items-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed group cursor-pointer"
+                  className="px-6 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-brand-600 via-brand-500 to-cyan-600 hover:from-brand-500 hover:to-cyan-400 shadow-lg shadow-brand-500/25 active:scale-95 flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed group cursor-pointer"
                 >
                   {isSaving ? (
                     <>
@@ -2713,25 +2921,25 @@ export const AdminPage: React.FC = () => {
 
       {/* LOCATION ADD / EDIT MODAL */}
       {showLocationModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md overflow-y-auto">
-          <div className="relative w-full max-w-2xl glass-card rounded-3xl p-6 sm:p-8 bg-white dark:bg-[#0B132B] border border-slate-200 dark:border-slate-800 shadow-2xl my-8">
+        <div className="fixed inset-0 z-50 overflow-y-auto p-2 sm:p-4 md:p-6 flex min-h-full items-start sm:items-center justify-center bg-slate-950/80 backdrop-blur-md">
+          <div className="relative w-full max-w-2xl glass-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 bg-white dark:bg-[#0B132B] border border-slate-200 dark:border-slate-800 shadow-2xl my-auto max-h-[96vh] sm:max-h-[90vh] flex flex-col">
             <button 
               onClick={() => setShowLocationModal(false)}
-              className="absolute top-5 right-5 p-2 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+              className="absolute top-3.5 right-3.5 sm:top-5 sm:right-5 p-2 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 bg-slate-100/80 dark:bg-slate-800/80 sm:bg-transparent z-10 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <div className="mb-4">
+            <div className="mb-3 sm:mb-4 shrink-0 pr-8">
               <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
                 {isEditingLocation ? 'Edit Commercial Location' : 'New Commercial Location'}
               </span>
-              <h2 className="text-2xl font-bold font-['Outfit']">
+              <h2 className="text-xl sm:text-2xl font-bold font-['Outfit']">
                 {isEditingLocation ? `Edit: ${currentLocation.name}` : 'Add Commercial Sector'}
               </h2>
             </div>
 
-            <form onSubmit={handleSaveLocation} className="space-y-4">
+            <form onSubmit={handleSaveLocation} className="space-y-4 overflow-y-auto pr-1 flex-1 -mr-1">
               {/* Location Name */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="sm:col-span-2">
@@ -2856,18 +3064,18 @@ export const AdminPage: React.FC = () => {
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
+              <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-3 pt-3 sm:pt-4 border-t border-slate-200 dark:border-slate-800 shrink-0">
                 <button
                   type="button"
                   onClick={() => setShowLocationModal(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800"
+                  className="px-4 py-2.5 sm:py-2 rounded-xl text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 text-center"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="px-6 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-brand-600 via-brand-500 to-cyan-600 hover:from-brand-500 hover:to-cyan-400 shadow-lg shadow-brand-500/25 active:scale-95 flex items-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed group cursor-pointer"
+                  className="px-6 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-brand-600 via-brand-500 to-cyan-600 hover:from-brand-500 hover:to-cyan-400 shadow-lg shadow-brand-500/25 active:scale-95 flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed group cursor-pointer"
                 >
                   {isSaving ? (
                     <>

@@ -16,8 +16,6 @@ import { Logo } from '../common/Logo';
 import { WhatsAppIcon } from '../common/SocialIcons';
 import { generateGeneralEnquiryWhatsAppLink } from '../../utils/whatsapp';
 import { useTheme } from '../../context/ThemeContext';
-import gsap from 'gsap';
-import { prefersReducedMotion } from '../../utils/animations';
 
 interface HeaderProps {
   onOpenSearch: () => void;
@@ -29,17 +27,6 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSearch, onOpenEnquiry }) =
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
-  const headerRef = React.useRef<HTMLElement | null>(null);
-
-  useEffect(() => {
-    if (headerRef.current && !prefersReducedMotion()) {
-      gsap.fromTo(
-        headerRef.current,
-        { y: -20, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.6, ease: 'power2.out', delay: 0.1 }
-      );
-    }
-  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -76,7 +63,6 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSearch, onOpenEnquiry }) =
   return (
     <>
       <header 
-        ref={headerRef}
         className={`sticky top-0 z-40 w-full transition-all duration-300 ${
           isScrolled 
             ? 'glass-nav shadow-lg shadow-black/5 dark:shadow-black/20 py-2 sm:py-2.5' 

@@ -23,8 +23,6 @@ import { Property, Building as BuildingType } from '../types';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
 import { WhatsAppIcon } from '../components/common/SocialIcons';
 import { generatePropertyWhatsAppLink } from '../utils/whatsapp';
-import { AnimatedText } from '../components/common/AnimatedText';
-import { ScrollReveal } from '../components/common/ScrollReveal';
 
 interface PropertyDetailPageProps {
   onOpenEnquiry: (property: Property) => void;
@@ -102,12 +100,12 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
         {/* Left Column */}
         <div className="lg:col-span-8 space-y-6 sm:space-y-8">
           {/* Gallery Showcase */}
-          <ScrollReveal variant="image-reveal" triggerOnLoad className="space-y-3 sm:space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <div className="relative aspect-[16/10] rounded-2xl sm:rounded-3xl overflow-hidden glass-card border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 shadow-xl">
               <img
                 src={activeImage || property.primary_image}
                 alt={property.title}
-                className="w-full h-full object-cover transition-all duration-300 card-image-zoom"
+                className="w-full h-full object-cover transition-all duration-300"
               />
 
               {/* Status & ID Badge */}
@@ -144,7 +142,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
                 ))}
               </div>
             )}
-          </ScrollReveal>
+          </div>
 
           {/* Property Title & Header Meta */}
           <div className="space-y-2 sm:space-y-3">
@@ -161,9 +159,9 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
               )}
             </div>
 
-            <AnimatedText as="h1" type="hero" triggerOnLoad delay={0.1} className="text-xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 dark:text-white font-['Outfit'] tracking-tight leading-tight">
+            <h1 className="text-xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 dark:text-white font-['Outfit'] tracking-tight leading-tight">
               {property.title}
-            </AnimatedText>
+            </h1>
 
             <div className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400">
               <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
@@ -324,7 +322,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
         </div>
 
         {/* Right Sticky Action Panel (4 Cols) */}
-        <ScrollReveal variant="slide-right" triggerOnLoad delay={0.2} className="lg:col-span-4 lg:sticky lg:top-24 space-y-6">
+        <div className="lg:col-span-4 lg:sticky lg:top-24 space-y-6">
           <div className="glass-card rounded-3xl p-6 sm:p-7 border border-slate-200/90 dark:border-slate-800 bg-white/80 dark:bg-[#0B132B]/85 shadow-2xl space-y-6">
             {/* Pricing Section */}
             <div>
@@ -363,21 +361,27 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
 
               <a
                 href="tel:+918750098666"
-                className="w-full py-3 rounded-xl font-semibold text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-2 transition-colors"
+                className="w-full py-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 font-semibold text-sm flex items-center justify-center gap-2 transition-colors"
               >
-                <PhoneCall className="w-3.5 h-3.5 text-brand-500" />
-                <span>Call Desk: +91 87500 98666</span>
+                <PhoneCall className="w-4 h-4 text-brand-500" />
+                <span>Call +91 87500 98666</span>
               </a>
-            </div>
 
-            {/* Share / Save Actions */}
-            <div className="pt-2 flex items-center gap-2">
               <button
                 onClick={handleShare}
-                className="flex-1 py-2 px-3 rounded-xl text-xs font-medium border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center gap-1.5 transition-colors"
+                className="w-full py-2.5 rounded-xl text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 flex items-center justify-center gap-1.5 transition-colors"
               >
-                {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Share2 className="w-3.5 h-3.5" />}
-                <span>{copied ? 'Link Copied!' : 'Share Listing'}</span>
+                {copied ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-emerald-500" />
+                    <span className="text-emerald-500 font-semibold">Link Copied to Clipboard</span>
+                  </>
+                ) : (
+                  <>
+                    <Share2 className="w-3.5 h-3.5" />
+                    <span>Share Property Dossier</span>
+                  </>
+                )}
               </button>
             </div>
 
@@ -397,7 +401,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
               </div>
             </div>
           </div>
-        </ScrollReveal>
+        </div>
       </div>
     </div>
   );

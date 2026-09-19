@@ -5,8 +5,6 @@ import { Breadcrumbs } from '../components/common/Breadcrumbs';
 import { WhatsAppIcon } from '../components/common/SocialIcons';
 import { generateGeneralEnquiryWhatsAppLink } from '../utils/whatsapp';
 import { handleOverviewPaste } from '../utils/textFormat';
-import { AnimatedText } from '../components/common/AnimatedText';
-import { ScrollReveal } from '../components/common/ScrollReveal';
 
 export const ContactPage: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -62,27 +60,24 @@ export const ContactPage: React.FC = () => {
       />
 
       <div className="text-center max-w-2xl mx-auto space-y-3">
-        <ScrollReveal variant="fade-up">
-          <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
-            Get in Touch
-          </span>
-        </ScrollReveal>
-        <AnimatedText as="h1" type="hero" className="text-3xl sm:text-5xl font-extrabold text-slate-900 dark:text-white font-['Outfit']">
+        <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
+          Get in Touch
+        </span>
+        <h1 className="text-3xl sm:text-5xl font-extrabold text-slate-900 dark:text-white font-['Outfit']">
           Contact Shristi Estate
-        </AnimatedText>
-        <AnimatedText as="p" type="subtitle" delay={0.2} className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+        </h1>
+        <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
           Visit our corporate office at I-Thum Tower, Sector 62, Noida, or connect directly with our commercial specialists.
-        </AnimatedText>
+        </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Contact Info (5 Cols) */}
-        <div className="lg:col-span-5">
-          <ScrollReveal variant="slide-left" className="space-y-6">
-            <div className="glass-card card-accent-top rounded-3xl p-6 sm:p-8 border border-slate-200/90 dark:border-slate-800 bg-white/70 dark:bg-[#0B132B]/75 space-y-6">
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white font-['Outfit']">
-                Corporate Headquarters
-              </h2>
+        <div className="lg:col-span-5 space-y-6">
+          <div className="glass-card rounded-3xl p-6 sm:p-8 border border-slate-200/90 dark:border-slate-800 bg-white/70 dark:bg-[#0B132B]/75 space-y-6">
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white font-['Outfit']">
+              Corporate Headquarters
+            </h2>
 
             <div className="space-y-4 text-sm">
               <div className="flex items-start gap-3.5">
@@ -150,13 +145,11 @@ export const ContactPage: React.FC = () => {
               </a>
             </div>
           </div>
-        </ScrollReveal>
-      </div>
+        </div>
 
-      {/* Contact Form (7 Cols) */}
-      <div className="lg:col-span-7">
-        <ScrollReveal variant="slide-right">
-          <div className="glass-card card-accent-top rounded-3xl p-6 sm:p-8 border border-slate-200/90 dark:border-slate-800 bg-white/70 dark:bg-[#0B132B]/75 space-y-6">
+        {/* Contact Form (7 Cols) */}
+        <div className="lg:col-span-7">
+          <div className="glass-card rounded-3xl p-6 sm:p-8 border border-slate-200/90 dark:border-slate-800 bg-white/70 dark:bg-[#0B132B]/75 space-y-6">
             <h2 className="text-xl font-bold text-slate-900 dark:text-white font-['Outfit']">
               Send an Advisory Inquiry
             </h2>
@@ -269,9 +262,8 @@ export const ContactPage: React.FC = () => {
               </form>
             )}
           </div>
-        </ScrollReveal>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
 };

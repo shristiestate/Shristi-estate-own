@@ -17,8 +17,6 @@ import {
 import { StorageService } from '../services/storageService';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
 import { handleOverviewPaste } from '../utils/textFormat';
-import { AnimatedText } from '../components/common/AnimatedText';
-import { ScrollReveal } from '../components/common/ScrollReveal';
 
 export const ListPropertyPage: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -132,15 +130,15 @@ export const ListPropertyPage: React.FC = () => {
         ]}
       />
 
-      <ScrollReveal variant="fade-up" triggerOnLoad className="glass-card card-accent-top rounded-3xl p-6 sm:p-10 border border-slate-200/90 dark:border-slate-800 bg-white/80 dark:bg-[#0B132B]/85 shadow-2xl">
+      <div className="glass-card rounded-3xl p-6 sm:p-10 border border-slate-200/90 dark:border-slate-800 bg-white/80 dark:bg-[#0B132B]/85 shadow-2xl">
         {submitted ? (
           <div className="text-center py-12 space-y-4">
             <div className="w-16 h-16 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center mx-auto mb-4 border border-emerald-500/20">
               <CheckCircle2 className="w-9 h-9" />
             </div>
-            <AnimatedText as="h2" className="text-3xl font-extrabold text-slate-900 dark:text-white font-['Outfit']">
+            <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white font-['Outfit']">
               Listing Submitted for Verification
-            </AnimatedText>
+            </h2>
             <p className="text-sm text-slate-600 dark:text-slate-300 max-w-lg mx-auto leading-relaxed">
               Thank you, <strong>{formData.ownerName}</strong>. Your commercial property has been recorded. Our team will verify building registry documents, take high-resolution floor photos if needed, and connect you with qualified corporate tenants/buyers.
             </p>
@@ -156,12 +154,12 @@ export const ListPropertyPage: React.FC = () => {
               <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
                 Landlord & Asset Owner Portal
               </span>
-              <AnimatedText as="h1" type="hero" triggerOnLoad delay={0.1} className="text-3xl font-extrabold text-slate-900 dark:text-white font-['Outfit'] mt-1">
+              <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white font-['Outfit'] mt-1">
                 List Your Commercial Property
-              </AnimatedText>
-              <AnimatedText as="p" type="fade-up" triggerOnLoad delay={0.25} className="text-sm text-slate-600 dark:text-slate-300 mt-1">
+              </h1>
+              <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">
                 Connect with vetted corporate tenants, MNCs, and commercial investors across Noida and Delhi-NCR.
-              </AnimatedText>
+              </p>
             </div>
 
             {error && (
@@ -495,7 +493,7 @@ export const ListPropertyPage: React.FC = () => {
             </form>
           </div>
         )}
-      </ScrollReveal>
+      </div>
     </div>
   );
 };

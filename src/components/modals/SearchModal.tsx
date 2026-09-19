@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, X, Building2, MapPin, ArrowRight } from 'lucide-react';
+import { Search, MapPin, Building2, ArrowRight, X } from 'lucide-react';
+import { toSafeInternalPath } from '../../utils/navigation';
 import { StorageService } from '../../services/storageService';
 import { Property, Building, Location } from '../../types';
 
@@ -52,7 +53,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
 
   const handleSelect = (url: string) => {
     onClose();
-    navigate(url);
+    navigate(toSafeInternalPath(url));
   };
 
   return (

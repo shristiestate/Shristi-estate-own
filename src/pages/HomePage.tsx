@@ -23,6 +23,7 @@ import { StorageService } from '../services/storageService';
 import { Property, Building, Location } from '../types';
 import { PropertyCard } from '../components/common/PropertyCard';
 import { BuildingCard } from '../components/common/BuildingCard';
+import { toSafeInternalPath } from '../utils/navigation';
 import { LocationCard } from '../components/common/LocationCard';
 import { WhatsAppIcon } from '../components/common/SocialIcons';
 import { generateGeneralEnquiryWhatsAppLink } from '../utils/whatsapp';
@@ -56,7 +57,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenEnquiry }) => {
     if (selectedCategory) params.set('category', selectedCategory);
     if (selectedLocation) params.set('location', selectedLocation);
     if (selectedBuilding) params.set('building', selectedBuilding);
-    navigate(`/properties?${params.toString()}`);
+    navigate(toSafeInternalPath(`/properties?${params.toString()}`));
   };
 
   const featuredProperties = properties.filter(p => p.featured).slice(0, 6);

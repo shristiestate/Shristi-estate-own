@@ -2,6 +2,8 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Building2, Key, Handshake, Search, CalendarCheck, FileText, ArrowRight } from 'lucide-react';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
+import { AnimatedText } from '../components/common/AnimatedText';
+import { ScrollReveal } from '../components/common/ScrollReveal';
 
 export const ServicesPage: React.FC = () => {
   const services = [
@@ -52,62 +54,66 @@ export const ServicesPage: React.FC = () => {
       />
 
       <div className="text-center max-w-3xl mx-auto space-y-4">
-        <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
-          Commercial Advisory Suite
-        </span>
-        <h1 className="text-3xl sm:text-5xl font-extrabold text-slate-900 dark:text-white font-['Outfit']">
+        <ScrollReveal variant="fade-up">
+          <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
+            Commercial Advisory Suite
+          </span>
+        </ScrollReveal>
+        <AnimatedText as="h1" type="hero" className="text-3xl sm:text-5xl font-extrabold text-slate-900 dark:text-white font-['Outfit']">
           Commercial Real Estate Services
-        </h1>
-        <p className="text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+        </AnimatedText>
+        <AnimatedText as="p" type="subtitle" delay={0.2} className="text-base text-slate-600 dark:text-slate-300 leading-relaxed">
           Tailored property solutions for business tenants, institutional buyers, and commercial property owners across Noida, Greater Noida, and Delhi-NCR.
-        </p>
+        </AnimatedText>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {services.map((svc, i) => {
-          const Icon = svc.icon;
-          return (
-            <div
-              key={i}
-              className="glass-card rounded-3xl p-6 sm:p-8 border border-slate-200/90 dark:border-slate-800 bg-white/70 dark:bg-[#0B132B]/75 flex flex-col justify-between space-y-6"
-            >
-              <div className="space-y-4">
-                <div className="w-12 h-12 rounded-2xl bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center">
-                  <Icon className="w-6 h-6" />
-                </div>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white font-['Outfit']">
-                  {svc.title}
-                </h3>
-                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                  {svc.desc}
-                </p>
+      <ScrollReveal variant="stagger" stagger={0.1}>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {services.map((svc, i) => {
+            const Icon = svc.icon;
+            return (
+              <div
+                key={i}
+                className="scroll-reveal-item will-change-transform card-hover-lift glass-card rounded-3xl p-6 sm:p-8 border border-slate-200/90 dark:border-slate-800 bg-white/70 dark:bg-[#0B132B]/75 flex flex-col justify-between space-y-6"
+              >
+                <div className="space-y-4">
+                  <div className="w-12 h-12 rounded-2xl bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center">
+                    <Icon className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-white font-['Outfit']">
+                    {svc.title}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                    {svc.desc}
+                  </p>
 
-                <div className="pt-2 space-y-2">
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Key Benefits:</span>
-                  <ul className="space-y-1.5 text-xs text-slate-600 dark:text-slate-300">
-                    {svc.benefits.map((b, idx) => (
-                      <li key={idx} className="flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-accent-teal" />
-                        <span>{b}</span>
-                      </li>
-                    ))}
-                  </ul>
+                  <div className="pt-2 space-y-2">
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Key Benefits:</span>
+                    <ul className="space-y-1.5 text-xs text-slate-600 dark:text-slate-300">
+                      {svc.benefits.map((b, idx) => (
+                        <li key={idx} className="flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-accent-teal" />
+                          <span>{b}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+                  <Link
+                    to="/tell-us-requirement"
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-600 dark:text-brand-400 hover:gap-2 transition-all"
+                  >
+                    <span>Request Service Consultation</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
                 </div>
               </div>
-
-              <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
-                <Link
-                  to="/tell-us-requirement"
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-600 dark:text-brand-400 hover:gap-2 transition-all"
-                >
-                  <span>Request Service Consultation</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      </ScrollReveal>
     </div>
   );
 };

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ShieldCheck, FileText, AlertTriangle } from 'lucide-react';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
+import { ScrollReveal } from '../components/common/ScrollReveal';
 
 export const LegalPage: React.FC = () => {
   const { docType } = useParams<{ docType?: string }>();
@@ -19,34 +20,37 @@ export const LegalPage: React.FC = () => {
       />
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
-        <button
-          onClick={() => setActiveTab('privacy')}
-          className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
-            activeTab === 'privacy' ? 'bg-brand-600 text-white shadow-md' : 'glass-card hover:bg-slate-100 dark:hover:bg-slate-800'
-          }`}
-        >
-          Privacy Policy
-        </button>
-        <button
-          onClick={() => setActiveTab('terms')}
-          className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
-            activeTab === 'terms' ? 'bg-brand-600 text-white shadow-md' : 'glass-card hover:bg-slate-100 dark:hover:bg-slate-800'
-          }`}
-        >
-          Terms of Service
-        </button>
-        <button
-          onClick={() => setActiveTab('disclaimer')}
-          className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
-            activeTab === 'disclaimer' ? 'bg-brand-600 text-white shadow-md' : 'glass-card hover:bg-slate-100 dark:hover:bg-slate-800'
-          }`}
-        >
-          Property Disclaimer
-        </button>
-      </div>
+      <ScrollReveal variant="fade-up">
+        <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
+          <button
+            onClick={() => setActiveTab('privacy')}
+            className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+              activeTab === 'privacy' ? 'bg-brand-600 text-white shadow-md' : 'glass-card hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            Privacy Policy
+          </button>
+          <button
+            onClick={() => setActiveTab('terms')}
+            className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+              activeTab === 'terms' ? 'bg-brand-600 text-white shadow-md' : 'glass-card hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            Terms of Service
+          </button>
+          <button
+            onClick={() => setActiveTab('disclaimer')}
+            className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+              activeTab === 'disclaimer' ? 'bg-brand-600 text-white shadow-md' : 'glass-card hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            Property Disclaimer
+          </button>
+        </div>
+      </ScrollReveal>
 
-      <div className="glass-card rounded-3xl p-6 sm:p-10 border border-slate-200/90 dark:border-slate-800 bg-white/70 dark:bg-[#0B132B]/75 space-y-6 leading-relaxed text-sm text-slate-600 dark:text-slate-300">
+      <ScrollReveal variant="fade-up" delay={0.1}>
+        <div className="glass-card card-accent-top rounded-3xl p-6 sm:p-10 border border-slate-200/90 dark:border-slate-800 bg-white/70 dark:bg-[#0B132B]/75 space-y-6 leading-relaxed text-sm text-slate-600 dark:text-slate-300">
         {activeTab === 'privacy' && (
           <div className="space-y-4">
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white font-['Outfit']">
@@ -107,7 +111,8 @@ export const LegalPage: React.FC = () => {
             </p>
           </div>
         )}
-      </div>
+        </div>
+      </ScrollReveal>
     </div>
   );
 };

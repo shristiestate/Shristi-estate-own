@@ -6,6 +6,8 @@ import { Location, Building, Property } from '../types';
 import { PropertyCard } from '../components/common/PropertyCard';
 import { BuildingCard } from '../components/common/BuildingCard';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
+import { AnimatedText } from '../components/common/AnimatedText';
+import { ScrollReveal } from '../components/common/ScrollReveal';
 
 interface LocationPageProps {
   onOpenEnquiry: (property?: Property) => void;
@@ -66,11 +68,11 @@ export const LocationPage: React.FC<LocationPageProps> = ({ onOpenEnquiry }) => 
       />
 
       {/* Location Hero */}
-      <div className="relative rounded-3xl overflow-hidden glass-card p-8 sm:p-12 border border-slate-200 dark:border-slate-800 bg-slate-900 text-white shadow-xl">
+      <ScrollReveal variant="fade-up" triggerOnLoad className="relative rounded-3xl overflow-hidden glass-card p-8 sm:p-12 border border-slate-200 dark:border-slate-800 bg-slate-900 text-white shadow-xl">
         <img
           src={location.hero_image}
           alt={location.name}
-          className="absolute inset-0 w-full h-full object-cover opacity-25"
+          className="absolute inset-0 w-full h-full object-cover opacity-25 card-image-zoom"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/80 to-transparent pointer-events-none" />
 
@@ -79,12 +81,12 @@ export const LocationPage: React.FC<LocationPageProps> = ({ onOpenEnquiry }) => 
             <MapPin className="w-3.5 h-3.5" />
             {location.city}, {location.region}
           </div>
-          <h1 className="text-3xl sm:text-5xl font-extrabold font-['Outfit'] tracking-tight">
+          <AnimatedText as="h1" type="hero" triggerOnLoad delay={0.1} className="text-3xl sm:text-5xl font-extrabold font-['Outfit'] tracking-tight">
             Commercial Property in {location.name}
-          </h1>
-          <div className="overview-text text-base sm:text-lg text-slate-300 leading-relaxed">
+          </AnimatedText>
+          <AnimatedText as="div" type="fade-up" triggerOnLoad delay={0.25} className="overview-text text-base sm:text-lg text-slate-300 leading-relaxed">
             {location.description}
-          </div>
+          </AnimatedText>
 
           <div className="pt-2 flex items-center gap-4 text-xs sm:text-sm text-slate-300">
             <span><strong>{buildings.length}</strong> Commercial Towers / Projects</span>
@@ -92,7 +94,7 @@ export const LocationPage: React.FC<LocationPageProps> = ({ onOpenEnquiry }) => 
             <span><strong>{properties.length}</strong> Available Properties</span>
           </div>
         </div>
-      </div>
+      </ScrollReveal>
 
       {/* MANDATORY HIERARCHY: BUILDINGS IN THIS LOCATION (SECTION 8 & 29) */}
       <section className="space-y-6">
@@ -101,9 +103,9 @@ export const LocationPage: React.FC<LocationPageProps> = ({ onOpenEnquiry }) => 
             <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
               Commercial Infrastructure
             </span>
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white font-['Outfit']">
+            <AnimatedText as="h2" showAccentLine className="text-2xl font-bold text-slate-900 dark:text-white font-['Outfit']">
               Buildings & Projects in {location.name}
-            </h2>
+            </AnimatedText>
           </div>
         </div>
 
@@ -112,11 +114,11 @@ export const LocationPage: React.FC<LocationPageProps> = ({ onOpenEnquiry }) => 
             No independent multi-story buildings registered yet in this sector. Direct plots and units are displayed below.
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <ScrollReveal variant="stagger" stagger={0.08} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {buildings.map((b) => (
               <BuildingCard key={b.id} building={b} />
             ))}
-          </div>
+          </ScrollReveal>
         )}
       </section>
 
@@ -127,14 +129,14 @@ export const LocationPage: React.FC<LocationPageProps> = ({ onOpenEnquiry }) => 
             <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
               Current Opportunities
             </span>
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white font-['Outfit']">
+            <AnimatedText as="h2" showAccentLine className="text-2xl font-bold text-slate-900 dark:text-white font-['Outfit']">
               Available Properties in {location.name} ({properties.length})
-            </h2>
+            </AnimatedText>
           </div>
         </div>
 
         {properties.length === 0 ? (
-          <div className="py-12 text-center glass-card rounded-3xl p-8 space-y-3">
+          <ScrollReveal variant="fade-up" className="py-12 text-center glass-card rounded-3xl p-8 space-y-3">
             <p className="text-base font-semibold text-slate-700 dark:text-slate-300">
               No live public inventory currently listed in {location.name}.
             </p>
@@ -148,29 +150,29 @@ export const LocationPage: React.FC<LocationPageProps> = ({ onOpenEnquiry }) => 
               <span>Submit Requirement for {location.name}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
-          </div>
+          </ScrollReveal>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <ScrollReveal variant="stagger" stagger={0.08} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {properties.map((prop) => (
               <PropertyCard key={prop.id} property={prop} onEnquire={onOpenEnquiry} />
             ))}
-          </div>
+          </ScrollReveal>
         )}
       </section>
 
       {/* LOCATION OVERVIEW & WHY INVEST/LEASE HERE */}
-      <section className="glass-card rounded-3xl p-8 bg-white/70 dark:bg-[#0B132B]/75 border border-slate-200/90 dark:border-slate-800 space-y-6">
+      <ScrollReveal variant="fade-up" className="glass-card rounded-3xl p-8 bg-white/70 dark:bg-[#0B132B]/75 border border-slate-200/90 dark:border-slate-800 space-y-6">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-white font-['Outfit']">
+          <AnimatedText as="h2" showAccentLine className="text-2xl font-bold text-slate-900 dark:text-white font-['Outfit']">
             Commercial Advantages of {location.name}
-          </h2>
+          </AnimatedText>
           <div className="overview-text text-sm text-slate-600 dark:text-slate-300 mt-2 leading-relaxed">
             {location.name} stands as one of the most prominent commercial micro-markets within {location.city}. Benefiting from comprehensive arterial road networks, reliable industrial power grids, and close proximity to public rapid transit hubs.
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800">
+        <ScrollReveal variant="stagger" stagger={0.1} className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+          <div className="scroll-reveal-item p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800 will-change-transform">
             <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-1">
               Metro & Arterial Connectivity
             </h4>
@@ -179,7 +181,7 @@ export const LocationPage: React.FC<LocationPageProps> = ({ onOpenEnquiry }) => 
             </p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800">
+          <div className="scroll-reveal-item p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800 will-change-transform">
             <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-1">
               Talent Pool Access
             </h4>
@@ -188,7 +190,7 @@ export const LocationPage: React.FC<LocationPageProps> = ({ onOpenEnquiry }) => 
             </p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800">
+          <div className="scroll-reveal-item p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800 will-change-transform">
             <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-1">
               Commercial Infrastructure
             </h4>
@@ -196,7 +198,7 @@ export const LocationPage: React.FC<LocationPageProps> = ({ onOpenEnquiry }) => 
               Equipped with Grade-A building management systems, multi-tier car parking, and round-the-clock security infrastructure.
             </p>
           </div>
-        </div>
+        </ScrollReveal>
 
         {/* CTA Bar */}
         <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -210,7 +212,7 @@ export const LocationPage: React.FC<LocationPageProps> = ({ onOpenEnquiry }) => 
             Enquire for {location.name}
           </button>
         </div>
-      </section>
+      </ScrollReveal>
     </div>
   );
 };

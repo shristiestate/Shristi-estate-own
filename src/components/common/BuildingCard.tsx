@@ -9,14 +9,14 @@ interface BuildingCardProps {
 
 export const BuildingCard: React.FC<BuildingCardProps> = ({ building }) => {
   return (
-    <div className="glass-card glass-card-hover rounded-3xl overflow-hidden flex flex-col group border border-slate-200/90 dark:border-slate-800/90 bg-white/70 dark:bg-[#0B132B]/75 transition-all duration-300">
+    <div className="scroll-reveal-item glass-card glass-card-hover rounded-3xl overflow-hidden flex flex-col group border border-slate-200/90 dark:border-slate-800/90 bg-white/70 dark:bg-[#0B132B]/75 transition-all duration-300 will-change-transform">
       {/* Building Image */}
       <div className="relative aspect-[16/10] overflow-hidden bg-slate-100 dark:bg-slate-800">
         <img
           src={building.hero_image}
           alt={building.name}
           loading="lazy"
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          className="w-full h-full object-cover card-image-zoom"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/20 to-transparent pointer-events-none" />
 

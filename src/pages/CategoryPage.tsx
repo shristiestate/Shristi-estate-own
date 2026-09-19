@@ -8,6 +8,8 @@ import { PropertyCard } from '../components/common/PropertyCard';
 import { BuildingCard } from '../components/common/BuildingCard';
 import { LocationCard } from '../components/common/LocationCard';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
+import { AnimatedText } from '../components/common/AnimatedText';
+import { ScrollReveal } from '../components/common/ScrollReveal';
 
 interface CategoryPageProps {
   categorySlug?: string;
@@ -68,11 +70,11 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
       />
 
       {/* Category Hero */}
-      <div className="relative rounded-3xl overflow-hidden glass-card p-8 sm:p-12 border border-slate-200 dark:border-slate-800 bg-slate-900 text-white shadow-xl">
+      <ScrollReveal variant="fade-up" triggerOnLoad className="relative rounded-3xl overflow-hidden glass-card p-8 sm:p-12 border border-slate-200 dark:border-slate-800 bg-slate-900 text-white shadow-xl">
         <img
           src={meta.image}
           alt={meta.title}
-          className="absolute inset-0 w-full h-full object-cover opacity-25"
+          className="absolute inset-0 w-full h-full object-cover opacity-25 card-image-zoom"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/80 to-transparent pointer-events-none" />
 
@@ -80,12 +82,12 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
           <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-brand-500/20 text-brand-300 border border-brand-500/30">
             Commercial Asset Class
           </span>
-          <h1 className="text-3xl sm:text-5xl font-extrabold font-['Outfit'] tracking-tight">
+          <AnimatedText as="h1" type="hero" triggerOnLoad delay={0.1} className="text-3xl sm:text-5xl font-extrabold font-['Outfit'] tracking-tight">
             {meta.title}
-          </h1>
-          <div className="overview-text text-base sm:text-lg text-slate-300 leading-relaxed">
+          </AnimatedText>
+          <AnimatedText as="div" type="fade-up" triggerOnLoad delay={0.25} className="overview-text text-base sm:text-lg text-slate-300 leading-relaxed">
             {meta.description}
-          </div>
+          </AnimatedText>
 
           <div className="pt-2 flex items-center gap-4 text-xs sm:text-sm text-slate-300">
             <span><strong>{properties.length}</strong> Available Spaces</span>
@@ -95,7 +97,7 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
             <span><strong>{locations.length}</strong> Sectors</span>
           </div>
         </div>
-      </div>
+      </ScrollReveal>
 
       {/* MANDATORY HIERARCHY LAYER 1: LOCATIONS */}
       {locations.length > 0 && (
@@ -105,17 +107,17 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
               <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
                 Step 1: Select Your Strategic Sector
               </span>
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white font-['Outfit']">
+              <AnimatedText as="h2" showAccentLine className="text-2xl font-bold text-slate-900 dark:text-white font-['Outfit']">
                 {meta.title} by Location
-              </h2>
+              </AnimatedText>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <ScrollReveal variant="stagger" stagger={0.08} className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {locations.map((loc) => (
               <LocationCard key={loc.id} location={loc} />
             ))}
-          </div>
+          </ScrollReveal>
         </section>
       )}
 
@@ -127,17 +129,17 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
               <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
                 Step 2: Commercial Buildings & Projects
               </span>
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white font-['Outfit']">
+              <AnimatedText as="h2" showAccentLine className="text-2xl font-bold text-slate-900 dark:text-white font-['Outfit']">
                 Commercial Projects for {meta.title}
-              </h2>
+              </AnimatedText>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <ScrollReveal variant="stagger" stagger={0.08} className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {buildings.map((b) => (
               <BuildingCard key={b.id} building={b} />
             ))}
-          </div>
+          </ScrollReveal>
         </section>
       )}
 
@@ -148,9 +150,9 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
             <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
               Step 3: Direct Verified Inventory
             </span>
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white font-['Outfit']">
+            <AnimatedText as="h2" showAccentLine className="text-2xl font-bold text-slate-900 dark:text-white font-['Outfit']">
               Available {meta.title} ({filteredProperties.length})
-            </h2>
+            </AnimatedText>
           </div>
 
           {/* Quick Filter Controls */}
@@ -181,7 +183,7 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
         </div>
 
         {filteredProperties.length === 0 ? (
-          <div className="py-16 text-center glass-card rounded-3xl p-8 space-y-3">
+          <ScrollReveal variant="fade-up" className="py-16 text-center glass-card rounded-3xl p-8 space-y-3">
             <p className="text-base font-semibold text-slate-700 dark:text-slate-300">
               No exact matches found for your selected filters in this category.
             </p>
@@ -195,18 +197,18 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
               <span>Submit Custom Requirement</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
-          </div>
+          </ScrollReveal>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <ScrollReveal variant="stagger" stagger={0.08} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredProperties.map((prop) => (
               <PropertyCard key={prop.id} property={prop} onEnquire={onOpenEnquiry} />
             ))}
-          </div>
+          </ScrollReveal>
         )}
       </section>
 
       {/* Requirement Callout */}
-      <div className="glass-card rounded-3xl p-6 sm:p-8 bg-brand-50/50 dark:bg-brand-950/20 border border-brand-200 dark:border-brand-800/60 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <ScrollReveal variant="fade-up" className="glass-card rounded-3xl p-6 sm:p-8 bg-brand-50/50 dark:bg-brand-950/20 border border-brand-200 dark:border-brand-800/60 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div>
           <h3 className="text-lg font-bold text-slate-900 dark:text-white font-['Outfit']">
             Need a Specific Space Configuration?
@@ -221,7 +223,7 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
         >
           Post Your Requirement
         </Link>
-      </div>
+      </ScrollReveal>
     </div>
   );
 };

@@ -17,6 +17,7 @@ import {
   FacebookIcon 
 } from '../common/SocialIcons';
 import { generateGeneralEnquiryWhatsAppLink } from '../../utils/whatsapp';
+import { ScrollReveal } from '../common/ScrollReveal';
 
 export const Footer: React.FC = () => {
   return (
@@ -27,7 +28,8 @@ export const Footer: React.FC = () => {
 
       {/* Professional Optimized Width Container (max-w-[1440px] with balanced padding) */}
       <div className="max-w-7xl xl:max-w-[1380px] 2xl:max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 relative z-10">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-10 lg:gap-8 xl:gap-10 pb-12 border-b border-slate-800/80">
+        <ScrollReveal variant="stagger" stagger={0.08}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-10 lg:gap-8 xl:gap-10 pb-12 border-b border-slate-800/80">
           
           {/* Col 1: Brand & Corporate Overview */}
           <div className="space-y-4">
@@ -316,6 +318,7 @@ export const Footer: React.FC = () => {
           </div>
 
         </div>
+        </ScrollReveal>
 
         {/* Disclaimer & Legal Links */}
         <div className="pt-8 flex flex-col lg:flex-row items-center justify-between gap-6 text-xs text-slate-400">

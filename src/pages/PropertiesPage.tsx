@@ -5,6 +5,8 @@ import { StorageService } from '../services/storageService';
 import { Property, Location } from '../types';
 import { PropertyCard } from '../components/common/PropertyCard';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
+import { AnimatedText } from '../components/common/AnimatedText';
+import { ScrollReveal } from '../components/common/ScrollReveal';
 
 interface PropertiesPageProps {
   onOpenEnquiry: (property?: Property) => void;
@@ -94,17 +96,17 @@ export const PropertiesPage: React.FC<PropertiesPageProps> = ({ onOpenEnquiry })
       />
 
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-6">
+      <ScrollReveal variant="fade-up" triggerOnLoad className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-6">
         <div>
           <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
             Real-Time Commercial Database
           </span>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white font-['Outfit'] mt-1">
+          <AnimatedText as="h1" type="hero" triggerOnLoad delay={0.1} className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white font-['Outfit'] mt-1">
             Commercial Properties for Lease & Sale
-          </h1>
-          <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">
+          </AnimatedText>
+          <AnimatedText as="p" type="fade-up" triggerOnLoad delay={0.25} className="text-sm text-slate-600 dark:text-slate-300 mt-1">
             Browse verified offices, IT spaces, warehouses, industrial units, and commercial plots across Noida & NCR.
-          </p>
+          </AnimatedText>
         </div>
 
         {/* Mobile Filter Toggle */}
@@ -115,7 +117,7 @@ export const PropertiesPage: React.FC<PropertiesPageProps> = ({ onOpenEnquiry })
           <SlidersHorizontal className="w-4 h-4" />
           <span>Filters ({filtered.length} Results)</span>
         </button>
-      </div>
+      </ScrollReveal>
 
       {/* Desktop & Mobile Main Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -298,11 +300,11 @@ export const PropertiesPage: React.FC<PropertiesPageProps> = ({ onOpenEnquiry })
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <ScrollReveal variant="stagger" stagger={0.08} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {sorted.map((prop) => (
                 <PropertyCard key={prop.id} property={prop} onEnquire={onOpenEnquiry} />
               ))}
-            </div>
+            </ScrollReveal>
           )}
         </div>
       </div>

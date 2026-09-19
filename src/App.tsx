@@ -8,6 +8,8 @@ import { Header } from './components/layout/Header';
 import { Footer } from './components/layout/Footer';
 import { EnquiryModal } from './components/modals/EnquiryModal';
 import { SearchModal } from './components/modals/SearchModal';
+import { SmoothScrollProvider } from './components/layout/SmoothScrollProvider';
+import { BackgroundTexture } from './components/layout/BackgroundTexture';
 import { Property } from './types';
 
 // Pages
@@ -79,8 +81,9 @@ export const AppContent: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#070C1E] text-slate-900 dark:text-slate-100 transition-colors duration-200">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#070C1E] text-slate-900 dark:text-slate-100 transition-colors duration-200 relative">
       <ScrollToTop />
+      <BackgroundTexture />
       
       {/* Header */}
       <Header
@@ -89,49 +92,51 @@ export const AppContent: React.FC = () => {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1">
-        <Routes>
-          <Route path="/" element={<HomePage onOpenEnquiry={handleOpenEnquiry} />} />
-          
-          {/* Commercial Category Silos */}
-          <Route path="/office-space" element={<CategoryPage categorySlug="office-space" onOpenEnquiry={handleOpenEnquiry} />} />
-          <Route path="/it-business-parks" element={<CategoryPage categorySlug="it-business-parks" onOpenEnquiry={handleOpenEnquiry} />} />
-          <Route path="/warehouses" element={<CategoryPage categorySlug="warehouses" onOpenEnquiry={handleOpenEnquiry} />} />
-          <Route path="/factory-industrial" element={<CategoryPage categorySlug="factory-industrial" onOpenEnquiry={handleOpenEnquiry} />} />
-          <Route path="/land" element={<CategoryPage categorySlug="land" onOpenEnquiry={handleOpenEnquiry} />} />
-          <Route path="/shops" element={<CategoryPage categorySlug="shops" onOpenEnquiry={handleOpenEnquiry} />} />
-          <Route path="/category/:categorySlug" element={<CategoryPage onOpenEnquiry={handleOpenEnquiry} />} />
+      <main className="flex-1 relative z-10">
+        <SmoothScrollProvider>
+          <Routes>
+            <Route path="/" element={<HomePage onOpenEnquiry={handleOpenEnquiry} />} />
+            
+            {/* Commercial Category Silos */}
+            <Route path="/office-space" element={<CategoryPage categorySlug="office-space" onOpenEnquiry={handleOpenEnquiry} />} />
+            <Route path="/it-business-parks" element={<CategoryPage categorySlug="it-business-parks" onOpenEnquiry={handleOpenEnquiry} />} />
+            <Route path="/warehouses" element={<CategoryPage categorySlug="warehouses" onOpenEnquiry={handleOpenEnquiry} />} />
+            <Route path="/factory-industrial" element={<CategoryPage categorySlug="factory-industrial" onOpenEnquiry={handleOpenEnquiry} />} />
+            <Route path="/land" element={<CategoryPage categorySlug="land" onOpenEnquiry={handleOpenEnquiry} />} />
+            <Route path="/shops" element={<CategoryPage categorySlug="shops" onOpenEnquiry={handleOpenEnquiry} />} />
+            <Route path="/category/:categorySlug" element={<CategoryPage onOpenEnquiry={handleOpenEnquiry} />} />
 
-          {/* Properties */}
-          <Route path="/properties" element={<PropertiesPage onOpenEnquiry={handleOpenEnquiry} />} />
-          <Route path="/properties/:propertySlug" element={<PropertyDetailPage onOpenEnquiry={handleOpenEnquiry} />} />
+            {/* Properties */}
+            <Route path="/properties" element={<PropertiesPage onOpenEnquiry={handleOpenEnquiry} />} />
+            <Route path="/properties/:propertySlug" element={<PropertyDetailPage onOpenEnquiry={handleOpenEnquiry} />} />
 
-          {/* Buildings */}
-          <Route path="/buildings/:buildingSlug" element={<BuildingDetailPage onOpenEnquiry={handleOpenEnquiry} />} />
-          <Route path="/buildings/:buildingSlug/properties" element={<BuildingDetailPage onOpenEnquiry={handleOpenEnquiry} />} />
+            {/* Buildings */}
+            <Route path="/buildings/:buildingSlug" element={<BuildingDetailPage onOpenEnquiry={handleOpenEnquiry} />} />
+            <Route path="/buildings/:buildingSlug/properties" element={<BuildingDetailPage onOpenEnquiry={handleOpenEnquiry} />} />
 
-          {/* Locations */}
-          <Route path="/locations" element={<LocationsDirectoryPage />} />
-          <Route path="/locations/:locationSlug" element={<LocationPage onOpenEnquiry={handleOpenEnquiry} />} />
+            {/* Locations */}
+            <Route path="/locations" element={<LocationsDirectoryPage />} />
+            <Route path="/locations/:locationSlug" element={<LocationPage onOpenEnquiry={handleOpenEnquiry} />} />
 
-          {/* Lead & Requirement Workflows */}
-          <Route path="/tell-us-requirement" element={<RequirementPage />} />
-          <Route path="/list-your-property" element={<ListPropertyPage />} />
+            {/* Lead & Requirement Workflows */}
+            <Route path="/tell-us-requirement" element={<RequirementPage />} />
+            <Route path="/list-your-property" element={<ListPropertyPage />} />
 
-          {/* Informational Pages */}
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/services" element={<ServicesPage />} />
-          <Route path="/contact" element={<ContactPage />} />
-          <Route path="/blog" element={<BlogPage />} />
-          <Route path="/legal/:docType" element={<LegalPage />} />
-          <Route path="/legal" element={<LegalPage />} />
+            {/* Informational Pages */}
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/services" element={<ServicesPage />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/blog" element={<BlogPage />} />
+            <Route path="/legal/:docType" element={<LegalPage />} />
+            <Route path="/legal" element={<LegalPage />} />
 
-          {/* Admin Dashboard */}
-          <Route path="/admin" element={<AdminPage />} />
+            {/* Admin Dashboard */}
+            <Route path="/admin" element={<AdminPage />} />
 
-          {/* 404 Fallback */}
-          <Route path="*" element={<NotFoundPage />} />
-        </Routes>
+            {/* 404 Fallback */}
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </SmoothScrollProvider>
       </main>
 
       {/* Footer */}

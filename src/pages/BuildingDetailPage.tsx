@@ -21,6 +21,8 @@ import { PropertyCard } from '../components/common/PropertyCard';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
 import { WhatsAppIcon } from '../components/common/SocialIcons';
 import { generateBuildingWhatsAppLink } from '../utils/whatsapp';
+import { AnimatedText } from '../components/common/AnimatedText';
+import { ScrollReveal } from '../components/common/ScrollReveal';
 
 interface BuildingDetailPageProps {
   onOpenEnquiry: (property?: Property) => void;
@@ -83,12 +85,12 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
       {/* Building Hero & Gallery */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Gallery / Image Showcase (7 Cols) */}
-        <div className="lg:col-span-7 space-y-4">
+        <ScrollReveal variant="image-reveal" triggerOnLoad className="lg:col-span-7 space-y-4">
           <div className="relative aspect-[16/10] rounded-3xl overflow-hidden glass-card border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 shadow-xl">
             <img
               src={activeImage || building.hero_image}
               alt={building.name}
-              className="w-full h-full object-cover transition-all duration-300"
+              className="w-full h-full object-cover transition-all duration-300 card-image-zoom"
             />
             <div className="absolute top-4 left-4">
               <span className="px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider bg-brand-600 text-white shadow-lg">
@@ -121,19 +123,19 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
               ))}
             </div>
           )}
-        </div>
+        </ScrollReveal>
 
         {/* Building Title & Quick Commercial Specs (5 Cols) */}
-        <div className="lg:col-span-5 space-y-6">
+        <ScrollReveal variant="slide-right" triggerOnLoad delay={0.15} className="lg:col-span-5 space-y-6">
           <div className="glass-card rounded-3xl p-6 sm:p-7 border border-slate-200/90 dark:border-slate-800 bg-white/70 dark:bg-[#0B132B]/75 space-y-5">
             <div>
               <div className="flex items-center gap-2 text-xs font-semibold text-brand-600 dark:text-brand-400 uppercase tracking-wider mb-1">
                 <Building2 className="w-4 h-4" />
                 <span>Commercial Tower</span>
               </div>
-              <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white font-['Outfit'] tracking-tight">
+              <AnimatedText as="h1" type="hero" triggerOnLoad delay={0.1} className="text-3xl font-extrabold text-slate-900 dark:text-white font-['Outfit'] tracking-tight">
                 {building.name}
-              </h1>
+              </AnimatedText>
               <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mt-1">
                 <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
                 <span>{building.address}</span>
@@ -197,12 +199,12 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
               </a>
             </div>
           </div>
-        </div>
+        </ScrollReveal>
       </div>
 
       {/* Building Overview & Technical Specifications (Section 10) */}
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 glass-card rounded-3xl p-6 sm:p-8 bg-white/70 dark:bg-[#0B132B]/75 border border-slate-200/90 dark:border-slate-800 space-y-6">
+        <ScrollReveal variant="fade-up" className="lg:col-span-2 glass-card rounded-3xl p-6 sm:p-8 bg-white/70 dark:bg-[#0B132B]/75 border border-slate-200/90 dark:border-slate-800 space-y-6">
           <div>
             <h2 className="text-xl font-bold text-slate-900 dark:text-white font-['Outfit']">
               Building Overview & Specifications
@@ -256,10 +258,10 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
               </div>
             </div>
           )}
-        </div>
+        </ScrollReveal>
 
         {/* Transit & Landmarks */}
-        <div className="glass-card rounded-3xl p-6 sm:p-8 bg-white/70 dark:bg-[#0B132B]/75 border border-slate-200/90 dark:border-slate-800 space-y-6">
+        <ScrollReveal variant="fade-up" delay={0.1} className="glass-card rounded-3xl p-6 sm:p-8 bg-white/70 dark:bg-[#0B132B]/75 border border-slate-200/90 dark:border-slate-800 space-y-6">
           <h2 className="text-lg font-bold text-slate-900 dark:text-white font-['Outfit']">
             Transit & Surroundings
           </h2>
@@ -286,7 +288,7 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
               </div>
             )}
           </div>
-        </div>
+        </ScrollReveal>
       </section>
 
       {/* MANDATORY HIERARCHY: AVAILABLE PROPERTIES IN THIS BUILDING (SECTION 11) */}
@@ -296,14 +298,14 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
             <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
               Immediate Inventory
             </span>
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white font-['Outfit']">
+            <AnimatedText as="h2" showAccentLine className="text-2xl font-bold text-slate-900 dark:text-white font-['Outfit']">
               Available Properties in {building.name} ({properties.length})
-            </h2>
+            </AnimatedText>
           </div>
         </div>
 
         {properties.length === 0 ? (
-          <div className="py-12 text-center glass-card rounded-3xl p-8 space-y-3">
+          <ScrollReveal variant="fade-up" className="py-12 text-center glass-card rounded-3xl p-8 space-y-3">
             <p className="text-base font-semibold text-slate-700 dark:text-slate-300">
               No live public vacancies currently listed in {building.name}.
             </p>
@@ -316,13 +318,13 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
             >
               Enquire for Upcoming Vacancies in {building.name}
             </button>
-          </div>
+          </ScrollReveal>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <ScrollReveal variant="stagger" stagger={0.08} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {properties.map((prop) => (
               <PropertyCard key={prop.id} property={prop} onEnquire={onOpenEnquiry} />
             ))}
-          </div>
+          </ScrollReveal>
         )}
       </section>
     </div>

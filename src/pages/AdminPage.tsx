@@ -28,11 +28,193 @@ import {
   Copy,
   FileImage,
   ArrowLeftRight,
-  Phone
+  Phone,
+  Warehouse,
+  Factory,
+  Store,
+  Trees,
+  Cpu,
+  Zap,
+  Truck,
+  Tag,
+  Hash
 } from 'lucide-react';
 import { StorageService } from '../services/storageService';
-import { Property, Building, Location, Lead, LeadStatus, PropertyStatus } from '../types';
+import { Property, Building, Location, Lead, LeadStatus, PropertyStatus, PropertyCategory } from '../types';
 import { handleOverviewPaste } from '../utils/textFormat';
+
+export const CATEGORY_CONFIG: Record<PropertyCategory, {
+  label: string;
+  badgeClass: string;
+  badgeBg: string;
+  icon: React.ComponentType<{ className?: string }>;
+  defaultType: string;
+  types: string[];
+  defaultPower: string;
+  defaultRoad: string;
+  suggestedFeatures: string[];
+}> = {
+  'it-business-parks': {
+    label: 'IT & Business Parks',
+    badgeClass: 'bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-500/30',
+    badgeBg: 'bg-indigo-500',
+    icon: Cpu,
+    defaultType: 'IT Office Space',
+    types: [
+      'IT Office Space',
+      'Plug-and-Play Tech Floor',
+      'Corporate IT Tower Floor',
+      'IT SEZ Unit',
+      'Tech R&D Facility',
+      'Data Center Space',
+      'Bare Shell IT Park Floor'
+    ],
+    defaultPower: '100% DG Backup with N+1 Redundancy',
+    defaultRoad: '60 Feet Arterial Road',
+    suggestedFeatures: [
+      'Dual High-Speed Fiber Lines',
+      '24/7 Central HVAC',
+      'Grade-A Tech Infrastructure',
+      'Food Court & Gym',
+      'Multi-Tier Security',
+      'Ample Covered Parking',
+      '100% DG Backup'
+    ]
+  },
+  'warehouses': {
+    label: 'Warehouses & Logistics',
+    badgeClass: 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30',
+    badgeBg: 'bg-amber-500',
+    icon: Warehouse,
+    defaultType: 'Storage Warehouse / Industrial Shed',
+    types: [
+      'Storage Warehouse / Industrial Shed',
+      'Grade-A Logistics Park Shed',
+      '3PL Distribution Hub',
+      'Cold Storage Facility',
+      'E-Commerce Fulfillment Center',
+      'Industrial Godown & Logistics Center'
+    ],
+    defaultPower: '60 KVA Industrial Power',
+    defaultRoad: '60 Feet Wide Road for 40ft Multi-Axle Containers',
+    suggestedFeatures: [
+      '28–34 ft Clear Height',
+      'Hydraulic Dock Levelers',
+      'FM2 Heavy Duty Flooring',
+      'K-Factor Fire Sprinklers',
+      'Dedicated Container Parking',
+      'Insulated Roofing',
+      'Two Rolling Shutters',
+      'Weighbridge Access'
+    ]
+  },
+  'factory-industrial': {
+    label: 'Factories & Industrial',
+    badgeClass: 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30',
+    badgeBg: 'bg-rose-500',
+    icon: Factory,
+    defaultType: 'Manufacturing Factory & Industrial Building',
+    types: [
+      'Manufacturing Factory & Industrial Building',
+      'Industrial Shed & Workshop',
+      'Heavy Industrial Plant',
+      'Flatted Industrial Unit',
+      'Assembly / Precision Engineering Unit',
+      'Automotive / Electronics Workshop'
+    ],
+    defaultPower: '150 KVA Sanctioned Industrial Load',
+    defaultRoad: '60 Feet Arterial Road',
+    suggestedFeatures: [
+      '150 KVA Dedicated Transformer',
+      '2-Ton Goods Lift',
+      'Overhead EOT Crane Provision',
+      'Pollution Control Board NOC',
+      'Borewell & Water Treatment',
+      'Heavy Floor Loading (5T/sqm)',
+      'Fire Suppression NOC',
+      'Loading Ramps'
+    ]
+  },
+  'land': {
+    label: 'Commercial Land',
+    badgeClass: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30',
+    badgeBg: 'bg-emerald-500',
+    icon: Trees,
+    defaultType: 'Commercial / Industrial Plot',
+    types: [
+      'Commercial / Industrial Plot',
+      'Commercial Corner Plot',
+      'Industrial Plot',
+      'Institutional Land',
+      'IT Park Land Parcel',
+      'Freehold Commercial Land'
+    ],
+    defaultPower: 'Heavy Load Grid Feeder Connected',
+    defaultRoad: '60 Feet Wide Sector Road',
+    suggestedFeatures: [
+      'Corner Plot with 2-Side Openings',
+      'Approved Commercial/IT FAR',
+      'Clear Title Deed & Authority Allotment',
+      'Direct Expressway Connectivity',
+      'Boundary Wall Constructed',
+      'Wide Frontage Road',
+      'Underground Drainage'
+    ]
+  },
+  'shops-retail': {
+    label: 'Shops & Retail',
+    badgeClass: 'bg-pink-500/15 text-pink-700 dark:text-pink-300 border-pink-500/30',
+    badgeBg: 'bg-pink-500',
+    icon: Store,
+    defaultType: 'Ground Floor Commercial Shop',
+    types: [
+      'Ground Floor Commercial Shop',
+      'High-Street Retail Showroom',
+      'Mall Anchor Store',
+      'Food Court / Restaurant Space',
+      'Commercial Corner Booth',
+      'Double-Height Retail Showroom'
+    ],
+    defaultPower: '100% DG Power Backup',
+    defaultRoad: 'High Footfall Main Road Promenade',
+    suggestedFeatures: [
+      'Full Glass Frontage Display',
+      'High Footfall Promenade',
+      'Main Road Facing Visibility',
+      'Central HVAC Provision',
+      'Escalator Connectivity',
+      'Prominent Signage Rights',
+      'Direct Metro Access'
+    ]
+  },
+  'office-space': {
+    label: 'Office Space',
+    badgeClass: 'bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30',
+    badgeBg: 'bg-blue-500',
+    icon: Building2,
+    defaultType: 'Commercial Office',
+    types: [
+      'Commercial Office',
+      'Fully Furnished Office',
+      'Plug-and-Play Office',
+      'Corporate Suite',
+      'Independent Commercial Floor',
+      'Bare Shell Office',
+      'Co-working Office Space'
+    ],
+    defaultPower: '100% DG Backup',
+    defaultRoad: '45 Feet Wide Sector Road',
+    suggestedFeatures: [
+      '24/7 Security',
+      '100% Power Backup',
+      'Central Air Conditioning',
+      'Conference Rooms',
+      'Cafeteria',
+      'Visitor Parking',
+      'High-speed Elevators'
+    ]
+  }
+};
 
 export const AdminPage: React.FC = () => {
   // Simple administrative authorization
@@ -57,6 +239,9 @@ export const AdminPage: React.FC = () => {
   const [leadStatusFilter, setLeadStatusFilter] = useState<string>('All');
   const [leadSearch, setLeadSearch] = useState('');
   const [propertySearch, setPropertySearch] = useState('');
+  const [propertyCategoryFilter, setPropertyCategoryFilter] = useState<string>('all');
+  const [newFeatureTag, setNewFeatureTag] = useState('');
+  const [customPropertyTypeInput, setCustomPropertyTypeInput] = useState('');
 
   // Property Modal Form (Add & Edit)
   const [showPropertyModal, setShowPropertyModal] = useState(false);
@@ -75,12 +260,21 @@ export const AdminPage: React.FC = () => {
     address: 'Sector 62, Noida',
     city: 'Noida',
     built_up_area: 1150,
+    carpet_area: undefined,
+    land_area: undefined,
     area_unit: 'sq.ft',
+    floor: 'Ground Floor',
+    total_floors: 1,
     furnishing: 'Furnished',
     parking: '1 Covered Bay',
+    power_load: '100% DG Backup',
+    road_width: '45 Feet Wide Sector Road',
     possession: 'Ready to Move',
     description: '',
+    features: ['24/7 Security', '100% Power Backup', 'Central Air Conditioning'],
+    amenities: ['High-speed Elevators', 'Cafeteria Provision'],
     primary_image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1000&q=80',
+    gallery: [],
     published: true,
   });
 
@@ -526,31 +720,54 @@ export const AdminPage: React.FC = () => {
   // --- PROPERTY ACTIONS ---
   const handleOpenAddProperty = () => {
     setIsEditingProperty(false);
+    const initialCat = (propertyCategoryFilter !== 'all' ? propertyCategoryFilter : 'office-space') as PropertyCategory;
+    const config = CATEGORY_CONFIG[initialCat] || CATEGORY_CONFIG['office-space'];
+    
     setCurrentProperty({
       title: '',
-      category: 'office-space',
-      property_type: 'Commercial Office',
-      listing_type: 'Rent',
+      category: initialCat,
+      property_type: config.defaultType,
+      listing_type: initialCat === 'land' ? 'Sale' : 'Rent',
       status: 'Available',
-      price: 65000,
-      price_display: '₹65,000/month',
-      rate_per_sqft: '₹55/sq.ft',
+      price: initialCat === 'land' ? 50000000 : (initialCat === 'warehouses' || initialCat === 'factory-industrial' ? 150000 : 65000),
+      price_display: initialCat === 'land' ? '₹5.00 Cr' : (initialCat === 'warehouses' ? '₹1,50,000/month' : '₹65,000/month'),
+      rate_per_sqft: initialCat === 'land' ? '₹85,000/sq.m' : (initialCat === 'warehouses' || initialCat === 'factory-industrial' ? '₹35/sq.ft' : '₹55/sq.ft'),
       location_id: locations[0]?.id || 'loc-sec-62',
       location_name: locations[0]?.name || 'Sector 62, Noida',
-      building_id: buildings[0]?.id || undefined,
-      building_name: buildings[0]?.name || undefined,
-      address: 'Sector 62, Noida',
-      city: 'Noida',
-      built_up_area: 1150,
-      area_unit: 'sq.ft',
-      furnishing: 'Furnished',
-      parking: '1 Covered Slot',
-      possession: 'Ready to Move',
+      building_id: undefined,
+      building_name: undefined,
+      address: locations[0]?.name || 'Sector 62, Noida',
+      city: locations[0]?.city || 'Noida',
+      built_up_area: initialCat === 'land' ? 5000 : (initialCat === 'warehouses' || initialCat === 'factory-industrial' ? 5000 : 1150),
+      carpet_area: undefined,
+      land_area: initialCat === 'land' ? 500 : undefined,
+      area_unit: initialCat === 'land' ? 'sq.meter' : 'sq.ft',
+      floor: initialCat === 'shops-retail' || initialCat === 'warehouses' || initialCat === 'land' ? 'Ground Floor' : '4th Floor',
+      total_floors: initialCat === 'warehouses' || initialCat === 'land' ? 1 : 12,
+      furnishing: initialCat === 'warehouses' || initialCat === 'factory-industrial' || initialCat === 'land' ? 'Bare Shell' : 'Furnished',
+      parking: initialCat === 'warehouses' || initialCat === 'factory-industrial' 
+        ? 'Internal trailer maneuvering & loading bays' 
+        : (initialCat === 'land' ? 'Freehold Open Plot' : '1 Covered Slot'),
+      power_load: config.defaultPower,
+      road_width: config.defaultRoad,
+      possession: initialCat === 'land' ? 'Immediate Clear Title' : 'Ready to Move',
       description: '',
-      primary_image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1000&q=80',
+      features: [...config.suggestedFeatures.slice(0, 4)],
+      amenities: ['24/7 Security', 'Power Backup'],
+      primary_image: initialCat === 'warehouses' 
+        ? 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1000&q=80'
+        : initialCat === 'factory-industrial'
+        ? 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=1000&q=80'
+        : initialCat === 'land'
+        ? 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1000&q=80'
+        : initialCat === 'shops-retail'
+        ? 'https://images.unsplash.com/photo-1519999482648-25049ddd37b1?auto=format&fit=crop&w=1000&q=80'
+        : 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1000&q=80',
       gallery: [],
       published: true,
     });
+    setCustomPropertyTypeInput('');
+    setNewFeatureTag('');
     setNewPropertyGalleryUrl('');
     setShowPropertyModal(true);
   };
@@ -559,10 +776,45 @@ export const AdminPage: React.FC = () => {
     setIsEditingProperty(true);
     setCurrentProperty({
       ...prop,
+      category: prop.category || 'office-space',
+      property_type: prop.property_type || 'Commercial Office',
+      area_unit: prop.area_unit || 'sq.ft',
+      land_area: prop.land_area,
+      floor: prop.floor || 'Ground Floor',
+      total_floors: prop.total_floors || 1,
+      power_load: prop.power_load || '',
+      road_width: prop.road_width || '',
+      possession: prop.possession || 'Ready to Move',
+      parking: prop.parking || '',
+      features: prop.features && Array.isArray(prop.features) ? [...prop.features] : [],
+      amenities: prop.amenities && Array.isArray(prop.amenities) ? [...prop.amenities] : [],
       gallery: prop.gallery && Array.isArray(prop.gallery) ? [...prop.gallery] : []
     });
+    setCustomPropertyTypeInput('');
+    setNewFeatureTag('');
     setNewPropertyGalleryUrl('');
     setShowPropertyModal(true);
+  };
+
+  const handleAddFeatureTag = (tagToAdd?: string) => {
+    const tag = (tagToAdd || newFeatureTag).trim();
+    if (!tag) return;
+    const existing = currentProperty.features || [];
+    if (!existing.includes(tag)) {
+      setCurrentProperty({
+        ...currentProperty,
+        features: [...existing, tag]
+      });
+    }
+    setNewFeatureTag('');
+  };
+
+  const handleRemoveFeatureTag = (index: number) => {
+    const existing = currentProperty.features || [];
+    setCurrentProperty({
+      ...currentProperty,
+      features: existing.filter((_, i) => i !== index)
+    });
   };
 
   const handleDeleteProperty = async (propertyId: string) => {
@@ -595,7 +847,7 @@ export const AdminPage: React.FC = () => {
         title: currentProperty.title.trim(),
         slug: currentProperty.slug || currentProperty.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
         reference_number: currentProperty.reference_number || `SE-${Math.floor(1000 + Math.random() * 9000)}`,
-        category: (currentProperty.category || 'office-space') as any,
+        category: (currentProperty.category || 'office-space') as PropertyCategory,
         property_type: currentProperty.property_type || 'Commercial Office',
         listing_type: (currentProperty.listing_type || 'Rent') as any,
         status: (currentProperty.status || 'Available') as any,
@@ -606,19 +858,22 @@ export const AdminPage: React.FC = () => {
         location_name: loc ? loc.name : (currentProperty.location_name || 'Sector 62, Noida'),
         building_id: (currentProperty.building_id && currentProperty.building_id.trim() !== '') ? currentProperty.building_id : null as any,
         building_name: (currentProperty.building_id && bld) ? bld.name : (currentProperty.building_name || null as any),
-        address: currentProperty.address || 'Sector 62, Noida',
+        address: currentProperty.address || (loc ? loc.name : 'Sector 62, Noida'),
         city: currentProperty.city || 'Noida',
         built_up_area: Number(currentProperty.built_up_area) || 1200,
         carpet_area: (currentProperty.carpet_area && !isNaN(Number(currentProperty.carpet_area))) ? Number(currentProperty.carpet_area) : null as any,
+        land_area: (currentProperty.land_area && !isNaN(Number(currentProperty.land_area))) ? Number(currentProperty.land_area) : null as any,
         area_unit: currentProperty.area_unit || 'sq.ft',
-        floor: currentProperty.floor || 'Ground',
+        floor: currentProperty.floor || 'Ground Floor',
+        total_floors: (currentProperty.total_floors && !isNaN(Number(currentProperty.total_floors))) ? Number(currentProperty.total_floors) : null as any,
         furnishing: (currentProperty.furnishing || 'Furnished') as any,
         parking: currentProperty.parking || '1 Covered Slot',
-        power_load: currentProperty.power_load || '100% DG Backup',
-        possession: currentProperty.possession || 'Immediate',
+        power_load: currentProperty.power_load || '',
+        road_width: currentProperty.road_width || '',
+        possession: currentProperty.possession || 'Ready to Move',
         description: currentProperty.description || '',
-        features: currentProperty.features || ['24/7 Security', 'Power Backup', 'Air Conditioning'],
-        amenities: currentProperty.amenities || ['High-speed Elevators', 'Cafeteria Provision'],
+        features: Array.isArray(currentProperty.features) && currentProperty.features.length > 0 ? currentProperty.features : ['24/7 Security', 'Power Backup'],
+        amenities: Array.isArray(currentProperty.amenities) ? currentProperty.amenities : [],
         primary_image: currentProperty.primary_image || 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1000&q=80',
         gallery: Array.isArray(currentProperty.gallery) ? currentProperty.gallery : [],
         published: true,
@@ -890,12 +1145,15 @@ export const AdminPage: React.FC = () => {
 
   // Filtered Properties
   const filteredProperties = properties.filter(p => {
+    if (propertyCategoryFilter !== 'all' && p.category !== propertyCategoryFilter) return false;
     if (!propertySearch) return true;
     const q = propertySearch.toLowerCase();
     return (
       p.title.toLowerCase().includes(q) ||
       p.reference_number.toLowerCase().includes(q) ||
       p.location_name.toLowerCase().includes(q) ||
+      (p.property_type && p.property_type.toLowerCase().includes(q)) ||
+      (p.category && p.category.toLowerCase().includes(q)) ||
       (p.building_name && p.building_name.toLowerCase().includes(q))
     );
   });
@@ -1267,7 +1525,7 @@ export const AdminPage: React.FC = () => {
               <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
               <input
                 type="text"
-                placeholder="Search property by title, ID, building, or location..."
+                placeholder="Search property by title, ID, building, type, or sector..."
                 value={propertySearch}
                 onChange={(e) => setPropertySearch(e.target.value)}
                 className="glass-input w-full pl-9 pr-3 py-2 rounded-xl text-xs"
@@ -1279,8 +1537,60 @@ export const AdminPage: React.FC = () => {
               className="btn-glass-primary w-full sm:w-auto px-4 py-2.5 sm:py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 shrink-0 shadow-sm"
             >
               <Plus className="w-4 h-4" />
-              <span>Add Commercial Property</span>
+              <span>
+                {propertyCategoryFilter !== 'all' 
+                  ? `Add ${CATEGORY_CONFIG[propertyCategoryFilter as PropertyCategory]?.label || 'Commercial'} Property`
+                  : 'Add Commercial Property'}
+              </span>
             </button>
+          </div>
+
+          {/* CATEGORY QUICK-FILTER TABS (ALL 6 ASSET CLASSES) */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar text-xs">
+            <button
+              onClick={() => setPropertyCategoryFilter('all')}
+              className={`px-3 py-1.5 rounded-xl font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 ${
+                propertyCategoryFilter === 'all'
+                  ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-950 shadow-sm'
+                  : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span>All Properties</span>
+              <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                propertyCategoryFilter === 'all' 
+                  ? 'bg-white/20 text-white dark:bg-black/20 dark:text-slate-900' 
+                  : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200'
+              }`}>
+                {properties.length}
+              </span>
+            </button>
+
+            {(['it-business-parks', 'warehouses', 'factory-industrial', 'land', 'shops-retail', 'office-space'] as PropertyCategory[]).map((cat) => {
+              const cfg = CATEGORY_CONFIG[cat];
+              const IconComp = cfg?.icon || Building2;
+              const count = properties.filter(p => p.category === cat).length;
+              const isActive = propertyCategoryFilter === cat;
+              return (
+                <button
+                  key={cat}
+                  onClick={() => setPropertyCategoryFilter(cat)}
+                  className={`px-3 py-1.5 rounded-xl font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 ${
+                    isActive
+                      ? `${cfg.badgeBg} text-white shadow-md shadow-brand-500/20`
+                      : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
+                  }`}
+                >
+                  <IconComp className="w-3.5 h-3.5" />
+                  <span>{cfg.label}</span>
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                    isActive ? 'bg-black/25 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200'
+                  }`}>
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
           {/* Desktop & Tablet Table (>= md) */}
@@ -1289,118 +1599,157 @@ export const AdminPage: React.FC = () => {
               <table className="w-full text-left text-xs">
                 <thead className="bg-slate-100/80 dark:bg-slate-800/80 text-slate-500 font-semibold border-b border-slate-200 dark:border-slate-800">
                   <tr>
-                    <th className="p-3.5">Property & Image</th>
+                    <th className="p-3.5">Property & Category</th>
                     <th className="p-3.5">Building & Location</th>
-                    <th className="p-3.5">Area & Type</th>
+                    <th className="p-3.5">Area & Technical Specs</th>
                     <th className="p-3.5">Tariff / Price</th>
                     <th className="p-3.5">Status</th>
                     <th className="p-3.5">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
-                  {filteredProperties.map((prop) => (
-                    <tr key={prop.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
-                      {/* Image & Title */}
-                      <td className="p-3.5 flex items-center gap-3">
-                        <div className="relative group/img cursor-pointer shrink-0" onClick={() => handleOpenEditProperty(prop)}>
-                          <img 
-                            src={prop.primary_image} 
-                            alt="" 
-                            className="w-14 h-11 rounded-xl object-cover border border-slate-200 dark:border-slate-700 group-hover/img:opacity-80 transition-opacity" 
-                          />
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-xl opacity-0 group-hover/img:opacity-100 transition-opacity">
-                            <Edit3 className="w-3 h-3 text-white" />
+                  {filteredProperties.map((prop) => {
+                    const cfg = CATEGORY_CONFIG[prop.category] || CATEGORY_CONFIG['office-space'];
+                    const CatIcon = cfg?.icon || Building2;
+                    return (
+                      <tr key={prop.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                        {/* Image & Title & Category Badge */}
+                        <td className="p-3.5 flex items-start gap-3">
+                          <div className="relative group/img cursor-pointer shrink-0 mt-0.5" onClick={() => handleOpenEditProperty(prop)}>
+                            <img 
+                              src={prop.primary_image} 
+                              alt="" 
+                              className="w-16 h-12 rounded-xl object-cover border border-slate-200 dark:border-slate-700 group-hover/img:opacity-80 transition-opacity" 
+                            />
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-xl opacity-0 group-hover/img:opacity-100 transition-opacity">
+                              <Edit3 className="w-3.5 h-3.5 text-white" />
+                            </div>
                           </div>
-                        </div>
-                        <div>
-                          <span 
-                            onClick={() => handleOpenEditProperty(prop)}
-                            className="font-bold text-slate-900 dark:text-white text-xs block line-clamp-1 hover:text-brand-600 cursor-pointer"
-                          >
-                            {prop.title}
-                          </span>
-                          <span className="text-[10px] font-mono text-brand-500 font-semibold">
-                            {prop.reference_number}
-                          </span>
-                        </div>
-                      </td>
+                          <div className="min-w-0 space-y-1">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border ${cfg.badgeClass}`}>
+                                <CatIcon className="w-3 h-3" />
+                                <span>{cfg.label}</span>
+                              </span>
+                              <span className="text-[10px] font-mono text-brand-500 font-bold">
+                                {prop.reference_number}
+                              </span>
+                            </div>
 
-                      {/* Building & Location */}
-                      <td className="p-3.5">
-                        <div className="font-semibold text-slate-800 dark:text-slate-200">
-                          {prop.building_name || 'Independent'}
-                        </div>
-                        <div className="text-[11px] text-slate-400">{prop.location_name}</div>
-                      </td>
-
-                      {/* Area & Type */}
-                      <td className="p-3.5">
-                        <div className="font-semibold">{prop.built_up_area} {prop.area_unit}</div>
-                        <div className="text-[11px] text-slate-400">{prop.furnishing}</div>
-                      </td>
-
-                      {/* Tariff / Pricing */}
-                      <td className="p-3.5">
-                        <div className="font-bold text-slate-900 dark:text-white text-sm">
-                          {prop.price_display}
-                        </div>
-                        {prop.rate_per_sqft && (
-                          <div className="text-[11px] text-brand-600 dark:text-brand-400 font-medium">
-                            {prop.rate_per_sqft}
+                            <span 
+                              onClick={() => handleOpenEditProperty(prop)}
+                              className="font-bold text-slate-900 dark:text-white text-xs block line-clamp-1 hover:text-brand-600 cursor-pointer"
+                              title={prop.title}
+                            >
+                              {prop.title}
+                            </span>
+                            <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block truncate">
+                              {prop.property_type || 'Commercial Property'}
+                            </span>
                           </div>
-                        )}
-                      </td>
+                        </td>
 
-                      {/* Status */}
-                      <td className="p-3.5">
-                        <select
-                          value={prop.status}
-                          onChange={(e) => handlePropertyStatus(prop, e.target.value as PropertyStatus)}
-                          className="glass-input px-2.5 py-1.5 rounded-xl text-xs font-semibold cursor-pointer border border-slate-200 dark:border-slate-700 hover:border-brand-500 transition-colors"
-                        >
-                          <option value="Available">Available</option>
-                          <option value="Ready to Move">Ready to Move</option>
-                          <option value="Under Negotiation">Under Negotiation</option>
-                          <option value="Rented">Rented</option>
-                          <option value="Leased">Leased</option>
-                          <option value="Sold">Sold</option>
-                        </select>
-                      </td>
+                        {/* Building & Location */}
+                        <td className="p-3.5">
+                          <div className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1">
+                            <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            <span className="truncate">{prop.building_name || 'Independent / Standalone'}</span>
+                          </div>
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5">
+                            <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                            <span className="truncate">{prop.location_name}</span>
+                          </div>
+                        </td>
 
-                      {/* Action buttons: Edit, View, Delete */}
-                      <td className="p-3.5">
-                        <div className="flex items-center gap-1.5">
-                          {/* EDIT / UPDATE BUTTON */}
-                          <button
-                            onClick={() => handleOpenEditProperty(prop)}
-                            className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-brand-50 hover:bg-brand-600 dark:bg-brand-950/80 dark:hover:bg-brand-600 text-brand-700 dark:text-brand-300 hover:text-white border border-brand-200/90 dark:border-brand-800/80 flex items-center gap-1.5 transition-all shadow-sm hover:shadow-md hover:shadow-brand-500/20 active:scale-95 group cursor-pointer"
-                            title="Update Property (Images, Tariff, Specs, Status)"
+                        {/* Area & Technical Specs */}
+                        <td className="p-3.5 space-y-0.5">
+                          <div className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1">
+                            <span>{prop.built_up_area?.toLocaleString()} {prop.area_unit || 'sq.ft'}</span>
+                            <span className="text-[10px] font-normal text-slate-400">({prop.furnishing})</span>
+                          </div>
+                          {prop.land_area && (
+                            <div className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                              <Trees className="w-3 h-3" />
+                              <span>Plot: {prop.land_area.toLocaleString()} {prop.area_unit || 'sq.m'}</span>
+                            </div>
+                          )}
+                          {prop.power_load && (
+                            <div className="text-[10px] text-amber-600 dark:text-amber-400 flex items-center gap-1 truncate max-w-[200px]" title={prop.power_load}>
+                              <Zap className="w-3 h-3 shrink-0" />
+                              <span className="truncate">{prop.power_load}</span>
+                            </div>
+                          )}
+                          {prop.road_width && (
+                            <div className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1 truncate max-w-[200px]" title={prop.road_width}>
+                              <Truck className="w-3 h-3 shrink-0" />
+                              <span className="truncate">{prop.road_width}</span>
+                            </div>
+                          )}
+                        </td>
+
+                        {/* Tariff / Pricing */}
+                        <td className="p-3.5">
+                          <div className="font-bold text-slate-900 dark:text-white text-sm">
+                            {prop.price_display}
+                          </div>
+                          {prop.rate_per_sqft && (
+                            <div className="text-[11px] text-brand-600 dark:text-brand-400 font-medium">
+                              {prop.rate_per_sqft}
+                            </div>
+                          )}
+                          <span className="text-[10px] uppercase font-bold text-slate-400">
+                            For {prop.listing_type}
+                          </span>
+                        </td>
+
+                        {/* Status */}
+                        <td className="p-3.5">
+                          <select
+                            value={prop.status}
+                            onChange={(e) => handlePropertyStatus(prop, e.target.value as PropertyStatus)}
+                            className="glass-input px-2.5 py-1.5 rounded-xl text-xs font-semibold cursor-pointer border border-slate-200 dark:border-slate-700 hover:border-brand-500 transition-colors"
                           >
-                            <Edit3 className="w-3.5 h-3.5 transition-transform group-hover:scale-110 group-hover:-rotate-12" />
-                            <span>Update</span>
-                          </button>
+                            <option value="Available">Available</option>
+                            <option value="Ready to Move">Ready to Move</option>
+                            <option value="Under Negotiation">Under Negotiation</option>
+                            <option value="Rented">Rented</option>
+                            <option value="Leased">Leased</option>
+                            <option value="Sold">Sold</option>
+                          </select>
+                        </td>
 
-                          {/* VIEW BUTTON */}
-                          <Link
-                            to={`/properties/${prop.slug}`}
-                            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500"
-                            title="View Public Page"
-                          >
-                            <ExternalLink className="w-3.5 h-3.5" />
-                          </Link>
+                        {/* Action buttons: Edit, View, Delete */}
+                        <td className="p-3.5">
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={() => handleOpenEditProperty(prop)}
+                              className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-brand-50 hover:bg-brand-600 dark:bg-brand-950/80 dark:hover:bg-brand-600 text-brand-700 dark:text-brand-300 hover:text-white border border-brand-200/90 dark:border-brand-800/80 flex items-center gap-1.5 transition-all shadow-sm hover:shadow-md hover:shadow-brand-500/20 active:scale-95 group cursor-pointer"
+                              title="Edit All Details & Technical Specs"
+                            >
+                              <Edit3 className="w-3.5 h-3.5 transition-transform group-hover:scale-110 group-hover:-rotate-12" />
+                              <span>Update</span>
+                            </button>
 
-                          {/* DELETE BUTTON */}
-                          <button
-                            onClick={() => handleDeleteProperty(prop.id)}
-                            className="p-1.5 rounded-lg hover:bg-rose-500/10 text-rose-500 transition-colors"
-                            title="Delete Listing"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                            <Link
+                              to={`/properties/${prop.slug}`}
+                              className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500"
+                              title="View Public Page"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </Link>
+
+                            <button
+                              onClick={() => handleDeleteProperty(prop.id)}
+                              className="p-1.5 rounded-lg hover:bg-rose-500/10 text-rose-500 transition-colors"
+                              title="Delete Listing"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -1408,96 +1757,118 @@ export const AdminPage: React.FC = () => {
 
           {/* Mobile Property Cards (< md) */}
           <div className="block md:hidden space-y-3">
-            {filteredProperties.map((prop) => (
-              <div 
-                key={prop.id}
-                className="glass-card rounded-2xl p-3.5 border border-slate-200/90 dark:border-slate-800 bg-white/80 dark:bg-[#0B132B]/85 shadow-sm space-y-3"
-              >
-                <div className="flex items-start gap-3">
-                  <div 
-                    className="relative rounded-xl overflow-hidden w-20 h-16 shrink-0 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 cursor-pointer"
-                    onClick={() => handleOpenEditProperty(prop)}
-                  >
-                    <img src={prop.primary_image} alt="" className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                      <Edit3 className="w-3.5 h-3.5 text-white" />
-                    </div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-1 mb-1">
-                      <span className="text-[10px] font-mono text-brand-500 font-bold px-1.5 py-0.5 rounded bg-brand-500/10 border border-brand-500/20">
-                        {prop.reference_number}
-                      </span>
-                      <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
-                        {prop.built_up_area} {prop.area_unit}
-                      </span>
-                    </div>
-                    <h3 
+            {filteredProperties.map((prop) => {
+              const cfg = CATEGORY_CONFIG[prop.category] || CATEGORY_CONFIG['office-space'];
+              const CatIcon = cfg?.icon || Building2;
+              return (
+                <div 
+                  key={prop.id}
+                  className="glass-card rounded-2xl p-3.5 border border-slate-200/90 dark:border-slate-800 bg-white/80 dark:bg-[#0B132B]/85 shadow-sm space-y-3"
+                >
+                  <div className="flex items-start gap-3">
+                    <div 
+                      className="relative rounded-xl overflow-hidden w-20 h-16 shrink-0 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 cursor-pointer"
                       onClick={() => handleOpenEditProperty(prop)}
-                      className="font-bold text-xs text-slate-900 dark:text-white line-clamp-2 cursor-pointer hover:text-brand-600"
                     >
-                      {prop.title}
-                    </h3>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5 truncate">
-                      <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
-                      <span className="truncate">{prop.building_name ? `${prop.building_name}, ` : ''}{prop.location_name}</span>
-                    </p>
+                      <img src={prop.primary_image} alt="" className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                        <Edit3 className="w-3.5 h-3.5 text-white" />
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-1 mb-1">
+                        <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${cfg.badgeClass}`}>
+                          <CatIcon className="w-2.5 h-2.5" />
+                          <span>{cfg.label}</span>
+                        </span>
+                        <span className="text-[10px] font-mono text-brand-500 font-bold px-1.5 py-0.5 rounded bg-brand-500/10 border border-brand-500/20">
+                          {prop.reference_number}
+                        </span>
+                      </div>
+                      <h3 
+                        onClick={() => handleOpenEditProperty(prop)}
+                        className="font-bold text-xs text-slate-900 dark:text-white line-clamp-2 cursor-pointer hover:text-brand-600"
+                      >
+                        {prop.title}
+                      </h3>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5 truncate">
+                        <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                        <span className="truncate">{prop.building_name ? `${prop.building_name}, ` : ''}{prop.location_name}</span>
+                      </p>
+                    </div>
                   </div>
-                </div>
 
-                <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800/80">
-                  <div>
-                    <span className="text-xs font-extrabold text-slate-900 dark:text-white block">
-                      {prop.price_display}
+                  {/* Mobile specs chips */}
+                  <div className="flex items-center gap-2 flex-wrap text-[11px] text-slate-600 dark:text-slate-300 pt-1">
+                    <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 font-semibold">
+                      {prop.built_up_area?.toLocaleString()} {prop.area_unit || 'sq.ft'}
                     </span>
-                    {prop.rate_per_sqft && (
-                      <span className="text-[10px] text-brand-600 dark:text-brand-400 font-medium">
-                        {prop.rate_per_sqft}
+                    {prop.land_area && (
+                      <span className="px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 font-semibold">
+                        Plot: {prop.land_area.toLocaleString()} {prop.area_unit || 'sq.m'}
+                      </span>
+                    )}
+                    {prop.power_load && (
+                      <span className="px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800 text-[10px] truncate max-w-[140px]">
+                        ⚡ {prop.power_load}
                       </span>
                     )}
                   </div>
-                  <select
-                    value={prop.status}
-                    onChange={(e) => handlePropertyStatus(prop, e.target.value as PropertyStatus)}
-                    className="glass-input px-2.5 py-1.5 rounded-xl text-xs font-semibold cursor-pointer border border-slate-200 dark:border-slate-700"
-                  >
-                    <option value="Available">Available</option>
-                    <option value="Ready to Move">Ready to Move</option>
-                    <option value="Under Negotiation">Under Negotiation</option>
-                    <option value="Rented">Rented</option>
-                    <option value="Leased">Leased</option>
-                    <option value="Sold">Sold</option>
-                  </select>
-                </div>
 
-                <div className="grid grid-cols-3 gap-2 pt-1">
-                  <button
-                    onClick={() => handleOpenEditProperty(prop)}
-                    className="py-2 px-2 rounded-xl text-xs font-semibold bg-brand-600 text-white flex items-center justify-center gap-1 shadow-sm active:scale-95 transition-all"
-                  >
-                    <Edit3 className="w-3.5 h-3.5" />
-                    <span>Update</span>
-                  </button>
-                  <Link
-                    to={`/properties/${prop.slug}`}
-                    className="py-2 px-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center gap-1 transition-colors"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5" />
-                    <span>Live View</span>
-                  </Link>
-                  <button
-                    onClick={() => handleDeleteProperty(prop.id)}
-                    className="py-2 px-2 rounded-xl text-xs font-semibold bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 border border-rose-200/50 dark:border-rose-900/30 flex items-center justify-center gap-1 active:scale-95 transition-all"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    <span>Delete</span>
-                  </button>
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800/80">
+                    <div>
+                      <span className="text-xs font-extrabold text-slate-900 dark:text-white block">
+                        {prop.price_display}
+                      </span>
+                      {prop.rate_per_sqft && (
+                        <span className="text-[10px] text-brand-600 dark:text-brand-400 font-medium">
+                          {prop.rate_per_sqft}
+                        </span>
+                      )}
+                    </div>
+                    <select
+                      value={prop.status}
+                      onChange={(e) => handlePropertyStatus(prop, e.target.value as PropertyStatus)}
+                      className="glass-input px-2.5 py-1.5 rounded-xl text-xs font-semibold cursor-pointer border border-slate-200 dark:border-slate-700"
+                    >
+                      <option value="Available">Available</option>
+                      <option value="Ready to Move">Ready to Move</option>
+                      <option value="Under Negotiation">Under Negotiation</option>
+                      <option value="Rented">Rented</option>
+                      <option value="Leased">Leased</option>
+                      <option value="Sold">Sold</option>
+                    </select>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 pt-1">
+                    <button
+                      onClick={() => handleOpenEditProperty(prop)}
+                      className="py-2 px-2 rounded-xl text-xs font-semibold bg-brand-600 text-white flex items-center justify-center gap-1 shadow-sm active:scale-95 transition-all"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                      <span>Update</span>
+                    </button>
+                    <Link
+                      to={`/properties/${prop.slug}`}
+                      className="py-2 px-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center gap-1 transition-colors"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      <span>Live View</span>
+                    </Link>
+                    <button
+                      onClick={() => handleDeleteProperty(prop.id)}
+                      className="py-2 px-2 rounded-xl text-xs font-semibold bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 border border-rose-200/50 dark:border-rose-900/30 flex items-center justify-center gap-1 active:scale-95 transition-all"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Delete</span>
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
             {filteredProperties.length === 0 && (
               <div className="text-center py-10 glass-card rounded-2xl p-4 text-xs text-slate-400">
-                No properties matched your search.
+                No properties matched your criteria.
               </div>
             )}
           </div>
@@ -2382,43 +2753,117 @@ export const AdminPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Category, Listing Type, Status */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold mb-1">Category</label>
-                  <select
-                    value={currentProperty.category}
-                    onChange={(e) => setCurrentProperty({ ...currentProperty, category: e.target.value as any })}
-                    className="glass-input w-full px-3 py-2 rounded-xl text-sm"
-                  >
-                    <option value="office-space">Office Space</option>
-                    <option value="it-business-parks">IT Park</option>
-                    <option value="warehouses">Warehouse</option>
-                    <option value="factory-industrial">Factory & Industrial</option>
-                    <option value="land">Commercial Land</option>
-                    <option value="shops-retail">Retail Shop</option>
-                  </select>
+              {/* CATEGORY & PROPERTY TYPE (ALL 6 ASSET CLASSES) */}
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                    <Tag className="w-3.5 h-3.5 text-brand-500" />
+                    <span>Commercial Category & Asset Class *</span>
+                  </span>
+                  {currentProperty.category && (
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${CATEGORY_CONFIG[currentProperty.category as PropertyCategory]?.badgeClass}`}>
+                      {CATEGORY_CONFIG[currentProperty.category as PropertyCategory]?.label}
+                    </span>
+                  )}
                 </div>
 
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold mb-1">Select Asset Class *</label>
+                    <select
+                      value={currentProperty.category}
+                      onChange={(e) => {
+                        const newCat = e.target.value as PropertyCategory;
+                        const config = CATEGORY_CONFIG[newCat] || CATEGORY_CONFIG['office-space'];
+                        setCurrentProperty({ 
+                          ...currentProperty, 
+                          category: newCat,
+                          property_type: config.defaultType,
+                          power_load: currentProperty.power_load || config.defaultPower,
+                          road_width: currentProperty.road_width || config.defaultRoad,
+                          listing_type: newCat === 'land' ? 'Sale' : (currentProperty.listing_type || 'Rent'),
+                          area_unit: newCat === 'land' ? 'sq.meter' : (currentProperty.area_unit || 'sq.ft'),
+                          features: currentProperty.features && currentProperty.features.length > 0 
+                            ? currentProperty.features 
+                            : [...config.suggestedFeatures.slice(0, 4)],
+                        });
+                      }}
+                      className="glass-input w-full px-3 py-2 rounded-xl text-sm font-semibold"
+                    >
+                      <option value="it-business-parks">IT & Business Parks</option>
+                      <option value="warehouses">Warehouses & Logistics</option>
+                      <option value="factory-industrial">Factories & Industrial</option>
+                      <option value="land">Commercial Land & Industrial Plots</option>
+                      <option value="shops-retail">Shops & Retail Showrooms</option>
+                      <option value="office-space">Commercial Office Space</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold mb-1">
+                      Property Type ({CATEGORY_CONFIG[(currentProperty.category || 'office-space') as PropertyCategory]?.label}) *
+                    </label>
+                    <select
+                      value={currentProperty.property_type || ''}
+                      onChange={(e) => {
+                        if (e.target.value === '__custom__') {
+                          setCurrentProperty({ ...currentProperty, property_type: '' });
+                          setCustomPropertyTypeInput('custom');
+                        } else {
+                          setCurrentProperty({ ...currentProperty, property_type: e.target.value });
+                        }
+                      }}
+                      className="glass-input w-full px-3 py-2 rounded-xl text-sm font-semibold"
+                    >
+                      {(CATEGORY_CONFIG[(currentProperty.category || 'office-space') as PropertyCategory]?.types || []).map((t) => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                      <option value="__custom__">✍️ Custom Property Type...</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Custom Property Type Input if selected */}
+                {(!CATEGORY_CONFIG[(currentProperty.category || 'office-space') as PropertyCategory]?.types.includes(currentProperty.property_type || '') || customPropertyTypeInput !== '') && (
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-500 mb-1">
+                      Custom Property Type Description
+                    </label>
+                    <input
+                      type="text"
+                      value={currentProperty.property_type || ''}
+                      onChange={(e) => {
+                        setCurrentProperty({ ...currentProperty, property_type: e.target.value });
+                        setCustomPropertyTypeInput(e.target.value);
+                      }}
+                      placeholder="e.g. Temperature Controlled Cold Storage or High-Street Anchor Store"
+                      className="glass-input w-full px-3 py-2 rounded-xl text-xs"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* LISTING TYPE & STATUS */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold mb-1">Listing Type</label>
+                  <label className="block text-xs font-semibold mb-1">Listing Commercial Model *</label>
                   <select
                     value={currentProperty.listing_type}
                     onChange={(e) => setCurrentProperty({ ...currentProperty, listing_type: e.target.value as any })}
                     className="glass-input w-full px-3 py-2 rounded-xl text-sm"
                   >
-                    <option value="Rent">Rent</option>
-                    <option value="Lease">Lease</option>
-                    <option value="Sale">Sale</option>
+                    <option value="Rent">Rent (Monthly / Lease)</option>
+                    <option value="Lease">Long-term Leasehold</option>
+                    <option value="Sale">Direct Sale / Freehold Outright</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold mb-1">Status</label>
+                  <label className="block text-xs font-semibold mb-1">Live Inventory Status *</label>
                   <select
                     value={currentProperty.status}
                     onChange={(e) => setCurrentProperty({ ...currentProperty, status: e.target.value as any })}
-                    className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                    className="glass-input w-full px-3 py-2 rounded-xl text-sm font-semibold"
                   >
                     <option value="Available">Available</option>
                     <option value="Ready to Move">Ready to Move</option>
@@ -2430,98 +2875,332 @@ export const AdminPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Location & Building Association */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold mb-1">Location / Sector</label>
-                  <select
-                    value={currentProperty.location_id}
-                    onChange={(e) => {
-                      const loc = locations.find(l => l.id === e.target.value);
-                      setCurrentProperty({ 
-                        ...currentProperty, 
-                        location_id: e.target.value,
-                        location_name: loc ? loc.name : currentProperty.location_name
-                      });
-                    }}
-                    className="glass-input w-full px-3 py-2 rounded-xl text-sm"
-                  >
-                    {locations.map(l => (
-                      <option key={l.id} value={l.id}>{l.name}</option>
-                    ))}
-                  </select>
+              {/* LOCATION, BUILDING & ADDRESS */}
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-3">
+                <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-brand-500" />
+                  <span>Location, Sector & Building Association</span>
+                </span>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold mb-1">Sector / Locality *</label>
+                    <select
+                      value={currentProperty.location_id}
+                      onChange={(e) => {
+                        const loc = locations.find(l => l.id === e.target.value);
+                        setCurrentProperty({ 
+                          ...currentProperty, 
+                          location_id: e.target.value,
+                          location_name: loc ? loc.name : currentProperty.location_name
+                        });
+                      }}
+                      className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                    >
+                      {locations.map(l => (
+                        <option key={l.id} value={l.id}>{l.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold mb-1">Building Association</label>
+                    <select
+                      value={currentProperty.building_id || ''}
+                      onChange={(e) => {
+                        const bld = buildings.find(b => b.id === e.target.value);
+                        setCurrentProperty({ 
+                          ...currentProperty, 
+                          building_id: e.target.value || undefined,
+                          building_name: bld ? bld.name : undefined
+                        });
+                      }}
+                      className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                    >
+                      <option value="">Independent / Standalone Plot / Premises</option>
+                      {buildings.map(b => (
+                        <option key={b.id} value={b.id}>{b.name} ({b.location_name})</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-semibold mb-1">Building Association</label>
-                  <select
-                    value={currentProperty.building_id || ''}
-                    onChange={(e) => {
-                      const bld = buildings.find(b => b.id === e.target.value);
-                      setCurrentProperty({ 
-                        ...currentProperty, 
-                        building_id: e.target.value || undefined,
-                        building_name: bld ? bld.name : undefined
-                      });
-                    }}
-                    className="glass-input w-full px-3 py-2 rounded-xl text-sm"
-                  >
-                    <option value="">Independent / Standalone</option>
-                    {buildings.map(b => (
-                      <option key={b.id} value={b.id}>{b.name} ({b.location_name})</option>
-                    ))}
-                  </select>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-semibold mb-1">Full Specific Address / Plot No.</label>
+                    <input
+                      type="text"
+                      value={currentProperty.address || ''}
+                      onChange={(e) => setCurrentProperty({ ...currentProperty, address: e.target.value })}
+                      placeholder="e.g. Plot 18, Block B, Sector 83, Noida"
+                      className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold mb-1">City</label>
+                    <input
+                      type="text"
+                      value={currentProperty.city || 'Noida'}
+                      onChange={(e) => setCurrentProperty({ ...currentProperty, city: e.target.value })}
+                      placeholder="Noida"
+                      className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                    />
+                  </div>
                 </div>
               </div>
 
-              {/* Area & Furnishing */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold mb-1">Built-Up Area (sq.ft) *</label>
-                  <input
-                    type="number"
-                    required
-                    value={currentProperty.built_up_area}
-                    onChange={(e) => setCurrentProperty({ ...currentProperty, built_up_area: Number(e.target.value) })}
-                    className="glass-input w-full px-3 py-2 rounded-xl text-sm"
-                  />
+              {/* AREA MEASUREMENTS & LAND SPECIFICATIONS */}
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                    <Layers className="w-3.5 h-3.5 text-brand-500" />
+                    <span>Area & Dimensions</span>
+                  </span>
+                  {(currentProperty.category === 'land' || currentProperty.category === 'warehouses' || currentProperty.category === 'factory-industrial') && (
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                      Plot Area Supported
+                    </span>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold mb-1">Built-Up Area *</label>
+                    <input
+                      type="number"
+                      required
+                      value={currentProperty.built_up_area || ''}
+                      onChange={(e) => setCurrentProperty({ ...currentProperty, built_up_area: Number(e.target.value) })}
+                      placeholder="e.g. 4500"
+                      className="glass-input w-full px-3 py-2 rounded-xl text-sm font-semibold"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold mb-1">Carpet Area</label>
+                    <input
+                      type="number"
+                      value={currentProperty.carpet_area || ''}
+                      onChange={(e) => setCurrentProperty({ ...currentProperty, carpet_area: Number(e.target.value) || undefined })}
+                      placeholder="e.g. 3600"
+                      className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold mb-1">
+                      Plot / Land Area {currentProperty.category === 'land' ? '*' : ''}
+                    </label>
+                    <input
+                      type="number"
+                      value={currentProperty.land_area || ''}
+                      onChange={(e) => setCurrentProperty({ ...currentProperty, land_area: Number(e.target.value) || undefined })}
+                      placeholder="e.g. 1000"
+                      className="glass-input w-full px-3 py-2 rounded-xl text-sm font-semibold border-brand-300 dark:border-brand-700"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold mb-1">Area Unit</label>
+                    <select
+                      value={currentProperty.area_unit || 'sq.ft'}
+                      onChange={(e) => setCurrentProperty({ ...currentProperty, area_unit: e.target.value as any })}
+                      className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                    >
+                      <option value="sq.ft">sq.ft</option>
+                      <option value="sq.meter">sq.meter</option>
+                      <option value="acres">acres</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* INFRASTRUCTURE, POWER, ROAD & FLOORS */}
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-3">
+                <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                  <Zap className="w-3.5 h-3.5 text-amber-500" />
+                  <span>Technical & Industrial Infrastructure Details</span>
+                </span>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold mb-1">Power Load / DG Backup</label>
+                    <input
+                      type="text"
+                      value={currentProperty.power_load || ''}
+                      onChange={(e) => setCurrentProperty({ ...currentProperty, power_load: e.target.value })}
+                      placeholder="e.g. 150 KVA Sanctioned Industrial Load or 100% DG Backup"
+                      className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold mb-1">Approach Road Width / Frontage</label>
+                    <input
+                      type="text"
+                      value={currentProperty.road_width || ''}
+                      onChange={(e) => setCurrentProperty({ ...currentProperty, road_width: e.target.value })}
+                      placeholder="e.g. 60 Feet Wide Arterial Road (40ft Trailer access)"
+                      className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold mb-1">Floor Level</label>
+                    <input
+                      type="text"
+                      value={currentProperty.floor || ''}
+                      onChange={(e) => setCurrentProperty({ ...currentProperty, floor: e.target.value })}
+                      placeholder="e.g. Ground Floor, 4th Floor"
+                      className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold mb-1">Total Floors</label>
+                    <input
+                      type="number"
+                      value={currentProperty.total_floors || ''}
+                      onChange={(e) => setCurrentProperty({ ...currentProperty, total_floors: Number(e.target.value) || undefined })}
+                      placeholder="e.g. 1 or 12"
+                      className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold mb-1">Furnishing / Shell</label>
+                    <select
+                      value={currentProperty.furnishing}
+                      onChange={(e) => setCurrentProperty({ ...currentProperty, furnishing: e.target.value as any })}
+                      className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                    >
+                      <option value="Furnished">Furnished</option>
+                      <option value="Plug-and-Play">Plug-and-Play</option>
+                      <option value="Semi-Furnished">Semi-Furnished</option>
+                      <option value="Bare Shell">Bare Shell</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold mb-1">Possession Timeline</label>
+                    <input
+                      type="text"
+                      value={currentProperty.possession || ''}
+                      onChange={(e) => setCurrentProperty({ ...currentProperty, possession: e.target.value })}
+                      placeholder="e.g. Immediate or Ready to Move"
+                      className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                    />
+                  </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold mb-1">Carpet Area (sq.ft)</label>
+                  <label className="block text-xs font-semibold mb-1">Parking, Truck Loading Bays & Open Yard</label>
                   <input
-                    type="number"
-                    value={currentProperty.carpet_area || ''}
-                    onChange={(e) => setCurrentProperty({ ...currentProperty, carpet_area: Number(e.target.value) || undefined })}
-                    placeholder="e.g. 850"
+                    type="text"
+                    value={currentProperty.parking || ''}
+                    onChange={(e) => setCurrentProperty({ ...currentProperty, parking: e.target.value })}
+                    placeholder="e.g. Internal trailer maneuvering & 4 loading bays, or 2 Covered Bays"
                     className="glass-input w-full px-3 py-2 rounded-xl text-sm"
                   />
                 </div>
+              </div>
 
-                <div>
-                  <label className="block text-xs font-semibold mb-1">Furnishing</label>
-                  <select
-                    value={currentProperty.furnishing}
-                    onChange={(e) => setCurrentProperty({ ...currentProperty, furnishing: e.target.value as any })}
-                    className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+              {/* FEATURES & KEY HIGHLIGHTS (CUSTOM TAGS & CATEGORY SUGGESTIONS) */}
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                    <Tag className="w-3.5 h-3.5 text-brand-500" />
+                    <span>Key Features & Specifications ({currentProperty.features?.length || 0})</span>
+                  </span>
+                  <span className="text-[11px] text-slate-400">
+                    Click suggested pills to add
+                  </span>
+                </div>
+
+                {/* Suggested quick chips */}
+                {CATEGORY_CONFIG[(currentProperty.category || 'office-space') as PropertyCategory]?.suggestedFeatures && (
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                    {CATEGORY_CONFIG[(currentProperty.category || 'office-space') as PropertyCategory].suggestedFeatures.map((sug) => {
+                      const isAdded = (currentProperty.features || []).includes(sug);
+                      return (
+                        <button
+                          key={sug}
+                          type="button"
+                          disabled={isAdded}
+                          onClick={() => handleAddFeatureTag(sug)}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all flex items-center gap-1 ${
+                            isAdded
+                              ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 opacity-60 cursor-not-allowed'
+                              : 'bg-white dark:bg-slate-800 hover:bg-brand-50 dark:hover:bg-brand-950/60 text-slate-700 dark:text-slate-200 hover:text-brand-600 border border-slate-200 dark:border-slate-700 active:scale-95 cursor-pointer'
+                          }`}
+                        >
+                          <Plus className="w-3 h-3 text-brand-500" />
+                          <span>{sug}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Current Active Tags */}
+                {currentProperty.features && currentProperty.features.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1.5">
+                    {currentProperty.features.map((feat, idx) => (
+                      <span
+                        key={idx}
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-semibold bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800/80"
+                      >
+                        <span>{feat}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveFeatureTag(idx)}
+                          className="hover:text-red-500 rounded-full p-0.5 cursor-pointer"
+                          title="Remove feature"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Add Custom Feature Input */}
+                <div className="flex items-center gap-2 pt-1">
+                  <input
+                    type="text"
+                    value={newFeatureTag}
+                    onChange={(e) => setNewFeatureTag(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddFeatureTag();
+                      }
+                    }}
+                    placeholder="Type custom feature and click Add (e.g. 5-Ton Overhead Crane, Direct Metro Access)..."
+                    className="glass-input flex-1 px-3 py-1.5 rounded-xl text-xs"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleAddFeatureTag()}
+                    className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-200 dark:bg-slate-800 hover:bg-brand-600 hover:text-white text-slate-700 dark:text-slate-200 flex items-center gap-1 transition-all cursor-pointer"
                   >
-                    <option value="Furnished">Furnished</option>
-                    <option value="Plug-and-Play">Plug-and-Play</option>
-                    <option value="Semi-Furnished">Semi-Furnished</option>
-                    <option value="Bare Shell">Bare Shell</option>
-                  </select>
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add Tag</span>
+                  </button>
                 </div>
               </div>
 
               {/* Description */}
               <div>
-                <label className="block text-xs font-semibold mb-1">Description & Key Highlights</label>
+                <label className="block text-xs font-semibold mb-1">Description & Commercial Overview</label>
                 <textarea
                   rows={5}
-                  value={currentProperty.description}
+                  value={currentProperty.description || ''}
                   onChange={(e) => setCurrentProperty({ ...currentProperty, description: e.target.value })}
                   onPaste={(e) => handleOverviewPaste(e, (val) => setCurrentProperty({ ...currentProperty, description: val }), currentProperty.description)}
-                  placeholder="Describe workstations, cabins, view, and immediate availability..."
+                  placeholder="Describe location advantages, industrial NOCs, ceiling clearances, immediate availability, or retail footfall..."
                   className="glass-input overview-input w-full px-3 py-2.5 rounded-xl text-sm"
                 />
               </div>
@@ -2837,10 +3516,11 @@ export const AdminPage: React.FC = () => {
                     className="glass-input w-full px-3 py-2 rounded-xl text-sm"
                   >
                     <option value="office-space">Office Space</option>
-                    <option value="it-business-parks">IT Park</option>
-                    <option value="warehouses">Warehouse</option>
-                    <option value="factory-industrial">Factory & Industrial</option>
-                    <option value="shops-retail">Retail & Mall</option>
+                    <option value="it-business-parks">IT & Business Parks</option>
+                    <option value="warehouses">Warehouses & Logistics</option>
+                    <option value="factory-industrial">Factories & Industrial</option>
+                    <option value="land">Commercial Land & Industrial Plots</option>
+                    <option value="shops-retail">Shops, Malls & Retail</option>
                   </select>
                 </div>
               </div>

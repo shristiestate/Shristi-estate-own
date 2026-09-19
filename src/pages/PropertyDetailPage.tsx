@@ -183,6 +183,15 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
                 </span>
               </div>
 
+              {property.land_area ? (
+                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800/80">
+                  <span className="text-slate-400 text-xs block">Plot / Land Area</span>
+                  <span className="font-bold text-slate-900 dark:text-white mt-1 block">
+                    {property.land_area.toLocaleString()} {property.area_unit}
+                  </span>
+                </div>
+              ) : null}
+
               <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800/80">
                 <span className="text-slate-400 text-xs block">Carpet Area</span>
                 <span className="font-bold text-slate-900 dark:text-white mt-1 block">

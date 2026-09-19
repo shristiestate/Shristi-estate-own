@@ -210,12 +210,24 @@ export const StorageService = {
   async saveProperty(property: Property): Promise<void> {
     const sanitized: Property = {
       ...property,
+      category: property.category || 'office-space',
+      property_type: property.property_type || 'Commercial Office',
       building_id: (property.building_id && String(property.building_id).trim() !== '') ? property.building_id : null as any,
       building_name: property.building_id ? (property.building_name || null as any) : null as any,
       location_id: (property.location_id && String(property.location_id).trim() !== '') ? property.location_id : null as any,
       carpet_area: (property.carpet_area && !isNaN(Number(property.carpet_area))) ? Number(property.carpet_area) : null as any,
+      land_area: (property.land_area && !isNaN(Number(property.land_area))) ? Number(property.land_area) : null as any,
+      area_unit: property.area_unit || 'sq.ft',
       price: Number(property.price) || 0,
       built_up_area: Number(property.built_up_area) || 0,
+      floor: property.floor || 'Ground',
+      total_floors: (property.total_floors && !isNaN(Number(property.total_floors))) ? Number(property.total_floors) : null as any,
+      power_load: property.power_load || '',
+      road_width: property.road_width || '',
+      possession: property.possession || 'Ready to Move',
+      parking: property.parking || '',
+      features: Array.isArray(property.features) ? property.features : [],
+      amenities: Array.isArray(property.amenities) ? property.amenities : [],
       gallery: Array.isArray(property.gallery) ? property.gallery : [],
     };
 

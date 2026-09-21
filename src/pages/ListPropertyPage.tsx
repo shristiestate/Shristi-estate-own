@@ -274,6 +274,36 @@ export const ListPropertyPage: React.FC = () => {
               </div>
             </div>
 
+            {/* Attached Photos Gallery on Success Card */}
+            {images.length > 0 && (
+              <div className="max-w-md mx-auto p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 space-y-2">
+                <div className="flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  <span className="flex items-center gap-1.5">
+                    <ImageIcon className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
+                    Uploaded Property Photos ({images.length})
+                  </span>
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                    Saved in Record
+                  </span>
+                </div>
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 pt-1">
+                  {images.map((img, idx) => (
+                    <div
+                      key={idx}
+                      className="aspect-video rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 shadow-sm relative group"
+                    >
+                      <img src={img} alt={`Uploaded ${idx + 1}`} className="w-full h-full object-cover" />
+                      {idx === 0 && (
+                        <span className="absolute bottom-1 left-1 px-1 rounded bg-brand-600 text-white text-[8px] font-bold uppercase">
+                          Cover
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* CTAs */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
               <a

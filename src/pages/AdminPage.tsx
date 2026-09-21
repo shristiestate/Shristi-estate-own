@@ -37,7 +37,11 @@ import {
   Zap,
   Truck,
   Tag,
-  Hash
+  Hash,
+  Eye,
+  PlusCircle,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { StorageService } from '../services/storageService';
 import { Property, Building, Location, Lead, LeadStatus, PropertyStatus, PropertyCategory } from '../types';
@@ -392,6 +396,23 @@ export const AdminPage: React.FC = () => {
   const [mediaUploadMode, setMediaUploadMode] = useState<'device' | 'url'>('device');
   const [newPropertyGalleryUrl, setNewPropertyGalleryUrl] = useState('');
   const [newBuildingGalleryUrl, setNewBuildingGalleryUrl] = useState('');
+  const [viewingImageModal, setViewingImageModal] = useState<{ url: string; title: string; allImages?: string[]; activeIndex?: number } | null>(null);
+
+  // Helper to safely extract all photos from a lead
+  const getLeadPhotos = (lead: Lead): string[] => {
+    let rawImgs: any[] = [];
+    if (Array.isArray(lead.images)) {
+      rawImgs = lead.images;
+    } else if (typeof lead.images === 'string') {
+      try { rawImgs = JSON.parse(lead.images); } catch { rawImgs = [lead.images]; }
+    }
+    if (rawImgs.length === 0 && lead.list_property_details?.images) {
+      rawImgs = Array.isArray(lead.list_property_details.images)
+        ? lead.list_property_details.images
+        : [lead.list_property_details.images];
+    }
+    return rawImgs.filter(img => typeof img === 'string' && img.length > 10 && !img.includes('[uploaded image]'));
+  };
 
   const compressImageFile = (file: File, maxWidth = 1400, quality = 0.82): Promise<string> => {
     return new Promise((resolve) => {
@@ -1175,15 +1196,65 @@ export const AdminPage: React.FC = () => {
 
   // Media Items (Custom Uploads + Landlord Submissions)
   const landlordUploads = leads
-    .filter(l => l.lead_type === 'list_property' && l.images && l.images.length > 0)
-    .flatMap(l => (l.images || []).map((img, idx) => ({
-      id: `lead-img-${l.id}-${idx}`,
-      url: img,
-      title: `${l.name} • ${l.property_title || l.building_name || l.location_name || 'Owner Property'}`,
-      source: `Landlord (${l.phone})`,
-      created_at: l.created_at.slice(0, 10),
-      lead_id: l.id
-    })));
+    .filter(l => l.lead_type === 'list_property')
+    .flatMap(l => {
+      const photos = getLeadPhotos(l);
+      return photos.map((img, idx) => ({
+        id: `lead-img-${l.id}-${idx}`,
+        url: img,
+        title: `${l.name} • ${l.property_title || l.building_name || l.location_name || 'Owner Property'}`,
+        source: `Landlord (${l.phone})`,
+        created_at: (l.created_at || '').slice(0, 10),
+        lead_id: l.id
+      }));
+    });
+
+  // Convert a Landlord Listing Submission directly into a Live Property
+  const handleConvertLeadToProperty = (lead: Lead) => {
+    const photos = getLeadPhotos(lead);
+    const details = lead.list_property_details || {};
+    const cleanArea = Number(String(details.area || '').replace(/[^0-9.]/g, '')) || 2000;
+    const cleanPrice = Number(String(details.expected_price || '').replace(/[^0-9.]/g, '')) || 60;
+    const category = (details.property_category as PropertyCategory) || 'office-space';
+
+    setCurrentProperty({
+      id: `prop-${Date.now()}`,
+      title: `${details.area || 'Commercial'} ${category.replace(/-/g, ' ')} in ${lead.location_name || 'Sector 62, Noida'}`,
+      slug: `commercial-${category}-${Date.now()}`,
+      reference_number: `SE-L-${Math.floor(1000 + Math.random() * 9000)}`,
+      category: category,
+      property_type: 'Commercial Office',
+      listing_type: 'Rent',
+      status: 'Available',
+      price: cleanPrice,
+      price_display: details.expected_price || `₹${cleanPrice}/sq.ft`,
+      rate_per_sqft: `₹${cleanPrice}`,
+      rent_frequency: 'month',
+      location_id: lead.location_id || 'loc-sector-62',
+      location_name: lead.location_name || 'Sector 62, Noida',
+      building_id: lead.building_id || undefined,
+      building_name: lead.building_name || undefined,
+      address: details.address || `${lead.location_name || 'Noida'}, Uttar Pradesh`,
+      city: 'Noida',
+      built_up_area: cleanArea,
+      carpet_area: Math.round(cleanArea * 0.75),
+      area_unit: 'sq.ft',
+      floor: 'Middle Floor',
+      furnishing: 'Semi-Furnished',
+      possession: 'Immediate',
+      description: lead.message || 'Commercial property listed directly by owner/representative.',
+      features: ['24/7 Power Backup', 'Car Parking', 'High Speed Elevators', 'Security'],
+      amenities: ['CCTV', 'Reserved Parking', 'Fire Fighting System'],
+      primary_image: photos[0] || 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=80',
+      gallery: photos.length > 1 ? photos.slice(1) : [],
+      featured: false,
+      published: true,
+      created_at: new Date().toISOString(),
+    });
+    setIsEditingProperty(false);
+    setShowPropertyModal(true);
+    setActiveTab('properties');
+  };
 
   const allMediaItems = [
     ...customMedia,
@@ -2041,13 +2112,39 @@ export const AdminPage: React.FC = () => {
                         </div>
                       </td>
 
-                      <td className="p-3.5 max-w-xs">
+                      <td className="p-3.5 max-w-sm">
                         <div className="font-semibold text-slate-800 dark:text-slate-200 line-clamp-1">
-                          {lead.property_title || lead.building_name || 'Custom Space Requirement'}
+                          {lead.property_title || lead.building_name || (lead.lead_type === 'list_property' ? 'Owner Commercial Listing' : 'Custom Space Requirement')}
                         </div>
                         <p className="overview-card-text text-[11px] text-slate-500 line-clamp-2 mt-0.5">
                           {lead.message}
                         </p>
+                        {/* Attached Photos Preview */}
+                        {(() => {
+                          const photos = getLeadPhotos(lead);
+                          if (photos.length === 0) return null;
+                          return (
+                            <div className="mt-2 flex items-center gap-1.5 flex-wrap">
+                              <span className="text-[10px] font-bold text-brand-600 dark:text-brand-400 flex items-center gap-1">
+                                <ImageIcon className="w-3 h-3" />
+                                {photos.length} {photos.length === 1 ? 'Photo' : 'Photos'}:
+                              </span>
+                              <div className="flex items-center gap-1">
+                                {photos.map((imgUrl, i) => (
+                                  <button
+                                    key={i}
+                                    type="button"
+                                    onClick={() => setViewingImageModal({ url: imgUrl, title: `${lead.name} • Photo ${i + 1}`, allImages: photos, activeIndex: i })}
+                                    className="w-8 h-8 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 hover:scale-110 hover:border-brand-500 transition-all cursor-pointer shadow-sm relative group"
+                                    title="Click to view full photo"
+                                  >
+                                    <img src={imgUrl} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </td>
 
                       <td className="p-3.5 text-slate-600 dark:text-slate-300">
@@ -2078,17 +2175,30 @@ export const AdminPage: React.FC = () => {
                       </td>
 
                       <td className="p-3.5">
-                        <a
-                          href={`https://wa.me/${lead.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
-                            `Hello ${lead.name}, thank you for contacting Shristi Estate. We have received your commercial inquiry for ${lead.property_title || 'commercial space'}.`
-                          )}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-1.5 rounded-lg btn-whatsapp inline-flex items-center justify-center text-white"
-                          title="Message on WhatsApp"
-                        >
-                          <MessageSquare className="w-3.5 h-3.5" />
-                        </a>
+                        <div className="flex items-center gap-1.5">
+                          {lead.lead_type === 'list_property' && (
+                            <button
+                              type="button"
+                              onClick={() => handleConvertLeadToProperty(lead)}
+                              className="px-2.5 py-1.5 rounded-lg bg-brand-50 hover:bg-brand-100 dark:bg-brand-950/80 dark:hover:bg-brand-900 text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-brand-800 text-[10px] font-bold inline-flex items-center gap-1 transition-all shadow-sm"
+                              title="Publish this Landlord Submission as a Live Property"
+                            >
+                              <PlusCircle className="w-3.5 h-3.5" />
+                              <span>Publish</span>
+                            </button>
+                          )}
+                          <a
+                            href={`https://wa.me/${lead.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
+                              `Hello ${lead.name}, thank you for contacting Shristi Estate. We have received your commercial inquiry for ${lead.property_title || 'commercial space'}.`
+                            )}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-1.5 rounded-lg btn-whatsapp inline-flex items-center justify-center text-white"
+                            title="Message on WhatsApp"
+                          >
+                            <MessageSquare className="w-3.5 h-3.5" />
+                          </a>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -2160,6 +2270,35 @@ export const AdminPage: React.FC = () => {
                   </div>
                 )}
 
+                {/* Attached Photos in Mobile Card */}
+                {(() => {
+                  const photos = getLeadPhotos(lead);
+                  if (photos.length === 0) return null;
+                  return (
+                    <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800 space-y-1.5">
+                      <div className="flex items-center justify-between text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                        <span className="flex items-center gap-1 text-brand-600 dark:text-brand-400">
+                          <ImageIcon className="w-3.5 h-3.5" />
+                          Attached Photos ({photos.length})
+                        </span>
+                        <span className="text-[10px] text-slate-400">Tap to expand</span>
+                      </div>
+                      <div className="grid grid-cols-4 gap-1.5">
+                        {photos.map((imgUrl, i) => (
+                          <button
+                            key={i}
+                            type="button"
+                            onClick={() => setViewingImageModal({ url: imgUrl, title: `${lead.name} • Photo ${i + 1}`, allImages: photos, activeIndex: i })}
+                            className="aspect-video rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm"
+                          >
+                            <img src={imgUrl} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 {/* Visit Schedule info if any */}
                 {lead.preferred_visit_date && (
                   <div className="flex items-center gap-1.5 text-xs text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/40 p-2 rounded-xl border border-teal-200 dark:border-teal-800/50">
@@ -2170,22 +2309,34 @@ export const AdminPage: React.FC = () => {
                   </div>
                 )}
 
-                {/* Status Selector */}
+                {/* Status Selector & Publish Action */}
                 <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-                  <span className="text-xs font-semibold text-slate-500">Status:</span>
-                  <select
-                    value={lead.status}
-                    onChange={(e) => handleStatusChange(lead.id, e.target.value as LeadStatus)}
-                    className="glass-input px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer border border-slate-200 dark:border-slate-700 hover:border-brand-500 transition-colors"
-                  >
-                    <option value="New">New</option>
-                    <option value="Contacted">Contacted</option>
-                    <option value="Qualified">Qualified</option>
-                    <option value="Visit Scheduled">Visit Scheduled</option>
-                    <option value="Converted">Converted</option>
-                    <option value="Not Interested">Not Interested</option>
-                    <option value="Closed">Closed</option>
-                  </select>
+                  {lead.lead_type === 'list_property' && (
+                    <button
+                      type="button"
+                      onClick={() => handleConvertLeadToProperty(lead)}
+                      className="px-3 py-1.5 rounded-xl bg-brand-50 hover:bg-brand-100 dark:bg-brand-950/80 text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-brand-800 text-xs font-bold flex items-center gap-1.5"
+                    >
+                      <PlusCircle className="w-3.5 h-3.5" />
+                      <span>Publish Property</span>
+                    </button>
+                  )}
+                  <div className="flex items-center gap-2 ml-auto">
+                    <span className="text-xs font-semibold text-slate-500">Status:</span>
+                    <select
+                      value={lead.status}
+                      onChange={(e) => handleStatusChange(lead.id, e.target.value as LeadStatus)}
+                      className="glass-input px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer border border-slate-200 dark:border-slate-700 hover:border-brand-500 transition-colors"
+                    >
+                      <option value="New">New</option>
+                      <option value="Contacted">Contacted</option>
+                      <option value="Qualified">Qualified</option>
+                      <option value="Visit Scheduled">Visit Scheduled</option>
+                      <option value="Converted">Converted</option>
+                      <option value="Not Interested">Not Interested</option>
+                      <option value="Closed">Closed</option>
+                    </select>
+                  </div>
                 </div>
               </div>
             ))}
@@ -3776,6 +3927,113 @@ export const AdminPage: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Lightbox / Photo Viewer Modal */}
+      {viewingImageModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="relative max-w-4xl w-full bg-slate-900 border border-slate-700/80 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-800 bg-slate-950/60">
+              <div className="flex items-center gap-2">
+                <ImageIcon className="w-4 h-4 text-brand-400" />
+                <h3 className="text-xs sm:text-sm font-bold text-white truncate max-w-xs sm:max-w-md">
+                  {viewingImageModal.title}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setViewingImageModal(null)}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                title="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Image Preview Container */}
+            <div className="relative flex-1 flex items-center justify-center p-4 bg-slate-950/90 overflow-hidden min-h-[300px]">
+              <img
+                src={viewingImageModal.url}
+                alt={viewingImageModal.title}
+                className="max-h-[65vh] w-auto max-w-full object-contain rounded-xl shadow-lg"
+              />
+
+              {/* Next/Prev Navigation */}
+              {viewingImageModal.allImages && viewingImageModal.allImages.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const list = viewingImageModal.allImages!;
+                      const cur = viewingImageModal.activeIndex ?? 0;
+                      const prev = (cur - 1 + list.length) % list.length;
+                      setViewingImageModal({
+                        ...viewingImageModal,
+                        url: list[prev],
+                        activeIndex: prev,
+                        title: `${viewingImageModal.title.split('•')[0]}• Photo ${prev + 1}`
+                      });
+                    }}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-slate-900/80 hover:bg-brand-600 text-white transition-all shadow"
+                    title="Previous Photo"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const list = viewingImageModal.allImages!;
+                      const cur = viewingImageModal.activeIndex ?? 0;
+                      const next = (cur + 1) % list.length;
+                      setViewingImageModal({
+                        ...viewingImageModal,
+                        url: list[next],
+                        activeIndex: next,
+                        title: `${viewingImageModal.title.split('•')[0]}• Photo ${next + 1}`
+                      });
+                    }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-slate-900/80 hover:bg-brand-600 text-white transition-all shadow"
+                    title="Next Photo"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* Footer Actions */}
+            <div className="flex items-center justify-between px-5 py-3 border-t border-slate-800 bg-slate-950/60 text-xs">
+              <span className="text-[11px] text-slate-400">
+                {viewingImageModal.allImages && viewingImageModal.allImages.length > 1
+                  ? `Photo ${(viewingImageModal.activeIndex ?? 0) + 1} of ${viewingImageModal.allImages.length}`
+                  : 'Single Photo'}
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleCopyUrl(viewingImageModal.url, 'modal-view')}
+                  className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-[11px] flex items-center gap-1.5"
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                  <span>Copy URL</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCurrentProperty(prev => ({ ...prev, primary_image: viewingImageModal.url }));
+                    setViewingImageModal(null);
+                    setShowPropertyModal(true);
+                  }}
+                  className="px-3.5 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-[11px] flex items-center gap-1.5 shadow"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Use in Property</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

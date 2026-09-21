@@ -298,13 +298,73 @@ export const StorageService = {
       created_at: new Date().toISOString(),
     };
 
-    const leads = await this.getLeads();
-    leads.unshift(newLead);
-    localStorage.setItem(STORAGE_KEYS.LEADS, JSON.stringify(leads));
+    // Quota-safe LocalStorage backup
+    try {
+      const leads = await this.getLeads();
+      leads.unshift(newLead);
+      // Keep only recent 40 leads in local cache to prevent quota overload
+      const trimmed = leads.slice(0, 40);
+      try {
+        localStorage.setItem(STORAGE_KEYS.LEADS, JSON.stringify(trimmed));
+      } catch (quotaError) {
+        // If quota exceeded, strip heavy data URLs for local cache
+        const lightweight = trimmed.map(l => ({
+          ...l,
+          images: (l.images || []).map(img => img.startsWith('data:') ? '[uploaded image]' : img),
+          list_property_details: l.list_property_details ? {
+            ...l.list_property_details,
+            images: (l.list_property_details.images || []).map(img => img.startsWith('data:') ? '[uploaded image]' : img)
+          } : undefined
+        }));
+        try {
+          localStorage.setItem(STORAGE_KEYS.LEADS, JSON.stringify(lightweight.slice(0, 20)));
+        } catch (innerErr) {
+          console.warn('LocalStorage leads cache bypassed due to storage limits:', innerErr);
+        }
+      }
+    } catch (e) {
+      console.warn('LocalStorage lead warning:', e);
+    }
 
+    // Supabase Persistence
     if (isSupabaseConfigured && supabase) {
       try {
-        await supabase.from('leads').insert(newLead);
+        const payload: Record<string, any> = {
+          id: newLead.id,
+          lead_type: newLead.lead_type,
+          name: newLead.name,
+          email: newLead.email,
+          phone: newLead.phone,
+          preferred_contact_method: newLead.preferred_contact_method || 'phone',
+          message: newLead.message || null,
+          property_id: newLead.property_id || null,
+          property_title: newLead.property_title || null,
+          building_id: newLead.building_id || null,
+          building_name: newLead.building_name || null,
+          location_id: newLead.location_id || null,
+          location_name: newLead.location_name || null,
+          requirement_details: newLead.requirement_details || null,
+          list_property_details: newLead.list_property_details || null,
+          images: newLead.images || [],
+          preferred_visit_date: newLead.preferred_visit_date || null,
+          preferred_visit_time: newLead.preferred_visit_time || null,
+          source_page: newLead.source_page || null,
+          lead_source: newLead.lead_source || 'website',
+          status: newLead.status || 'New',
+          notes: newLead.notes || null,
+          assigned_agent: newLead.assigned_agent || null,
+          created_at: newLead.created_at,
+        };
+
+        const { error } = await supabase.from('leads').insert(payload);
+        if (error) {
+          console.warn('Supabase insert lead issue:', error.message);
+          // If column mismatch on images, retry without top-level images column
+          if (error.message && error.message.includes('images')) {
+            delete payload.images;
+            await supabase.from('leads').insert(payload);
+          }
+        }
       } catch (e) {
         console.error('Supabase insert lead error:', e);
       }

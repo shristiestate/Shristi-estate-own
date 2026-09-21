@@ -106,6 +106,7 @@ CREATE TABLE IF NOT EXISTS leads (
   location_name TEXT,
   requirement_details JSONB,
   list_property_details JSONB,
+  images JSONB DEFAULT '[]'::jsonb,
   preferred_visit_date TEXT,
   preferred_visit_time TEXT,
   source_page TEXT,

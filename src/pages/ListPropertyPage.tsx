@@ -12,11 +12,58 @@ import {
   Trash2, 
   X, 
   Link2,
-  FileImage
+  Phone,
+  MessageSquare,
+  AlertCircle,
+  RefreshCw,
+  Loader2,
+  Sparkles
 } from 'lucide-react';
 import { StorageService } from '../services/storageService';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
 import { handleOverviewPaste } from '../utils/textFormat';
+
+// Client-side image compressor: scales down high-res photos to prevent memory lag & storage quota issues
+const compressImage = (file: File, maxWidth = 1280, quality = 0.75): Promise<string> => {
+  return new Promise((resolve) => {
+    if (!file.type.startsWith('image/')) {
+      resolve('');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+        if (width > maxWidth || height > maxWidth) {
+          if (width > height) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          } else {
+            width = Math.round((width * maxWidth) / height);
+            height = maxWidth;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        } else {
+          resolve((e.target?.result as string) || '');
+        }
+      };
+      img.onerror = () => resolve((e.target?.result as string) || '');
+      img.src = (e.target?.result as string) || '';
+    };
+    reader.onerror = () => resolve('');
+    reader.readAsDataURL(file);
+  });
+};
 
 export const ListPropertyPage: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -39,43 +86,64 @@ export const ListPropertyPage: React.FC = () => {
   const [imageUploadTab, setImageUploadTab] = useState<'device' | 'url'>('device');
   const [imageUrlInput, setImageUrlInput] = useState('');
   const [uploadError, setUploadError] = useState('');
+  const [isProcessingImages, setIsProcessingImages] = useState(false);
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setUploadError('');
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    const fileList = Array.from(files);
-    fileList.forEach(file => {
-      if (!file.type.startsWith('image/')) {
-        setUploadError('Please select valid image files (PNG, JPG, WebP).');
-        return;
-      }
-      if (file.size > 10 * 1024 * 1024) {
-        setUploadError('One or more images exceed 10MB limit.');
-        return;
-      }
+    if (images.length + files.length > 8) {
+      setUploadError('Maximum 8 photos allowed. You can paste more via image URLs.');
+      return;
+    }
 
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (typeof reader.result === 'string') {
-          setImages(prev => [...prev, reader.result as string]);
+    setIsProcessingImages(true);
+    try {
+      const fileList = Array.from(files);
+      const compressedList: string[] = [];
+
+      for (const file of fileList) {
+        if (!file.type.startsWith('image/')) {
+          setUploadError('Please select valid image files (PNG, JPG, WebP).');
+          continue;
         }
-      };
-      reader.readAsDataURL(file);
-    });
+        if (file.size > 15 * 1024 * 1024) {
+          setUploadError('One or more images exceed 15MB limit.');
+          continue;
+        }
 
-    e.target.value = '';
+        const compressed = await compressImage(file, 1280, 0.75);
+        if (compressed) {
+          compressedList.push(compressed);
+        }
+      }
+
+      if (compressedList.length > 0) {
+        setImages(prev => [...prev, ...compressedList]);
+      }
+    } catch (err) {
+      console.warn('Image optimization error:', err);
+      setUploadError('Failed to process one or more images.');
+    } finally {
+      setIsProcessingImages(false);
+      e.target.value = '';
+    }
   };
 
   const handleAddUrl = (e: React.FormEvent) => {
     e.preventDefault();
     if (!imageUrlInput.trim()) return;
+    if (images.length >= 8) {
+      setUploadError('Maximum 8 photos reached.');
+      return;
+    }
     setImages(prev => [...prev, imageUrlInput.trim()]);
     setImageUrlInput('');
+    setUploadError('');
   };
 
   const handleRemoveImage = (index: number) => {
@@ -86,27 +154,32 @@ export const ListPropertyPage: React.FC = () => {
     e.preventDefault();
     setError('');
 
-    if (!formData.ownerName.trim()) return setError('Please enter owner/representative name.');
-    if (!formData.phone.trim() || formData.phone.length < 10) return setError('Please enter a valid mobile number.');
-    if (!formData.size.trim()) return setError('Please enter property floor size.');
-    if (!formData.expectedPrice.trim()) return setError('Please enter expected price or rent.');
-    if (!formData.consent) return setError('Please accept authorization consent.');
+    const cleanName = formData.ownerName.trim();
+    const cleanPhone = formData.phone.trim().replace(/[\s-]/g, '');
+    const cleanSize = formData.size.trim();
+    const cleanPrice = formData.expectedPrice.trim();
+
+    if (!cleanName) return setError('Please enter owner or representative name.');
+    if (!cleanPhone || cleanPhone.length < 10) return setError('Please enter a valid 10-digit mobile number.');
+    if (!cleanSize) return setError('Please enter property floor area/size.');
+    if (!cleanPrice) return setError('Please enter expected rent or sale price.');
+    if (!formData.consent) return setError('Please accept the owner authorization consent.');
 
     setLoading(true);
 
     try {
       await StorageService.createLead({
         lead_type: 'list_property',
-        name: formData.ownerName,
-        email: formData.email || 'owner@shristiestate.in',
-        phone: formData.phone,
+        name: cleanName,
+        email: formData.email.trim() || 'owner@shristiestate.in',
+        phone: cleanPhone,
         preferred_contact_method: formData.preferredContact as any,
-        message: `Owner property listing: ${formData.size} ${formData.category} in ${formData.buildingName || formData.locationName}. Expected: ${formData.expectedPrice}. Details: ${formData.description}. Attached: ${images.length} photos.`,
+        message: `Owner property listing: ${cleanSize} ${formData.category} (${formData.listingType}) in ${formData.buildingName ? formData.buildingName + ', ' : ''}${formData.locationName}. Expected: ${cleanPrice}. Details: ${formData.description.trim() || 'No additional details'}. Photos attached: ${images.length}.`,
         list_property_details: {
           property_category: formData.category,
-          expected_price: formData.expectedPrice,
-          area: formData.size,
-          address: formData.address,
+          expected_price: cleanPrice,
+          area: cleanSize,
+          address: formData.address.trim(),
           images: images,
         },
         images: images,
@@ -114,12 +187,46 @@ export const ListPropertyPage: React.FC = () => {
         lead_source: 'website',
       });
       setSubmitted(true);
-    } catch (err) {
-      setError('Error submitting property. Please reach our advisory desk directly.');
+    } catch (err: any) {
+      console.error('List property submit error:', err);
+      setError(
+        'Submission failed due to a temporary network issue. Please connect with our advisory desk directly via WhatsApp or phone.'
+      );
     } finally {
       setLoading(false);
     }
   };
+
+  const resetForm = () => {
+    setFormData({
+      ownerName: '',
+      phone: '',
+      email: '',
+      category: 'office-space',
+      listingType: 'Rent',
+      buildingName: '',
+      locationName: 'Sector 62, Noida',
+      address: '',
+      size: '',
+      expectedPrice: '',
+      description: '',
+      preferredContact: 'phone',
+      consent: true,
+    });
+    setImages([]);
+    setSubmitted(false);
+    setError('');
+  };
+
+  const whatsappMessage = encodeURIComponent(
+    `Hello Shristi Estate Team, I want to list my commercial property:\n` +
+    `• Owner: ${formData.ownerName}\n` +
+    `• Phone: ${formData.phone}\n` +
+    `• Type: ${formData.category} (${formData.listingType})\n` +
+    `• Location: ${formData.buildingName ? formData.buildingName + ', ' : ''}${formData.locationName}\n` +
+    `• Size: ${formData.size}\n` +
+    `• Expected: ${formData.expectedPrice}`
+  );
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
@@ -132,26 +239,73 @@ export const ListPropertyPage: React.FC = () => {
 
       <div className="glass-card rounded-3xl p-6 sm:p-10 border border-slate-200/90 dark:border-slate-800 bg-white/80 dark:bg-[#0B132B]/85 shadow-2xl">
         {submitted ? (
-          <div className="text-center py-12 space-y-4">
-            <div className="w-16 h-16 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center mx-auto mb-4 border border-emerald-500/20">
+          <div className="text-center py-10 space-y-6">
+            <div className="w-16 h-16 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center mx-auto border border-emerald-500/20 shadow-lg">
               <CheckCircle2 className="w-9 h-9" />
             </div>
-            <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white font-['Outfit']">
-              Listing Submitted for Verification
-            </h2>
-            <p className="text-sm text-slate-600 dark:text-slate-300 max-w-lg mx-auto leading-relaxed">
-              Thank you, <strong>{formData.ownerName}</strong>. Your commercial property has been recorded. Our team will verify building registry documents, take high-resolution floor photos if needed, and connect you with qualified corporate tenants/buyers.
-            </p>
-            <div className="pt-6">
-              <Link to="/" className="btn-glass-primary px-6 py-2.5 rounded-xl text-sm font-semibold inline-block">
-                Return to Homepage
+
+            <div className="space-y-2">
+              <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white font-['Outfit']">
+                Listing Submitted for Verification
+              </h2>
+              <p className="text-sm text-slate-600 dark:text-slate-300 max-w-lg mx-auto leading-relaxed">
+                Thank you, <strong>{formData.ownerName}</strong>. Your commercial property at{' '}
+                <strong>{formData.buildingName || formData.locationName}</strong> has been registered with our advisory team.
+              </p>
+            </div>
+
+            {/* Quick Summary Card */}
+            <div className="max-w-md mx-auto p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-left text-xs space-y-2">
+              <div className="flex justify-between py-1 border-b border-slate-200/60 dark:border-slate-800">
+                <span className="text-slate-500 dark:text-slate-400">Category & Type:</span>
+                <span className="font-semibold text-slate-900 dark:text-white capitalize">{formData.category.replace(/-/g, ' ')} ({formData.listingType})</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-slate-200/60 dark:border-slate-800">
+                <span className="text-slate-500 dark:text-slate-400">Floor Size:</span>
+                <span className="font-semibold text-slate-900 dark:text-white">{formData.size}</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-slate-200/60 dark:border-slate-800">
+                <span className="text-slate-500 dark:text-slate-400">Expected Pricing:</span>
+                <span className="font-semibold text-emerald-600 dark:text-emerald-400">{formData.expectedPrice}</span>
+              </div>
+              <div className="flex justify-between py-1">
+                <span className="text-slate-500 dark:text-slate-400">Photos Attached:</span>
+                <span className="font-semibold text-slate-900 dark:text-white">{images.length} photos</span>
+              </div>
+            </div>
+
+            {/* CTAs */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+              <a
+                href={`https://wa.me/918750098666?text=${whatsappMessage}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full sm:w-auto px-6 py-3 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center gap-2 shadow-lg transition-all"
+              >
+                <MessageSquare className="w-4 h-4" />
+                <span>Notify Team on WhatsApp</span>
+              </a>
+              <button
+                type="button"
+                onClick={resetForm}
+                className="w-full sm:w-auto px-6 py-3 rounded-xl text-xs font-bold border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-all"
+              >
+                List Another Property
+              </button>
+              <Link
+                to="/properties"
+                className="w-full sm:w-auto px-6 py-3 rounded-xl text-xs font-bold btn-glass-primary flex items-center justify-center gap-1.5"
+              >
+                <span>Browse Inventory</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
           </div>
         ) : (
           <div>
             <div className="mb-8">
-              <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
+              <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400 flex items-center gap-1.5">
+                <Building2 className="w-3.5 h-3.5" />
                 Landlord & Asset Owner Portal
               </span>
               <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white font-['Outfit'] mt-1">
@@ -162,9 +316,43 @@ export const ListPropertyPage: React.FC = () => {
               </p>
             </div>
 
+            {/* Actionable Error Alert */}
             {error && (
-              <div className="mb-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-semibold">
-                {error}
+              <div className="mb-6 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 text-xs space-y-3 animate-in fade-in duration-300">
+                <div className="flex items-start gap-2.5">
+                  <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="font-semibold">{error}</p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                      Our commercial team is directly reachable for immediate listing assistance:
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-rose-500/20">
+                  <a
+                    href={`https://wa.me/918750098666?text=${whatsappMessage}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] flex items-center gap-1.5 shadow"
+                  >
+                    <MessageSquare className="w-3 h-3" />
+                    <span>Send via WhatsApp (+91 87500 98666)</span>
+                  </a>
+                  <a
+                    href="tel:+918750098666"
+                    className="px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-900 text-white font-semibold text-[11px] flex items-center gap-1.5"
+                  >
+                    <Phone className="w-3 h-3" />
+                    <span>Call Advisory Desk (+91 87500 98666)</span>
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => setError('')}
+                    className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white text-[11px] font-medium"
+                  >
+                    Dismiss
+                  </button>
+                </div>
               </div>
             )}
 
@@ -180,7 +368,10 @@ export const ListPropertyPage: React.FC = () => {
                     required
                     placeholder="Full Name"
                     value={formData.ownerName}
-                    onChange={(e) => setFormData({ ...formData, ownerName: e.target.value })}
+                    onChange={(e) => {
+                      setFormData({ ...formData, ownerName: e.target.value });
+                      if (error) setError('');
+                    }}
                     className="glass-input w-full px-3.5 py-2.5 rounded-xl text-sm"
                   />
                 </div>
@@ -194,7 +385,10 @@ export const ListPropertyPage: React.FC = () => {
                     required
                     placeholder="10-digit mobile"
                     value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    onChange={(e) => {
+                      setFormData({ ...formData, phone: e.target.value });
+                      if (error) setError('');
+                    }}
                     className="glass-input w-full px-3.5 py-2.5 rounded-xl text-sm"
                   />
                 </div>
@@ -257,7 +451,10 @@ export const ListPropertyPage: React.FC = () => {
                     required
                     placeholder="e.g. 2,150 sq.ft"
                     value={formData.size}
-                    onChange={(e) => setFormData({ ...formData, size: e.target.value })}
+                    onChange={(e) => {
+                      setFormData({ ...formData, size: e.target.value });
+                      if (error) setError('');
+                    }}
                     className="glass-input w-full px-3.5 py-2.5 rounded-xl text-sm"
                   />
                 </div>
@@ -287,7 +484,10 @@ export const ListPropertyPage: React.FC = () => {
                     required
                     placeholder="e.g. Sector 62, Sector 63, Expressway"
                     value={formData.locationName}
-                    onChange={(e) => setFormData({ ...formData, locationName: e.target.value })}
+                    onChange={(e) => {
+                      setFormData({ ...formData, locationName: e.target.value });
+                      if (error) setError('');
+                    }}
                     className="glass-input w-full px-3.5 py-2.5 rounded-xl text-sm"
                   />
                 </div>
@@ -301,7 +501,10 @@ export const ListPropertyPage: React.FC = () => {
                     required
                     placeholder="e.g. ₹60/sq.ft or ₹2.5 Cr"
                     value={formData.expectedPrice}
-                    onChange={(e) => setFormData({ ...formData, expectedPrice: e.target.value })}
+                    onChange={(e) => {
+                      setFormData({ ...formData, expectedPrice: e.target.value });
+                      if (error) setError('');
+                    }}
                     className="glass-input w-full px-3.5 py-2.5 rounded-xl text-sm"
                   />
                 </div>
@@ -313,7 +516,7 @@ export const ListPropertyPage: React.FC = () => {
                   Property Description, Furnishing, Power & Amenities
                 </label>
                 <textarea
-                  rows={5}
+                  rows={4}
                   placeholder="e.g. 5th floor, 24 workstations, 2 director cabins, 100% power backup, 2 covered car parkings..."
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -322,7 +525,7 @@ export const ListPropertyPage: React.FC = () => {
                 />
               </div>
 
-              {/* IMAGE UPLOADING SECTION WITH TABS */}
+              {/* IMAGE UPLOADING SECTION WITH TABS & OPTIMIZATION */}
               <div className="p-5 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/60 space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
@@ -330,9 +533,14 @@ export const ListPropertyPage: React.FC = () => {
                       <ImageIcon className="w-4 h-4" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                        Property Photos & Media Upload
-                      </h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                          Property Photos & Media Upload
+                        </h3>
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-brand-500/10 text-brand-600 dark:text-brand-400">
+                          {images.length}/8 Max
+                        </span>
+                      </div>
                       <p className="text-[11px] text-slate-500 dark:text-slate-400">
                         Upload unit interior, workstations, cabins, facade, or floor plans.
                       </p>
@@ -369,37 +577,49 @@ export const ListPropertyPage: React.FC = () => {
                 </div>
 
                 {uploadError && (
-                  <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 text-xs font-medium">
+                  <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-medium">
                     {uploadError}
                   </div>
                 )}
 
                 {/* Tab 1: Device Upload Drag & Drop Area */}
                 {imageUploadTab === 'device' ? (
-                  <label className="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-brand-500 dark:hover:border-brand-400 rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer transition-colors bg-white/40 dark:bg-slate-900/40 hover:bg-brand-50/30 dark:hover:bg-brand-950/20 group">
+                  <label className="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-brand-500 dark:hover:border-brand-400 rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer transition-colors bg-white/40 dark:bg-slate-900/40 hover:bg-brand-50/30 dark:hover:bg-brand-950/20 group relative">
                     <input
                       type="file"
                       multiple
                       accept="image/png,image/jpeg,image/webp,image/jpg"
                       onChange={handleFileUpload}
+                      disabled={isProcessingImages || images.length >= 8}
                       className="hidden"
                     />
-                    <div className="w-12 h-12 rounded-2xl bg-brand-500/10 group-hover:scale-110 text-brand-600 dark:text-brand-400 flex items-center justify-center transition-transform mb-2">
-                      <UploadCloud className="w-6 h-6" />
-                    </div>
-                    <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                      Click to choose photos or drag & drop files here
-                    </p>
-                    <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
-                      Supports JPG, PNG, WebP up to 10MB each. High-res images increase tenant inquiries by 3x.
-                    </p>
+                    {isProcessingImages ? (
+                      <div className="flex flex-col items-center py-2 space-y-2">
+                        <Loader2 className="w-7 h-7 text-brand-600 dark:text-brand-400 animate-spin" />
+                        <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                          Optimizing photos for instant high-res upload...
+                        </p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="w-12 h-12 rounded-2xl bg-brand-500/10 group-hover:scale-110 text-brand-600 dark:text-brand-400 flex items-center justify-center transition-transform mb-2">
+                          <UploadCloud className="w-6 h-6" />
+                        </div>
+                        <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                          Click to choose photos or drag & drop files here
+                        </p>
+                        <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
+                          Supports JPG, PNG, WebP up to 15MB each (automatically compressed for fast loading).
+                        </p>
+                      </>
+                    )}
                   </label>
                 ) : (
-                  /* Tab 2: Paste Image URL / Drive Link */
+                  /* Tab 2: Paste Image URL / Cloud Photo Link */
                   <div className="flex gap-2">
                     <input
                       type="url"
-                      placeholder="Paste image link (e.g. https://images.unsplash.com/... or cloud photo URL)"
+                      placeholder="Paste image link (e.g. https://images.unsplash.com/... or Google Drive URL)"
                       value={imageUrlInput}
                       onChange={(e) => setImageUrlInput(e.target.value)}
                       className="glass-input flex-1 px-3.5 py-2.5 rounded-xl text-sm"
@@ -471,18 +691,21 @@ export const ListPropertyPage: React.FC = () => {
                   onChange={(e) => setFormData({ ...formData, consent: e.target.checked })}
                   className="mt-1 rounded text-brand-600 focus:ring-brand-500"
                 />
-                <label htmlFor="list-consent" className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                  I confirm that I am the owner / authorized channel partner for this commercial asset and authorize Shristi Estate to present this unit to qualified commercial prospects.
+                <label htmlFor="list-consent" className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed cursor-pointer select-none">
+                  I confirm that I am the owner / authorized channel partner for this commercial asset and authorize Shristi Estate to present this unit to qualified corporate prospects.
                 </label>
               </div>
 
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || isProcessingImages}
                 className="btn-glass-primary w-full py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2"
               >
                 {loading ? (
-                  <span>Submitting Listing...</span>
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Submitting Listing...
+                  </span>
                 ) : (
                   <>
                     <UploadCloud className="w-4 h-4" />

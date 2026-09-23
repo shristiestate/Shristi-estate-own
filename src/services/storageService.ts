@@ -282,10 +282,35 @@ export const StorageService = {
 
   // PROPERTIES
   async getProperties(): Promise<Property[]> {
+    let localProps: Property[] = [];
+    try {
+      const stored = localStorage.getItem(STORAGE_KEYS.PROPERTIES);
+      if (stored) localProps = JSON.parse(stored);
+    } catch (e) {
+      console.warn('Error reading local properties:', e);
+    }
+
     if (isSupabaseConfigured && supabase) {
       try {
         const { data, error } = await supabase.from('properties').select('*');
-        if (!error && data && data.length > 0) return data as Property[];
+        if (!error && data && data.length > 0) {
+          const merged: Property[] = (data as any[]).map(supaProp => {
+            const localProp = localProps.find(lp => lp.id === supaProp.id || lp.slug === supaProp.slug);
+            return {
+              ...supaProp,
+              ...(localProp || {}),
+              tower: supaProp.tower || localProp?.tower || null,
+            };
+          });
+
+          try {
+            localStorage.setItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(merged));
+          } catch (e) {
+            // ignore
+          }
+
+          return merged;
+        }
       } catch (e) {
         console.warn('Falling back to local storage for properties:', e);
       }
@@ -321,6 +346,7 @@ export const StorageService = {
       property_type: property.property_type || 'Commercial Office',
       building_id: (property.building_id && String(property.building_id).trim() !== '') ? property.building_id : null as any,
       building_name: property.building_id ? (property.building_name || null as any) : null as any,
+      tower: property.tower || null as any,
       location_id: (property.location_id && String(property.location_id).trim() !== '') ? property.location_id : null as any,
       carpet_area: (property.carpet_area && !isNaN(Number(property.carpet_area))) ? Number(property.carpet_area) : null as any,
       land_area: (property.land_area && !isNaN(Number(property.land_area))) ? Number(property.land_area) : null as any,
@@ -355,8 +381,13 @@ export const StorageService = {
       try {
         const { error } = await supabase.from('properties').upsert(sanitized);
         if (error) {
-          console.error('Supabase upsert property error:', error);
-          throw new Error(error.message || 'Supabase upsert failed');
+          console.warn('Supabase upsert property error, trying fallback without optional fields:', error);
+          const { tower, ...basePayload } = sanitized as any;
+          const fallbackRes = await supabase.from('properties').upsert(basePayload);
+          if (fallbackRes.error) {
+            console.error('Supabase fallback upsert property error:', fallbackRes.error);
+            throw new Error(fallbackRes.error.message || 'Supabase upsert failed');
+          }
         }
       } catch (e) {
         console.error('Supabase upsert property error:', e);

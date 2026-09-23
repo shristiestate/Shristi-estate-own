@@ -804,6 +804,7 @@ export const AdminPage: React.FC = () => {
         ? 'https://images.unsplash.com/photo-1519999482648-25049ddd37b1?auto=format&fit=crop&w=1000&q=80'
         : 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1000&q=80',
       gallery: [],
+      tower: '',
       published: true,
     });
     setCustomPropertyTypeInput('');
@@ -822,6 +823,7 @@ export const AdminPage: React.FC = () => {
       land_area: prop.land_area,
       floor: prop.floor || 'Ground Floor',
       total_floors: prop.total_floors || 1,
+      tower: prop.tower || '',
       power_load: prop.power_load || '',
       road_width: prop.road_width || '',
       possession: prop.possession || 'Ready to Move',
@@ -898,6 +900,7 @@ export const AdminPage: React.FC = () => {
         location_name: loc ? loc.name : (currentProperty.location_name || 'Sector 62, Noida'),
         building_id: (currentProperty.building_id && currentProperty.building_id.trim() !== '') ? currentProperty.building_id : null as any,
         building_name: (currentProperty.building_id && bld) ? bld.name : (currentProperty.building_name || null as any),
+        tower: currentProperty.tower || (bld && bld.towers && bld.towers.length > 0 ? bld.towers[0] : null) as any,
         address: currentProperty.address || (loc ? loc.name : 'Sector 62, Noida'),
         city: currentProperty.city || 'Noida',
         built_up_area: Number(currentProperty.built_up_area) || 1200,
@@ -3184,7 +3187,8 @@ export const AdminPage: React.FC = () => {
                         setCurrentProperty({ 
                           ...currentProperty, 
                           building_id: e.target.value || undefined,
-                          building_name: bld ? bld.name : undefined
+                          building_name: bld ? bld.name : undefined,
+                          tower: bld && bld.towers && bld.towers.length > 0 ? bld.towers[0] : currentProperty.tower
                         });
                       }}
                       className="glass-input w-full px-3 py-2 rounded-xl text-sm"
@@ -3196,6 +3200,66 @@ export const AdminPage: React.FC = () => {
                     </select>
                   </div>
                 </div>
+
+                {/* Multi-Tower & Floor Options for Connected Building */}
+                {(() => {
+                  const assocBld = buildings.find(b => b.id === currentProperty.building_id);
+                  if (!assocBld) return null;
+
+                  return (
+                    <div className="p-3.5 rounded-2xl bg-brand-50/70 dark:bg-brand-950/40 border border-brand-200/80 dark:border-brand-800/80 space-y-2.5">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                        <span className="text-xs font-bold text-brand-700 dark:text-brand-300 uppercase tracking-wider flex items-center gap-1.5">
+                          <Building2 className="w-3.5 h-3.5 text-brand-500" />
+                          <span>Campus Tower & Floor Option</span>
+                        </span>
+                        <span className="text-[11px] text-brand-700 dark:text-brand-300 font-bold bg-white dark:bg-slate-800 px-2 py-0.5 rounded-lg border border-brand-200 dark:border-brand-800">
+                          {assocBld.name} → {currentProperty.tower || (assocBld.towers?.[0] || 'Tower A')} → {currentProperty.floor || 'Ground'} Floor
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-semibold mb-1 text-slate-700 dark:text-slate-300">
+                            Tower / Block *
+                          </label>
+                          {assocBld.towers && assocBld.towers.length > 0 ? (
+                            <select
+                              value={currentProperty.tower || assocBld.towers[0]}
+                              onChange={(e) => setCurrentProperty({ ...currentProperty, tower: e.target.value })}
+                              className="glass-input w-full px-3 py-2 rounded-xl text-xs font-semibold"
+                            >
+                              {assocBld.towers.map(t => (
+                                <option key={t} value={t}>{t}</option>
+                              ))}
+                            </select>
+                          ) : (
+                            <input
+                              type="text"
+                              value={currentProperty.tower || ''}
+                              onChange={(e) => setCurrentProperty({ ...currentProperty, tower: e.target.value })}
+                              placeholder="e.g. Tower A"
+                              className="glass-input w-full px-3 py-2 rounded-xl text-xs"
+                            />
+                          )}
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold mb-1 text-slate-700 dark:text-slate-300">
+                            Floor Level (e.g. 5 for 5th Floor, G for Ground) *
+                          </label>
+                          <input
+                            type="text"
+                            value={currentProperty.floor || ''}
+                            onChange={(e) => setCurrentProperty({ ...currentProperty, floor: e.target.value })}
+                            placeholder="e.g. 5 or 5th Floor"
+                            className="glass-input w-full px-3 py-2 rounded-xl text-xs font-semibold"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="sm:col-span-2">

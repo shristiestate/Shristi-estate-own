@@ -94,6 +94,7 @@ export interface Property {
   location_name: string;
   building_id?: string;
   building_name?: string;
+  tower?: string; // e.g. "Tower A", "Tower B", "Block 1"
   address: string;
   city: string;
   built_up_area: number; // in sq.ft

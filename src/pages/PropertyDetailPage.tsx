@@ -16,7 +16,8 @@ import {
   ArrowRight,
   ShieldCheck,
   Check,
-  Building
+  Building,
+  ChevronRight
 } from 'lucide-react';
 import { StorageService } from '../services/storageService';
 import { Property, Building as BuildingType } from '../types';
@@ -147,7 +148,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
 
           {/* Property Title & Header Meta */}
           <div className="space-y-2 sm:space-y-3">
-            <div className="flex items-center gap-2 text-xs font-semibold text-brand-600 dark:text-brand-400 uppercase tracking-wider">
+            <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-brand-600 dark:text-brand-400 uppercase tracking-wider">
               <span>{property.property_type}</span>
               {property.building_name && (
                 <>
@@ -159,6 +160,24 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
                 </>
               )}
             </div>
+
+            {/* Multi-Tower & Floor Hierarchy Path (e.g. I-Thum → Tower A → 5th Floor) */}
+            {property.building_name && (
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs font-semibold py-1.5 px-3 rounded-2xl bg-brand-50/80 dark:bg-brand-950/40 border border-brand-200/80 dark:border-brand-800/80 text-brand-800 dark:text-brand-300 w-fit shadow-2xs">
+                <Building2 className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400 shrink-0" />
+                <Link to={`/buildings/${building?.slug || ''}`} className="hover:underline font-bold text-brand-700 dark:text-brand-300">
+                  {property.building_name}
+                </Link>
+                <ChevronRight className="w-3.5 h-3.5 text-brand-400 shrink-0" />
+                <span className="font-bold">
+                  {property.tower || (property.address.match(/Tower\s+[A-Z0-9]+/i)?.[0]) || 'Tower A'}
+                </span>
+                <ChevronRight className="w-3.5 h-3.5 text-brand-400 shrink-0" />
+                <span className="font-bold text-slate-900 dark:text-white">
+                  {property.floor ? `${property.floor}${typeof property.floor === 'number' ? 'th' : ''} Floor` : 'Ground Floor'}
+                </span>
+              </div>
+            )}
 
             <h1 className="text-xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 dark:text-white font-['Outfit'] tracking-tight leading-tight">
               {property.title}

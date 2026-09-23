@@ -23,6 +23,7 @@ import { Property, Building as BuildingType } from '../types';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
 import { WhatsAppIcon } from '../components/common/SocialIcons';
 import { generatePropertyWhatsAppLink } from '../utils/whatsapp';
+import { getBuildingStructureDisplay } from '../utils/textFormat';
 
 interface PropertyDetailPageProps {
   onOpenEnquiry: (property: Property) => void;
@@ -302,7 +303,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs pt-2">
                 <div>
                   <span className="text-slate-400 block font-medium">Structure</span>
-                  <span className="font-semibold text-slate-800 dark:text-slate-200">G + {building.total_floors} Floors</span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200">{getBuildingStructureDisplay(building)}</span>
                 </div>
                 <div>
                   <span className="text-slate-400 block font-medium">Lifts</span>

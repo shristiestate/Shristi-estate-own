@@ -45,7 +45,7 @@ import {
 } from 'lucide-react';
 import { StorageService } from '../services/storageService';
 import { Property, Building, Location, Lead, LeadStatus, PropertyStatus, PropertyCategory } from '../types';
-import { handleOverviewPaste } from '../utils/textFormat';
+import { handleOverviewPaste, computeStructureDisplay, getBuildingStructureDisplay } from '../utils/textFormat';
 
 export const CATEGORY_CONFIG: Record<PropertyCategory, {
   label: string;
@@ -325,31 +325,7 @@ export const AdminPage: React.FC = () => {
 
   // Helper to dynamically calculate human-readable building structure
   const getComputedStructureDisplay = (basement?: string, ground?: string, floors?: number) => {
-    const parts: string[] = [];
-    const b = (basement || '').trim();
-    if (b && b !== 'No Basement' && b !== 'None') {
-      if (b.includes('5')) parts.push('5B');
-      else if (b.includes('4')) parts.push('4B');
-      else if (b.includes('3')) parts.push('3B');
-      else if (b.includes('2')) parts.push('2B');
-      else if (b.includes('1') || b.toLowerCase().includes('single')) parts.push('B');
-      else parts.push(b);
-    }
-    
-    const g = (ground || 'Ground (G)').trim();
-    if (g === 'Ground (G)') parts.push('G');
-    else if (g === 'Ground + Mezzanine (G + M)') parts.push('G + M');
-    else if (g === 'Lower Ground + Upper Ground (LG + UG)') parts.push('LG + UG');
-    else if (g === 'Stilt + Ground (S + G)') parts.push('S + G');
-    else if (g === 'Stilt Only (S)') parts.push('S');
-    else if (g === 'Ground Only') parts.push('Ground');
-    else if (g && g !== 'No Ground') parts.push(g);
-
-    const f = Number(floors) || 0;
-    if (f > 0 && g !== 'Ground Only') {
-      parts.push(`${f} Floors`);
-    }
-    return parts.join(' + ') || `${f || 1} Floors`;
+    return computeStructureDisplay(basement, ground, floors);
   };
 
   // Location Modal Form (Add & Edit)
@@ -1015,7 +991,7 @@ export const AdminPage: React.FC = () => {
     const basement = bld.basement_floors || '2 Basements (2B)';
     const ground = bld.ground_option || 'Ground (G)';
     const floors = Number(bld.total_floors) || 14;
-    const structureDisplay = bld.structure_display || getComputedStructureDisplay(basement, ground, floors);
+    const structureDisplay = getBuildingStructureDisplay({ ...bld, basement_floors: basement, ground_option: ground, total_floors: floors, structure_display: bld.structure_display });
 
     setCurrentBuilding({
       ...bld,
@@ -1121,7 +1097,7 @@ export const AdminPage: React.FC = () => {
         total_floors: Number(currentBuilding.total_floors) || 1,
         basement_floors: currentBuilding.basement_floors || '2 Basements (2B)',
         ground_option: currentBuilding.ground_option || 'Ground (G)',
-        structure_display: currentBuilding.structure_display || getComputedStructureDisplay(currentBuilding.basement_floors, currentBuilding.ground_option, currentBuilding.total_floors || 14),
+        structure_display: getBuildingStructureDisplay(currentBuilding),
         towers: towersList,
         total_towers: towersList.length > 0 ? towersList.length : (currentBuilding.total_towers || 1),
         tower_details: currentBuilding.tower_details || (towersList.length > 1 ? `${towersList.length} Towers (${towersList.join(', ')})` : (towersList[0] || 'Single Tower')),
@@ -2144,7 +2120,7 @@ export const AdminPage: React.FC = () => {
                     <div>
                       <span className="text-slate-400 block">Structure:</span>
                       <span className="font-semibold text-slate-800 dark:text-slate-200">
-                        {bld.structure_display || `G + ${bld.total_floors} Floors`}
+                        {getBuildingStructureDisplay(bld)}
                       </span>
                     </div>
                     <div>

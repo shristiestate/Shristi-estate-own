@@ -21,6 +21,7 @@ import { PropertyCard } from '../components/common/PropertyCard';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
 import { WhatsAppIcon } from '../components/common/SocialIcons';
 import { generateBuildingWhatsAppLink } from '../utils/whatsapp';
+import { getBuildingStructureDisplay } from '../utils/textFormat';
 
 interface BuildingDetailPageProps {
   onOpenEnquiry: (property?: Property) => void;
@@ -176,8 +177,8 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
               </div>
               <div>
                 <span className="text-slate-400 block font-medium">Structure</span>
-                <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white mt-0.5 block truncate" title={building.structure_display || `G + ${building.total_floors} Floors`}>
-                  {building.structure_display || `G + ${building.total_floors} Floors`}
+                <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white mt-0.5 block truncate" title={getBuildingStructureDisplay(building)}>
+                  {getBuildingStructureDisplay(building)}
                 </span>
               </div>
               <div>
@@ -247,9 +248,9 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
               <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800">
                 <span className="text-slate-400 block font-medium">Floor Structure</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200 mt-1 block">
-                  {building.structure_display || `G + ${building.total_floors} Floors`}
+                  {getBuildingStructureDisplay(building)}
                 </span>
-                {building.basement_floors && (
+                {building.basement_floors && building.basement_floors !== 'No Basement' && (
                   <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">
                     Basement: {building.basement_floors} • {building.ground_option || 'Ground Level'}
                   </span>

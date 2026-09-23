@@ -1,6 +1,7 @@
 import { Location, Building, Property, Lead, LeadStatus } from '../types';
 import { INITIAL_LOCATIONS, INITIAL_BUILDINGS, INITIAL_PROPERTIES, INITIAL_LEADS } from '../data/mockData';
 import { supabase, isSupabaseConfigured } from './supabaseClient';
+import { getBuildingStructureDisplay } from '../utils/textFormat';
 
 const STORAGE_KEYS = {
   LOCATIONS: 'shristi_locations_v1',
@@ -97,16 +98,69 @@ export const StorageService = {
 
   // BUILDINGS
   async getBuildings(): Promise<Building[]> {
+    let localBuildings: Building[] = [];
+    try {
+      const stored = localStorage.getItem(STORAGE_KEYS.BUILDINGS);
+      if (stored) {
+        localBuildings = JSON.parse(stored);
+      }
+    } catch (e) {
+      console.warn('Error reading local buildings:', e);
+    }
+
     if (isSupabaseConfigured && supabase) {
       try {
         const { data, error } = await supabase.from('buildings').select('*');
-        if (!error && data && data.length > 0) return data as Building[];
+        if (!error && data && data.length > 0) {
+          const mergedList: Building[] = (data as any[]).map(supaBld => {
+            const localBld = localBuildings.find(lb => lb.id === supaBld.id || lb.slug === supaBld.slug);
+            let meta: any = {};
+            if (typeof supaBld.available_floors === 'string' && supaBld.available_floors.startsWith('__meta:')) {
+              try {
+                meta = JSON.parse(supaBld.available_floors.replace('__meta:', ''));
+              } catch (e) {
+                // ignore
+              }
+            }
+
+            const combined: Building = {
+              ...supaBld,
+              ...meta,
+              ...(localBld || {}),
+              available_floors: meta.available_floors !== undefined ? meta.available_floors : (supaBld.available_floors?.startsWith('__meta:') ? null : supaBld.available_floors),
+              structure_display: supaBld.structure_display || meta.structure_display || localBld?.structure_display,
+              basement_floors: supaBld.basement_floors || meta.basement_floors || localBld?.basement_floors,
+              ground_option: supaBld.ground_option || meta.ground_option || localBld?.ground_option,
+              towers: (Array.isArray(supaBld.towers) && supaBld.towers.length > 0) ? supaBld.towers : (meta.towers || localBld?.towers || []),
+              tower_details: supaBld.tower_details || meta.tower_details || localBld?.tower_details,
+              categories: (Array.isArray(supaBld.categories) && supaBld.categories.length > 0) ? supaBld.categories : (meta.categories || localBld?.categories || [supaBld.category || 'office-space']),
+              locations: (Array.isArray(supaBld.locations) && supaBld.locations.length > 0) ? supaBld.locations : (meta.locations || localBld?.locations || (supaBld.location_id ? [supaBld.location_id] : [])),
+              location_names: (Array.isArray(supaBld.location_names) && supaBld.location_names.length > 0) ? supaBld.location_names : (meta.location_names || localBld?.location_names || (supaBld.location_name ? [supaBld.location_name] : []))
+            };
+
+            combined.structure_display = getBuildingStructureDisplay(combined);
+            return combined;
+          });
+
+          // Sync back to local storage cache so next render is consistent
+          try {
+            localStorage.setItem(STORAGE_KEYS.BUILDINGS, JSON.stringify(mergedList));
+          } catch (e) {
+            // ignore
+          }
+
+          return mergedList;
+        }
       } catch (e) {
         console.warn('Falling back to local storage for buildings:', e);
       }
     }
-    const data = localStorage.getItem(STORAGE_KEYS.BUILDINGS);
-    return data ? JSON.parse(data) : INITIAL_BUILDINGS;
+
+    const source = localBuildings.length > 0 ? localBuildings : INITIAL_BUILDINGS;
+    return source.map(b => ({
+      ...b,
+      structure_display: getBuildingStructureDisplay(b)
+    }));
   },
 
   async getBuildingBySlug(slug: string): Promise<Building | null> {
@@ -120,6 +174,7 @@ export const StorageService = {
   },
 
   async saveBuilding(building: Building): Promise<void> {
+    const structureDisplay = getBuildingStructureDisplay(building);
     const sanitized: Building = {
       ...building,
       location_id: (building.location_id && String(building.location_id).trim() !== '') ? building.location_id : null as any,
@@ -128,6 +183,9 @@ export const StorageService = {
       category: building.category || (building.categories && building.categories[0]) || 'office-space',
       categories: Array.isArray(building.categories) && building.categories.length > 0 ? building.categories : [building.category || 'office-space'],
       total_floors: Number(building.total_floors) || 1,
+      basement_floors: building.basement_floors || '2 Basements (2B)',
+      ground_option: building.ground_option || 'Ground (G)',
+      structure_display: structureDisplay,
       sale_range: (building.sale_range && String(building.sale_range).trim() !== '') ? building.sale_range : null as any,
       gallery: Array.isArray(building.gallery) ? building.gallery : [],
       towers: Array.isArray(building.towers) ? building.towers : [],
@@ -150,8 +208,20 @@ export const StorageService = {
       try {
         const { error } = await supabase.from('buildings').upsert(sanitized);
         if (error) {
-          // If upsert fails due to missing optional columns on Supabase, attempt fallback with core schema columns
-          console.warn('Supabase upsert building error, trying fallback with base columns:', error);
+          // If upsert fails due to missing optional columns on Supabase, attempt fallback with core schema columns and encode metadata
+          console.warn('Supabase upsert building error, trying fallback with base columns and packed metadata:', error);
+          const metaPayload = {
+            available_floors: sanitized.available_floors || null,
+            structure_display: sanitized.structure_display,
+            basement_floors: sanitized.basement_floors,
+            ground_option: sanitized.ground_option,
+            towers: sanitized.towers,
+            total_towers: sanitized.total_towers,
+            tower_details: sanitized.tower_details,
+            categories: sanitized.categories,
+            locations: sanitized.locations,
+            location_names: sanitized.location_names,
+          };
           const basePayload = {
             id: sanitized.id,
             name: sanitized.name,
@@ -164,7 +234,7 @@ export const StorageService = {
             hero_image: sanitized.hero_image,
             gallery: sanitized.gallery,
             total_floors: sanitized.total_floors,
-            available_floors: sanitized.available_floors || null,
+            available_floors: '__meta:' + JSON.stringify(metaPayload),
             size_range: sanitized.size_range,
             rent_range: sanitized.rent_range || null,
             sale_range: sanitized.sale_range || null,

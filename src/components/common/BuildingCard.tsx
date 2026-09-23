@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Building2, MapPin, ArrowRight, Layers, ShieldCheck, Zap } from 'lucide-react';
 import { Building } from '../../types';
+import { getBuildingStructureDisplay } from '../../utils/textFormat';
 
 interface BuildingCardProps {
   building: Building;
@@ -85,7 +86,7 @@ export const BuildingCard: React.FC<BuildingCardProps> = ({ building }) => {
               Floors & Structure:
             </span>
             <span className="font-semibold text-slate-800 dark:text-slate-200">
-              {building.structure_display || `G + ${building.total_floors} Floors`}
+              {getBuildingStructureDisplay(building)}
             </span>
           </div>
 

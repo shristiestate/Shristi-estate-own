@@ -130,3 +130,15 @@ CREATE POLICY "Public read properties" ON properties FOR SELECT USING (published
 
 -- Public Leads Insertion Policy
 CREATE POLICY "Public insert leads" ON leads FOR INSERT WITH CHECK (true);
+
+-- Extensions for Commercial Buildings: Multi-locations, Categories, Structure, and Towers
+ALTER TABLE buildings ADD COLUMN IF NOT EXISTS locations JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE buildings ADD COLUMN IF NOT EXISTS location_names JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE buildings ADD COLUMN IF NOT EXISTS categories JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE buildings ADD COLUMN IF NOT EXISTS basement_floors TEXT;
+ALTER TABLE buildings ADD COLUMN IF NOT EXISTS ground_option TEXT;
+ALTER TABLE buildings ADD COLUMN IF NOT EXISTS structure_display TEXT;
+ALTER TABLE buildings ADD COLUMN IF NOT EXISTS towers JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE buildings ADD COLUMN IF NOT EXISTS total_towers INTEGER DEFAULT 1;
+ALTER TABLE buildings ADD COLUMN IF NOT EXISTS tower_details TEXT;
+

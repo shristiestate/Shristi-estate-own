@@ -248,7 +248,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenEnquiry }) => {
                   >
                     <option value="">All Buildings</option>
                     {buildings
-                      .filter((b) => !selectedLocation || b.location_id === selectedLocation)
+                      .filter((b) => !selectedLocation || b.location_id === selectedLocation || (b.locations && b.locations.includes(selectedLocation)))
                       .map((b) => (
                         <option key={b.id} value={b.id}>
                           {b.name} ({b.location_name.split(',')[0]})

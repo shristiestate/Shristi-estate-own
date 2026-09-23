@@ -116,16 +116,21 @@ export const StorageService = {
 
   async getBuildingsByLocation(locationId: string): Promise<Building[]> {
     const buildings = await this.getBuildings();
-    return buildings.filter(b => b.location_id === locationId);
+    return buildings.filter(b => b.location_id === locationId || (b.locations && b.locations.includes(locationId)));
   },
 
   async saveBuilding(building: Building): Promise<void> {
     const sanitized: Building = {
       ...building,
       location_id: (building.location_id && String(building.location_id).trim() !== '') ? building.location_id : null as any,
+      locations: Array.isArray(building.locations) ? building.locations : (building.location_id ? [building.location_id] : []),
+      location_names: Array.isArray(building.location_names) ? building.location_names : (building.location_name ? [building.location_name] : []),
+      category: building.category || (building.categories && building.categories[0]) || 'office-space',
+      categories: Array.isArray(building.categories) && building.categories.length > 0 ? building.categories : [building.category || 'office-space'],
       total_floors: Number(building.total_floors) || 1,
       sale_range: (building.sale_range && String(building.sale_range).trim() !== '') ? building.sale_range : null as any,
       gallery: Array.isArray(building.gallery) ? building.gallery : [],
+      towers: Array.isArray(building.towers) ? building.towers : [],
     };
 
     try {
@@ -145,8 +150,40 @@ export const StorageService = {
       try {
         const { error } = await supabase.from('buildings').upsert(sanitized);
         if (error) {
-          console.error('Supabase upsert building error:', error);
-          throw new Error(error.message || 'Supabase upsert failed');
+          // If upsert fails due to missing optional columns on Supabase, attempt fallback with core schema columns
+          console.warn('Supabase upsert building error, trying fallback with base columns:', error);
+          const basePayload = {
+            id: sanitized.id,
+            name: sanitized.name,
+            slug: sanitized.slug,
+            location_id: sanitized.location_id,
+            location_name: sanitized.location_name,
+            category: sanitized.category,
+            address: sanitized.address,
+            description: sanitized.description,
+            hero_image: sanitized.hero_image,
+            gallery: sanitized.gallery,
+            total_floors: sanitized.total_floors,
+            available_floors: sanitized.available_floors || null,
+            size_range: sanitized.size_range,
+            rent_range: sanitized.rent_range || null,
+            sale_range: sanitized.sale_range || null,
+            furnishing_options: sanitized.furnishing_options,
+            parking: sanitized.parking,
+            lifts: sanitized.lifts,
+            security: sanitized.security,
+            power_backup: sanitized.power_backup,
+            amenities: sanitized.amenities,
+            nearby_landmarks: sanitized.nearby_landmarks,
+            nearby_transport: sanitized.nearby_transport,
+            published: sanitized.published,
+            property_count: sanitized.property_count || 0
+          };
+          const fallbackRes = await supabase.from('buildings').upsert(basePayload);
+          if (fallbackRes.error) {
+            console.error('Supabase fallback upsert error:', fallbackRes.error);
+            throw new Error(fallbackRes.error.message || 'Supabase upsert failed');
+          }
         }
       } catch (e) {
         console.error('Supabase upsert building error:', e);

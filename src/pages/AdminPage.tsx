@@ -285,16 +285,30 @@ export const AdminPage: React.FC = () => {
   // Building Modal Form (Add & Edit)
   const [showBuildingModal, setShowBuildingModal] = useState(false);
   const [isEditingBuilding, setIsEditingBuilding] = useState(false);
+  const [showQuickLocationModal, setShowQuickLocationModal] = useState(false);
+  const [quickLocationName, setQuickLocationName] = useState('');
+  const [quickLocationCity, setQuickLocationCity] = useState('Noida');
+  const [newTowerInput, setNewTowerInput] = useState('');
+
   const [currentBuilding, setCurrentBuilding] = useState<Partial<Building>>({
     name: '',
     location_id: 'loc-sec-62',
     location_name: 'Sector 62, Noida',
+    locations: ['loc-sec-62'],
+    location_names: ['Sector 62, Noida'],
     category: 'office-space',
+    categories: ['office-space'],
     address: 'Plot A-40, Sector 62, Noida',
     description: '',
     hero_image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80',
     gallery: [],
     total_floors: 14,
+    basement_floors: '2 Basements (2B)',
+    ground_option: 'Ground (G)',
+    structure_display: '2B + G + 14 Floors',
+    towers: ['Tower A', 'Tower B'],
+    total_towers: 2,
+    tower_details: 'Twin Towers (Tower A & Tower B)',
     size_range: '750 sq.ft – 25,000 sq.ft',
     rent_range: '₹55 – ₹70/sq.ft',
     sale_range: '',
@@ -308,6 +322,35 @@ export const AdminPage: React.FC = () => {
     nearby_transport: '500m from Metro Station',
     published: true,
   });
+
+  // Helper to dynamically calculate human-readable building structure
+  const getComputedStructureDisplay = (basement?: string, ground?: string, floors?: number) => {
+    const parts: string[] = [];
+    const b = (basement || '').trim();
+    if (b && b !== 'No Basement' && b !== 'None') {
+      if (b.includes('5')) parts.push('5B');
+      else if (b.includes('4')) parts.push('4B');
+      else if (b.includes('3')) parts.push('3B');
+      else if (b.includes('2')) parts.push('2B');
+      else if (b.includes('1') || b.toLowerCase().includes('single')) parts.push('B');
+      else parts.push(b);
+    }
+    
+    const g = (ground || 'Ground (G)').trim();
+    if (g === 'Ground (G)') parts.push('G');
+    else if (g === 'Ground + Mezzanine (G + M)') parts.push('G + M');
+    else if (g === 'Lower Ground + Upper Ground (LG + UG)') parts.push('LG + UG');
+    else if (g === 'Stilt + Ground (S + G)') parts.push('S + G');
+    else if (g === 'Stilt Only (S)') parts.push('S');
+    else if (g === 'Ground Only') parts.push('Ground');
+    else if (g && g !== 'No Ground') parts.push(g);
+
+    const f = Number(floors) || 0;
+    if (f > 0 && g !== 'Ground Only') {
+      parts.push(`${f} Floors`);
+    }
+    return parts.join(' + ') || `${f || 1} Floors`;
+  };
 
   // Location Modal Form (Add & Edit)
   const [showLocationModal, setShowLocationModal] = useState(false);
@@ -921,16 +964,27 @@ export const AdminPage: React.FC = () => {
   // --- BUILDING ACTIONS ---
   const handleOpenAddBuilding = () => {
     setIsEditingBuilding(false);
+    const initialLoc = locations[0]?.id || 'loc-sec-62';
+    const initialLocName = locations[0]?.name || 'Sector 62, Noida';
     setCurrentBuilding({
       name: '',
-      location_id: locations[0]?.id || 'loc-sec-62',
-      location_name: locations[0]?.name || 'Sector 62, Noida',
+      location_id: initialLoc,
+      location_name: initialLocName,
+      locations: [initialLoc],
+      location_names: [initialLocName],
       category: 'office-space',
+      categories: ['office-space'],
       address: 'Plot A-40, Sector 62, Noida',
       description: '',
       hero_image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80',
       gallery: [],
       total_floors: 14,
+      basement_floors: '2 Basements (2B)',
+      ground_option: 'Ground (G)',
+      structure_display: '2B + G + 14 Floors',
+      towers: ['Tower A', 'Tower B'],
+      total_towers: 2,
+      tower_details: 'Twin Towers (Tower A & Tower B)',
       size_range: '750 sq.ft – 25,000 sq.ft',
       rent_range: '₹55 – ₹70/sq.ft',
       sale_range: '',
@@ -945,16 +999,37 @@ export const AdminPage: React.FC = () => {
       published: true,
     });
     setNewBuildingGalleryUrl('');
+    setNewTowerInput('');
     setShowBuildingModal(true);
   };
 
   const handleOpenEditBuilding = (bld: Building) => {
     setIsEditingBuilding(true);
+    const existingCats: PropertyCategory[] = Array.isArray(bld.categories) && bld.categories.length > 0 
+      ? bld.categories 
+      : [bld.category || 'office-space'];
+    const existingLocs = Array.isArray(bld.locations) && bld.locations.length > 0
+      ? bld.locations
+      : [bld.location_id];
+    const existingTowers = Array.isArray(bld.towers) ? [...bld.towers] : [];
+    const basement = bld.basement_floors || '2 Basements (2B)';
+    const ground = bld.ground_option || 'Ground (G)';
+    const floors = Number(bld.total_floors) || 14;
+    const structureDisplay = bld.structure_display || getComputedStructureDisplay(basement, ground, floors);
+
     setCurrentBuilding({
       ...bld,
+      categories: existingCats,
+      locations: existingLocs,
+      towers: existingTowers,
+      basement_floors: basement,
+      ground_option: ground,
+      structure_display: structureDisplay,
+      tower_details: bld.tower_details || (existingTowers.length > 1 ? `${existingTowers.length} Towers (${existingTowers.join(', ')})` : (existingTowers[0] || 'Single Tower')),
       gallery: bld.gallery && Array.isArray(bld.gallery) ? [...bld.gallery] : []
     });
     setNewBuildingGalleryUrl('');
+    setNewTowerInput('');
     setShowBuildingModal(true);
   };
 
@@ -962,6 +1037,46 @@ export const AdminPage: React.FC = () => {
     if (window.confirm('Are you sure you want to delete this commercial building?')) {
       await StorageService.deleteBuilding(buildingId);
       setBuildings(prev => prev.filter(b => b.id !== buildingId));
+    }
+  };
+
+  const handleSaveQuickLocation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!quickLocationName.trim()) return;
+    try {
+      const slug = quickLocationName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      const newLoc: Location = {
+        id: `loc-${slug}`,
+        name: quickLocationName.trim(),
+        city: quickLocationCity.trim() || 'Noida',
+        region: 'Delhi-NCR',
+        slug: slug,
+        description: `Premier commercial hubs and IT centers in ${quickLocationName.trim()}, ${quickLocationCity.trim()}.`,
+        hero_image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80',
+        categories: ['office-space', 'it-business-parks'],
+        featured: true,
+        building_count: 1,
+        property_count: 0
+      };
+      await StorageService.saveLocation(newLoc);
+      setLocations(prev => [newLoc, ...prev.filter(l => l.id !== newLoc.id)]);
+      
+      const currentLocs = currentBuilding.locations || [];
+      const updatedLocs = currentLocs.includes(newLoc.id) ? currentLocs : [newLoc.id, ...currentLocs];
+      const currentLocNames = currentBuilding.location_names || [];
+      const updatedLocNames = currentLocNames.includes(newLoc.name) ? currentLocNames : [newLoc.name, ...currentLocNames];
+      
+      setCurrentBuilding(prev => ({
+        ...prev,
+        location_id: newLoc.id,
+        location_name: newLoc.name,
+        locations: updatedLocs,
+        location_names: updatedLocNames,
+      }));
+      setQuickLocationName('');
+      setShowQuickLocationModal(false);
+    } catch (err: any) {
+      alert('Error creating location: ' + err.message);
     }
   };
 
@@ -974,20 +1089,42 @@ export const AdminPage: React.FC = () => {
 
     setIsSaving(true);
     try {
-      const loc = locations.find(l => l.id === currentBuilding.location_id);
+      const selectedLocationIds = Array.isArray(currentBuilding.locations) && currentBuilding.locations.length > 0
+        ? currentBuilding.locations
+        : [currentBuilding.location_id || (locations[0]?.id || 'loc-sec-62')];
+      
+      const primaryLocId = currentBuilding.location_id || selectedLocationIds[0];
+      const primaryLoc = locations.find(l => l.id === primaryLocId);
+      const selectedLocationNames = selectedLocationIds.map(id => locations.find(l => l.id === id)?.name).filter(Boolean) as string[];
+
+      const selectedCategories: PropertyCategory[] = Array.isArray(currentBuilding.categories) && currentBuilding.categories.length > 0
+        ? currentBuilding.categories
+        : [currentBuilding.category || 'office-space'];
+      const primaryCategory = selectedCategories[0];
+
+      const towersList = Array.isArray(currentBuilding.towers) ? currentBuilding.towers : [];
 
       const buildingObj: Building = {
         id: currentBuilding.id || `bld-${Date.now()}`,
         name: currentBuilding.name.trim(),
         slug: currentBuilding.slug || currentBuilding.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-        location_id: currentBuilding.location_id || (locations[0]?.id || 'loc-sec-62'),
-        location_name: loc ? loc.name : (currentBuilding.location_name || 'Sector 62, Noida'),
-        category: (currentBuilding.category || 'office-space') as any,
-        address: currentBuilding.address || 'Sector 62, Noida',
+        location_id: primaryLocId,
+        location_name: primaryLoc ? primaryLoc.name : (currentBuilding.location_name || 'Sector 62, Noida'),
+        locations: selectedLocationIds,
+        location_names: selectedLocationNames,
+        category: primaryCategory,
+        categories: selectedCategories,
+        address: currentBuilding.address || (primaryLoc ? primaryLoc.name : 'Sector 62, Noida'),
         description: currentBuilding.description || '',
         hero_image: currentBuilding.hero_image || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80',
         gallery: Array.isArray(currentBuilding.gallery) ? currentBuilding.gallery : [],
         total_floors: Number(currentBuilding.total_floors) || 1,
+        basement_floors: currentBuilding.basement_floors || '2 Basements (2B)',
+        ground_option: currentBuilding.ground_option || 'Ground (G)',
+        structure_display: currentBuilding.structure_display || getComputedStructureDisplay(currentBuilding.basement_floors, currentBuilding.ground_option, currentBuilding.total_floors || 14),
+        towers: towersList,
+        total_towers: towersList.length > 0 ? towersList.length : (currentBuilding.total_towers || 1),
+        tower_details: currentBuilding.tower_details || (towersList.length > 1 ? `${towersList.length} Towers (${towersList.join(', ')})` : (towersList[0] || 'Single Tower')),
         size_range: currentBuilding.size_range || '1,000 sq.ft – 20,000 sq.ft',
         rent_range: currentBuilding.rent_range || '₹55 – ₹70/sq.ft',
         sale_range: currentBuilding.sale_range || undefined,
@@ -2006,12 +2143,20 @@ export const AdminPage: React.FC = () => {
                     </div>
                     <div>
                       <span className="text-slate-400 block">Structure:</span>
-                      <span className="font-semibold text-slate-800 dark:text-slate-200">G + {bld.total_floors} Floors</span>
+                      <span className="font-semibold text-slate-800 dark:text-slate-200">
+                        {bld.structure_display || `G + ${bld.total_floors} Floors`}
+                      </span>
                     </div>
                     <div>
                       <span className="text-slate-400 block">Size Range:</span>
                       <span className="font-semibold text-slate-800 dark:text-slate-200">{bld.size_range}</span>
                     </div>
+                    {bld.towers && bld.towers.length > 0 && (
+                      <div className="col-span-2 pt-1 border-t border-slate-100 dark:border-slate-800/60 flex items-center gap-1 text-[11px] text-brand-700 dark:text-brand-300 font-semibold truncate">
+                        <Building2 className="w-3.5 h-3.5 text-brand-500 shrink-0" />
+                        <span className="truncate">{bld.tower_details || `${bld.towers.length} Towers (${bld.towers.join(', ')})`}</span>
+                      </div>
+                    )}
                     <div>
                       <span className="text-slate-400 block">Power:</span>
                       <span className="font-semibold text-slate-800 dark:text-slate-200">{bld.power_backup}</span>
@@ -3428,23 +3573,115 @@ export const AdminPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold mb-1">Location / Sector *</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-semibold">Primary Location / Sector *</label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setQuickLocationName('');
+                        setQuickLocationCity('Noida');
+                        setShowQuickLocationModal(true);
+                      }}
+                      className="text-[11px] font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <Plus className="w-3 h-3" />
+                      <span>+ Add Location</span>
+                    </button>
+                  </div>
                   <select
                     value={currentBuilding.location_id}
                     onChange={(e) => {
                       const loc = locations.find(l => l.id === e.target.value);
+                      const currentLocs = currentBuilding.locations || [];
+                      const updatedLocs = currentLocs.includes(e.target.value) ? currentLocs : [e.target.value, ...currentLocs];
+                      const currentNames = currentBuilding.location_names || [];
+                      const updatedNames = loc && !currentNames.includes(loc.name) ? [loc.name, ...currentNames] : currentNames;
                       setCurrentBuilding({ 
                         ...currentBuilding, 
                         location_id: e.target.value,
-                        location_name: loc ? loc.name : currentBuilding.location_name
+                        location_name: loc ? loc.name : currentBuilding.location_name,
+                        locations: updatedLocs,
+                        location_names: updatedNames
                       });
                     }}
                     className="glass-input w-full px-3 py-2 rounded-xl text-sm"
                   >
                     {locations.map(l => (
-                      <option key={l.id} value={l.id}>{l.name}</option>
+                      <option key={l.id} value={l.id}>{l.name} ({l.city})</option>
                     ))}
                   </select>
+                </div>
+              </div>
+
+              {/* Multi-Location / Linked Serving Sectors */}
+              <div className="p-3 rounded-2xl bg-slate-50/90 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-brand-500" />
+                    <span>Associate Locations / Sectors (Multi-Location Option)</span>
+                  </label>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400">
+                    {(currentBuilding.locations?.length || 1)} selected
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Select all sectors or micromarkets this building serves or spans.
+                </p>
+                <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pr-1">
+                  {locations.map(loc => {
+                    const isSelected = (currentBuilding.locations || [currentBuilding.location_id]).includes(loc.id);
+                    const isPrimary = currentBuilding.location_id === loc.id;
+                    return (
+                      <button
+                        type="button"
+                        key={loc.id}
+                        onClick={() => {
+                          const existing = currentBuilding.locations || [currentBuilding.location_id || ''];
+                          let updated: string[];
+                          if (isSelected) {
+                            if (isPrimary && existing.length > 1) {
+                              const nextPrimary = existing.find(id => id !== loc.id)!;
+                              const nextLoc = locations.find(l => l.id === nextPrimary);
+                              updated = existing.filter(id => id !== loc.id);
+                              setCurrentBuilding({
+                                ...currentBuilding,
+                                locations: updated,
+                                location_id: nextPrimary,
+                                location_name: nextLoc ? nextLoc.name : currentBuilding.location_name
+                              });
+                              return;
+                            } else if (existing.length <= 1) {
+                              return; // Keep at least one
+                            } else {
+                              updated = existing.filter(id => id !== loc.id);
+                            }
+                          } else {
+                            updated = [...existing, loc.id];
+                          }
+                          const updatedNames = updated.map(id => locations.find(l => l.id === id)?.name).filter(Boolean) as string[];
+                          setCurrentBuilding({ 
+                            ...currentBuilding, 
+                            locations: updated,
+                            location_names: updatedNames
+                          });
+                        }}
+                        className={`px-2.5 py-1 rounded-lg text-xs border transition-all flex items-center gap-1.5 cursor-pointer ${
+                          isSelected
+                            ? isPrimary
+                              ? 'bg-brand-600 text-white border-brand-600 shadow-sm font-semibold'
+                              : 'bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300 border-brand-300 dark:border-brand-700 font-medium'
+                            : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-brand-400'
+                        }`}
+                      >
+                        <span>{loc.name}</span>
+                        {isPrimary && (
+                          <span className="text-[9px] uppercase px-1 py-0.2 bg-white/20 rounded font-bold">
+                            Primary
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -3635,19 +3872,306 @@ export const AdminPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Floors & Size Range */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold mb-1">Total Floors (Structure)</label>
-                  <input
-                    type="number"
-                    value={currentBuilding.total_floors}
-                    onChange={(e) => setCurrentBuilding({ ...currentBuilding, total_floors: Number(e.target.value) })}
-                    placeholder="e.g. 14"
-                    className="glass-input w-full px-3 py-2 rounded-xl text-sm"
-                  />
+              {/* 1. TOTAL FLOORS (STRUCTURE) - MULTI BASEMENT & GROUND OPTION */}
+              <div className="p-4 rounded-2xl bg-slate-50/90 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 space-y-3.5">
+                <div className="flex flex-wrap items-center justify-between gap-1">
+                  <div>
+                    <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                      <Layers className="w-4 h-4 text-brand-500" />
+                      <span>Total Floors & Building Structure</span>
+                    </label>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Configure multi-basement levels, ground level type, and superstructure floors.
+                    </p>
+                  </div>
+                  <div className="px-3 py-1 rounded-xl bg-brand-50 dark:bg-brand-950/70 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800 text-xs font-bold">
+                    Structure: {currentBuilding.structure_display || getComputedStructureDisplay(currentBuilding.basement_floors, currentBuilding.ground_option, currentBuilding.total_floors || 14)}
+                  </div>
                 </div>
 
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                  {/* Multi Basement Selector */}
+                  <div>
+                    <label className="block text-xs font-semibold mb-1 text-slate-700 dark:text-slate-300">
+                      Multi Basement Level
+                    </label>
+                    <select
+                      value={currentBuilding.basement_floors || '2 Basements (2B)'}
+                      onChange={(e) => {
+                        const newBasement = e.target.value;
+                        const newDisplay = getComputedStructureDisplay(newBasement, currentBuilding.ground_option, currentBuilding.total_floors || 14);
+                        setCurrentBuilding({
+                          ...currentBuilding,
+                          basement_floors: newBasement,
+                          structure_display: newDisplay
+                        });
+                      }}
+                      className="glass-input w-full px-3 py-2 rounded-xl text-xs font-medium"
+                    >
+                      <option value="No Basement">No Basement (Ground direct)</option>
+                      <option value="1 Basement (B1)">1 Basement (B1 - Single Basement)</option>
+                      <option value="2 Basements (2B)">2 Basements (2B - B1 + B2)</option>
+                      <option value="3 Basements (3B)">3 Basements (3B - B1 + B2 + B3)</option>
+                      <option value="4 Basements (4B)">4 Basements (4B - B1 to B4)</option>
+                      <option value="5 Basements (5B)">5 Basements (5B - Mega Parking)</option>
+                      <option value="Multi-Level Basement">Custom Multi-Level Basement</option>
+                    </select>
+                  </div>
+
+                  {/* Ground Level Option */}
+                  <div>
+                    <label className="block text-xs font-semibold mb-1 text-slate-700 dark:text-slate-300">
+                      Ground Level Option
+                    </label>
+                    <select
+                      value={currentBuilding.ground_option || 'Ground (G)'}
+                      onChange={(e) => {
+                        const newGround = e.target.value;
+                        const newDisplay = getComputedStructureDisplay(currentBuilding.basement_floors, newGround, currentBuilding.total_floors || 14);
+                        setCurrentBuilding({
+                          ...currentBuilding,
+                          ground_option: newGround,
+                          structure_display: newDisplay
+                        });
+                      }}
+                      className="glass-input w-full px-3 py-2 rounded-xl text-xs font-medium"
+                    >
+                      <option value="Ground (G)">Standard Ground (G)</option>
+                      <option value="Ground + Mezzanine (G + M)">Ground + Mezzanine (G + M)</option>
+                      <option value="Lower Ground + Upper Ground (LG + UG)">Lower Ground + Upper Ground (LG + UG)</option>
+                      <option value="Stilt + Ground (S + G)">Stilt + Ground (S + G)</option>
+                      <option value="Stilt Only (S)">Stilt Parking Only (S)</option>
+                      <option value="Ground Only">Ground Floor Only (Single Level)</option>
+                    </select>
+                  </div>
+
+                  {/* Superstructure Floors */}
+                  <div>
+                    <label className="block text-xs font-semibold mb-1 text-slate-700 dark:text-slate-300">
+                      Superstructure Floors *
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={120}
+                      value={currentBuilding.total_floors || 14}
+                      onChange={(e) => {
+                        const num = Number(e.target.value);
+                        const newDisplay = getComputedStructureDisplay(currentBuilding.basement_floors, currentBuilding.ground_option, num);
+                        setCurrentBuilding({
+                          ...currentBuilding,
+                          total_floors: num,
+                          structure_display: newDisplay
+                        });
+                      }}
+                      placeholder="e.g. 14"
+                      className="glass-input w-full px-3 py-2 rounded-xl text-xs font-semibold"
+                    />
+                  </div>
+                </div>
+
+                {/* Editable Final Structure Display String */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                      Display Structure Spec (Customizable / Auto-generated)
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const regenerated = getComputedStructureDisplay(currentBuilding.basement_floors, currentBuilding.ground_option, currentBuilding.total_floors || 14);
+                        setCurrentBuilding({ ...currentBuilding, structure_display: regenerated });
+                      }}
+                      className="text-[10px] text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1 font-semibold cursor-pointer"
+                    >
+                      <RefreshCw className="w-2.5 h-2.5" />
+                      <span>Reset to Auto-format</span>
+                    </button>
+                  </div>
+                  <input
+                    type="text"
+                    value={currentBuilding.structure_display || ''}
+                    onChange={(e) => setCurrentBuilding({ ...currentBuilding, structure_display: e.target.value })}
+                    placeholder="e.g. 2B + G + 14 Floors"
+                    className="glass-input w-full px-3 py-1.5 rounded-xl text-xs font-mono font-medium"
+                  />
+                </div>
+              </div>
+
+              {/* 2. MULTI TOWERS & BLOCKS */}
+              <div className="p-4 rounded-2xl bg-slate-50/90 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-1">
+                  <div>
+                    <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                      <Building2 className="w-4 h-4 text-brand-500" />
+                      <span>Towers & Blocks (Multi-Tower Option)</span>
+                    </label>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Specify standalone tower or multiple towers/blocks (e.g. Twin Towers, Tower A/B/C, IT Blocks).
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {/* Tower presets */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCurrentBuilding({
+                          ...currentBuilding,
+                          towers: ['Tower 1'],
+                          total_towers: 1,
+                          tower_details: 'Single Tower'
+                        });
+                      }}
+                      className="px-2 py-0.5 rounded-lg text-[10px] font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-brand-500 text-slate-600 dark:text-slate-300"
+                    >
+                      Single
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCurrentBuilding({
+                          ...currentBuilding,
+                          towers: ['Tower A', 'Tower B'],
+                          total_towers: 2,
+                          tower_details: 'Twin Towers (Tower A & Tower B)'
+                        });
+                      }}
+                      className="px-2 py-0.5 rounded-lg text-[10px] font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-brand-500 text-slate-600 dark:text-slate-300"
+                    >
+                      Twin Towers (2)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCurrentBuilding({
+                          ...currentBuilding,
+                          towers: ['Tower A', 'Tower B', 'Tower C'],
+                          total_towers: 3,
+                          tower_details: '3 Towers (Tower A, B & C)'
+                        });
+                      }}
+                      className="px-2 py-0.5 rounded-lg text-[10px] font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-brand-500 text-slate-600 dark:text-slate-300"
+                    >
+                      3 Towers
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCurrentBuilding({
+                          ...currentBuilding,
+                          towers: ['Block 1', 'Block 2'],
+                          total_towers: 2,
+                          tower_details: 'Campus Blocks (Block 1 & 2)'
+                        });
+                      }}
+                      className="px-2 py-0.5 rounded-lg text-[10px] font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-brand-500 text-slate-600 dark:text-slate-300"
+                    >
+                      Blocks 1 & 2
+                    </button>
+                  </div>
+                </div>
+
+                {/* Active Tower Tags */}
+                <div className="flex flex-wrap items-center gap-1.5 min-h-[32px] p-2 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80">
+                  {(!currentBuilding.towers || currentBuilding.towers.length === 0) ? (
+                    <span className="text-xs text-slate-400 italic">No specific towers defined (Single Standalone Building).</span>
+                  ) : (
+                    currentBuilding.towers.map((tower, idx) => (
+                      <span
+                        key={idx}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-brand-50 text-brand-700 dark:bg-brand-950/80 dark:text-brand-300 border border-brand-200 dark:border-brand-800"
+                      >
+                        <Building2 className="w-3 h-3 text-brand-500" />
+                        <span>{tower}</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updated = (currentBuilding.towers || []).filter((_, i) => i !== idx);
+                            const count = updated.length;
+                            const details = count > 1 ? `${count} Towers (${updated.join(', ')})` : (updated[0] || 'Single Tower');
+                            setCurrentBuilding({
+                              ...currentBuilding,
+                              towers: updated,
+                              total_towers: count,
+                              tower_details: details
+                            });
+                          }}
+                          className="hover:text-red-500 ml-0.5 transition-colors cursor-pointer"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    ))
+                  )}
+                </div>
+
+                {/* Add Custom Tower Input Bar */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={newTowerInput}
+                      onChange={(e) => setNewTowerInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          const trimmed = newTowerInput.trim();
+                          if (trimmed && !(currentBuilding.towers || []).includes(trimmed)) {
+                            const updated = [...(currentBuilding.towers || []), trimmed];
+                            const count = updated.length;
+                            const details = count > 1 ? `${count} Towers (${updated.join(', ')})` : (updated[0] || 'Single Tower');
+                            setCurrentBuilding({
+                              ...currentBuilding,
+                              towers: updated,
+                              total_towers: count,
+                              tower_details: details
+                            });
+                            setNewTowerInput('');
+                          }
+                        }
+                      }}
+                      placeholder="Type tower name (e.g. Tower C, Block 3)..."
+                      className="glass-input flex-1 px-3 py-1.5 rounded-xl text-xs"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const trimmed = newTowerInput.trim();
+                        if (trimmed && !(currentBuilding.towers || []).includes(trimmed)) {
+                          const updated = [...(currentBuilding.towers || []), trimmed];
+                          const count = updated.length;
+                          const details = count > 1 ? `${count} Towers (${updated.join(', ')})` : (updated[0] || 'Single Tower');
+                          setCurrentBuilding({
+                            ...currentBuilding,
+                            towers: updated,
+                            total_towers: count,
+                            tower_details: details
+                          });
+                          setNewTowerInput('');
+                        }
+                      }}
+                      className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-brand-600 hover:bg-brand-500 text-white flex items-center gap-1 transition-all cursor-pointer shrink-0 shadow-sm"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add Tower</span>
+                    </button>
+                  </div>
+
+                  <div>
+                    <input
+                      type="text"
+                      value={currentBuilding.tower_details || ''}
+                      onChange={(e) => setCurrentBuilding({ ...currentBuilding, tower_details: e.target.value })}
+                      placeholder="Summary: e.g. Twin Towers (Tower A & Tower B)"
+                      className="glass-input w-full px-3 py-1.5 rounded-xl text-xs"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. MULTI PRIMARY CATEGORY OPTION & AVAILABLE SIZES */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {/* Available Sizes Range (1 Col) */}
                 <div>
                   <label className="block text-xs font-semibold mb-1">Available Sizes Range</label>
                   <input
@@ -3657,22 +4181,86 @@ export const AdminPage: React.FC = () => {
                     placeholder="e.g. 750 sq.ft – 25,000 sq.ft"
                     className="glass-input w-full px-3 py-2 rounded-xl text-sm"
                   />
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                    Min & max floor plates available.
+                  </p>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-semibold mb-1">Primary Category</label>
-                  <select
-                    value={currentBuilding.category}
-                    onChange={(e) => setCurrentBuilding({ ...currentBuilding, category: e.target.value as any })}
-                    className="glass-input w-full px-3 py-2 rounded-xl text-sm"
-                  >
-                    <option value="office-space">Office Space</option>
-                    <option value="it-business-parks">IT & Business Parks</option>
-                    <option value="warehouses">Warehouses & Logistics</option>
-                    <option value="factory-industrial">Factories & Industrial</option>
-                    <option value="land">Commercial Land & Industrial Plots</option>
-                    <option value="shops-retail">Shops, Malls & Retail</option>
-                  </select>
+                {/* Multi Primary Category Option (2 Cols) */}
+                <div className="md:col-span-2 p-3.5 rounded-2xl bg-brand-50/40 dark:bg-brand-950/20 border border-brand-200 dark:border-brand-800/60 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-brand-800 dark:text-brand-300 flex items-center gap-1.5">
+                      <Tag className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
+                      <span>Commercial Categories (Multi-Category Option) *</span>
+                    </label>
+                    <span className="text-[10px] font-semibold text-brand-600 dark:text-brand-400">
+                      {(currentBuilding.categories?.length || 1)} selected
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Click to toggle all applicable categories for this commercial building. First is Primary.
+                  </p>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                    {[
+                      { id: 'office-space' as PropertyCategory, label: 'Office Space', icon: Building2 },
+                      { id: 'it-business-parks' as PropertyCategory, label: 'IT & Business Parks', icon: Cpu },
+                      { id: 'warehouses' as PropertyCategory, label: 'Warehouses & Logistics', icon: Warehouse },
+                      { id: 'factory-industrial' as PropertyCategory, label: 'Factories & Industrial', icon: Factory },
+                      { id: 'land' as PropertyCategory, label: 'Land & Plots', icon: Trees },
+                      { id: 'shops-retail' as PropertyCategory, label: 'Shops, Malls & Retail', icon: Store },
+                    ].map((catItem) => {
+                      const isSelected = (currentBuilding.categories || [currentBuilding.category || 'office-space']).includes(catItem.id);
+                      const isPrimary = (currentBuilding.categories && currentBuilding.categories[0] === catItem.id) || currentBuilding.category === catItem.id;
+                      const Icon = catItem.icon;
+
+                      return (
+                        <button
+                          type="button"
+                          key={catItem.id}
+                          onClick={() => {
+                            const existing = currentBuilding.categories || [currentBuilding.category || 'office-space'];
+                            let updated: PropertyCategory[];
+                            if (isSelected) {
+                              if (isPrimary && existing.length > 1) {
+                                updated = existing.filter(c => c !== catItem.id);
+                              } else if (existing.length <= 1) {
+                                return; // Keep at least 1 category
+                              } else {
+                                updated = existing.filter(c => c !== catItem.id);
+                              }
+                            } else {
+                              updated = [...existing, catItem.id];
+                            }
+                            setCurrentBuilding({
+                              ...currentBuilding,
+                              categories: updated,
+                              category: updated[0] || 'office-space'
+                            });
+                          }}
+                          className={`p-2 rounded-xl text-left border transition-all flex flex-col justify-between cursor-pointer ${
+                            isSelected
+                              ? isPrimary
+                                ? 'bg-brand-600 text-white border-brand-600 shadow-md ring-2 ring-brand-400/40'
+                                : 'bg-brand-50/90 text-brand-800 dark:bg-brand-950/80 dark:text-brand-200 border-brand-300 dark:border-brand-700 font-semibold'
+                              : 'bg-white dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-brand-400'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between w-full mb-1">
+                            <Icon className={`w-3.5 h-3.5 ${isSelected ? (isPrimary ? 'text-white' : 'text-brand-600 dark:text-brand-400') : 'text-slate-400'}`} />
+                            {isPrimary && (
+                              <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded bg-white text-brand-700 dark:bg-white dark:text-brand-800">
+                                Primary
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[11px] font-semibold leading-tight line-clamp-1">
+                            {catItem.label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
 
@@ -3743,6 +4331,68 @@ export const AdminPage: React.FC = () => {
                       <span>Save Commercial Building</span>
                     </>
                   )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* QUICK ADD LOCATION SUB-MODAL */}
+      {showQuickLocationModal && (
+        <div className="fixed inset-0 z-[60] overflow-y-auto p-4 flex items-center justify-center bg-slate-950/80 backdrop-blur-md">
+          <div className="relative w-full max-w-md glass-card rounded-2xl p-5 bg-white dark:bg-[#0B132B] border border-slate-200 dark:border-slate-800 shadow-2xl">
+            <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-brand-500" />
+                <h3 className="font-bold text-base font-['Outfit']">Add New Sector / Location</h3>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setShowQuickLocationModal(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <form onSubmit={handleSaveQuickLocation} className="space-y-3">
+              <div>
+                <label className="block text-xs font-semibold mb-1">Sector / Location Name *</label>
+                <input
+                  type="text"
+                  required
+                  autoFocus
+                  value={quickLocationName}
+                  onChange={(e) => setQuickLocationName(e.target.value)}
+                  placeholder="e.g. Sector 135, Noida Expressway"
+                  className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold mb-1">City *</label>
+                <input
+                  type="text"
+                  required
+                  value={quickLocationCity}
+                  onChange={(e) => setQuickLocationCity(e.target.value)}
+                  placeholder="e.g. Noida"
+                  className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowQuickLocationModal(false)}
+                  className="px-3.5 py-1.5 rounded-xl text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 rounded-xl text-xs font-bold text-white bg-brand-600 hover:bg-brand-500 flex items-center gap-1 shadow-md cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Create & Select</span>
                 </button>
               </div>
             </form>

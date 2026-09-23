@@ -43,7 +43,11 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
     ]).then(([props, blds, locs]) => {
       setProperties(props);
       // Filter buildings that belong to this category or have properties in this category
-      const matchingBlds = blds.filter(b => b.category === normalizedCategory || props.some(p => p.building_id === b.id));
+      const matchingBlds = blds.filter(b => 
+        b.category === normalizedCategory || 
+        (b.categories && b.categories.includes(normalizedCategory)) || 
+        props.some(p => p.building_id === b.id)
+      );
       setBuildings(matchingBlds);
       // Filter locations where inventory exists per section 7
       const matchingLocs = locs.filter(l => l.categories.includes(normalizedCategory) || props.some(p => p.location_id === l.id));

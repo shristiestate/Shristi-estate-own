@@ -46,13 +46,22 @@ export interface Building {
   slug: string;
   location_id: string;
   location_name: string;
-  category: PropertyCategory;
+  locations?: string[]; // Multiple linked location IDs
+  location_names?: string[]; // Multiple linked location names
+  category: PropertyCategory; // Primary Category
+  categories?: PropertyCategory[]; // Multiple Commercial Categories
   address: string;
   description: string;
   hero_image: string;
   gallery: string[];
   total_floors: number;
+  basement_floors?: string; // e.g. "2 Basements (2B)", "3 Basements (3B)"
+  ground_option?: string; // e.g. "Ground (G)", "Ground + Mezzanine (G+M)", "Stilt + Ground (S+G)"
+  structure_display?: string; // e.g. "2B + G + 14 Floors"
   available_floors?: string;
+  towers?: string[]; // e.g. ["Tower A", "Tower B"]
+  total_towers?: number;
+  tower_details?: string; // e.g. "Twin Towers (Tower A & Tower B)"
   size_range: string;
   rent_range?: string;
   sale_range?: string;

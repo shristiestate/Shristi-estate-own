@@ -127,21 +127,47 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
         <div className="lg:col-span-5 space-y-6">
           <div className="glass-card rounded-3xl p-6 sm:p-7 border border-slate-200/90 dark:border-slate-800 bg-white/70 dark:bg-[#0B132B]/75 space-y-5">
             <div>
-              <div className="flex items-center gap-2 text-xs font-semibold text-brand-600 dark:text-brand-400 uppercase tracking-wider mb-1">
-                <Building2 className="w-4 h-4" />
-                <span>Commercial Tower</span>
+              <div className="flex flex-wrap items-center gap-1.5 mb-2">
+                {building.categories && building.categories.length > 0 ? (
+                  building.categories.map((cat, idx) => (
+                    <span
+                      key={idx}
+                      className="px-2.5 py-0.5 rounded-lg text-[11px] font-bold bg-brand-50 dark:bg-brand-950/80 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800 uppercase tracking-wider"
+                    >
+                      {cat.replace(/-/g, ' ')}
+                    </span>
+                  ))
+                ) : (
+                  <div className="flex items-center gap-2 text-xs font-semibold text-brand-600 dark:text-brand-400 uppercase tracking-wider">
+                    <Building2 className="w-4 h-4" />
+                    <span>{building.category?.replace(/-/g, ' ') || 'Commercial Tower'}</span>
+                  </div>
+                )}
+                {building.towers && building.towers.length > 1 && (
+                  <span className="px-2.5 py-0.5 rounded-lg text-[11px] font-bold bg-cyan-50 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800">
+                    {building.towers.length} Towers / Blocks
+                  </span>
+                )}
               </div>
               <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white font-['Outfit'] tracking-tight">
                 {building.name}
               </h1>
-              <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mt-1">
-                <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
-                <span>{building.address}</span>
+              <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-1.5">
+                <div className="flex items-center gap-1">
+                  <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
+                  <span>{building.address}</span>
+                </div>
+                {building.locations && building.locations.length > 1 && (
+                  <div className="flex items-center gap-1 text-[11px] text-brand-600 dark:text-brand-400 font-semibold">
+                    <span>• Serving Sectors:</span>
+                    <span>{building.location_names?.join(', ') || building.location_name}</span>
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Quick Metrics */}
-            <div className="grid grid-cols-2 gap-3 py-4 border-y border-slate-100 dark:border-slate-800 text-xs">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 py-4 border-y border-slate-100 dark:border-slate-800 text-xs">
               <div>
                 <span className="text-slate-400 block font-medium">Available Units</span>
                 <span className="text-base font-bold text-slate-900 dark:text-white mt-0.5 block">
@@ -149,15 +175,15 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
                 </span>
               </div>
               <div>
-                <span className="text-slate-400 block font-medium">Floor Structure</span>
-                <span className="text-base font-bold text-slate-900 dark:text-white mt-0.5 block">
-                  G + {building.total_floors} Floors
+                <span className="text-slate-400 block font-medium">Structure</span>
+                <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white mt-0.5 block truncate" title={building.structure_display || `G + ${building.total_floors} Floors`}>
+                  {building.structure_display || `G + ${building.total_floors} Floors`}
                 </span>
               </div>
               <div>
-                <span className="text-slate-400 block font-medium">Unit Sizes</span>
-                <span className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 mt-0.5 block">
-                  {building.size_range}
+                <span className="text-slate-400 block font-medium">Towers / Blocks</span>
+                <span className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 mt-0.5 block truncate" title={building.tower_details || 'Single Tower'}>
+                  {building.tower_details || (building.towers && building.towers.length > 1 ? `${building.towers.length} Towers` : 'Single Tower')}
                 </span>
               </div>
               <div>
@@ -214,10 +240,27 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
 
           <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
             <h3 className="text-sm font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
-              Technical Infrastructure
+              Technical Infrastructure & Structure
             </h3>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800">
+                <span className="text-slate-400 block font-medium">Floor Structure</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200 mt-1 block">
+                  {building.structure_display || `G + ${building.total_floors} Floors`}
+                </span>
+                {building.basement_floors && (
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">
+                    Basement: {building.basement_floors} • {building.ground_option || 'Ground Level'}
+                  </span>
+                )}
+              </div>
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800">
+                <span className="text-slate-400 block font-medium">Towers & Wings</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200 mt-1 block">
+                  {building.tower_details || (building.towers && building.towers.length > 0 ? building.towers.join(', ') : 'Single Standalone Tower')}
+                </span>
+              </div>
               <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800">
                 <span className="text-slate-400 block font-medium">Power Backup</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200 mt-1 block">{building.power_backup}</span>

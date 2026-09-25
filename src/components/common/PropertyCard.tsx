@@ -6,6 +6,7 @@ import {
   Maximize2, 
   Armchair, 
   Layers, 
+  Clock,
   MessageSquare, 
   ArrowRight,
   ShieldCheck,
@@ -129,10 +130,10 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, onEnquire 
             </div>
 
             <div className="flex flex-col">
-              <span className="text-[11px] text-slate-400 font-medium">{property.tower ? property.tower : 'Floor'}</span>
-              <span className="text-xs sm:text-sm font-semibold truncate flex items-center gap-1 mt-0.5" title={`${property.tower ? `${property.tower} • ` : ''}${property.floor ? `${property.floor}th Floor` : 'Ground'}`}>
-                <Layers className="w-3.5 h-3.5 text-indigo-400" />
-                {property.floor ? `${property.floor} Fl` : 'Ground'}
+              <span className="text-[11px] text-slate-400 font-medium">Possession</span>
+              <span className="text-xs sm:text-sm font-semibold truncate flex items-center gap-1 mt-0.5" title={property.possession || 'Ready to Move'}>
+                <Clock className="w-3.5 h-3.5 text-indigo-400" />
+                {property.possession || 'Immediate'}
               </span>
             </div>
           </div>

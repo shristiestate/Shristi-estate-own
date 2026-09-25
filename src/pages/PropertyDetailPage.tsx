@@ -148,36 +148,20 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
 
           {/* Property Title & Header Meta */}
           <div className="space-y-2 sm:space-y-3">
-            <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-brand-600 dark:text-brand-400 uppercase tracking-wider">
-              <span>{property.property_type}</span>
+            <div className="flex flex-wrap items-center gap-2 text-xs font-semibold">
+              <span className="px-2.5 py-1 rounded-lg bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 font-bold uppercase tracking-wider border border-brand-200/60 dark:border-brand-800/60">
+                {property.property_type}
+              </span>
               {property.building_name && (
-                <>
-                  <span>•</span>
-                  <Link to={`/buildings/${building?.slug || ''}`} className="hover:underline flex items-center gap-1">
-                    <Building2 className="w-3.5 h-3.5" />
-                    {property.building_name}
-                  </Link>
-                </>
+                <Link 
+                  to={`/buildings/${building?.slug || ''}`} 
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 hover:bg-brand-50 dark:hover:bg-brand-950/60 text-slate-700 dark:text-slate-200 hover:text-brand-600 dark:hover:text-brand-300 border border-slate-200/80 dark:border-slate-700/80 font-bold transition-all"
+                >
+                  <Building2 className="w-3.5 h-3.5 text-brand-500" />
+                  <span>{property.building_name}</span>
+                </Link>
               )}
             </div>
-
-            {/* Multi-Tower & Floor Hierarchy Path (e.g. I-Thum → Tower A → 5th Floor) */}
-            {property.building_name && (
-              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs font-semibold py-1.5 px-3 rounded-2xl bg-brand-50/80 dark:bg-brand-950/40 border border-brand-200/80 dark:border-brand-800/80 text-brand-800 dark:text-brand-300 w-fit shadow-2xs">
-                <Building2 className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400 shrink-0" />
-                <Link to={`/buildings/${building?.slug || ''}`} className="hover:underline font-bold text-brand-700 dark:text-brand-300">
-                  {property.building_name}
-                </Link>
-                <ChevronRight className="w-3.5 h-3.5 text-brand-400 shrink-0" />
-                <span className="font-bold">
-                  {property.tower || (property.address.match(/Tower\s+[A-Z0-9]+/i)?.[0]) || 'Tower A'}
-                </span>
-                <ChevronRight className="w-3.5 h-3.5 text-brand-400 shrink-0" />
-                <span className="font-bold text-slate-900 dark:text-white">
-                  {property.floor ? `${property.floor}${typeof property.floor === 'number' ? 'th' : ''} Floor` : 'Ground Floor'}
-                </span>
-              </div>
-            )}
 
             <h1 className="text-xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 dark:text-white font-['Outfit'] tracking-tight leading-tight">
               {property.title}
@@ -223,13 +207,6 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
                 <span className="text-slate-400 text-xs block">Furnishing State</span>
                 <span className="font-bold text-slate-900 dark:text-white mt-1 block">
                   {property.furnishing}
-                </span>
-              </div>
-
-              <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800/80">
-                <span className="text-slate-400 text-xs block">Floor / Levels</span>
-                <span className="font-bold text-slate-900 dark:text-white mt-1 block">
-                  {property.floor ? `${property.floor} / ${property.total_floors || 'G'}` : 'Ground Floor'}
                 </span>
               </div>
 

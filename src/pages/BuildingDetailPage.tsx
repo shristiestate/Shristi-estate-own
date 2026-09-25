@@ -13,7 +13,8 @@ import {
   PhoneCall, 
   Calendar, 
   Compass, 
-  CheckCircle2 
+  CheckCircle2,
+  Edit3
 } from 'lucide-react';
 import { StorageService } from '../services/storageService';
 import { Building, Property } from '../types';
@@ -22,6 +23,7 @@ import { Breadcrumbs } from '../components/common/Breadcrumbs';
 import { WhatsAppIcon } from '../components/common/SocialIcons';
 import { generateBuildingWhatsAppLink } from '../utils/whatsapp';
 import { getBuildingStructureDisplay } from '../utils/textFormat';
+import { EditBuildingPropertiesModal } from '../components/modals/EditBuildingPropertiesModal';
 
 interface BuildingDetailPageProps {
   onOpenEnquiry: (property?: Property) => void;
@@ -33,6 +35,9 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
   const [properties, setProperties] = useState<Property[]>([]);
   const [activeImage, setActiveImage] = useState<string>('');
   const [loading, setLoading] = useState(true);
+  const [unitFilter, setUnitFilter] = useState<'all' | 'compact' | 'enterprise'>('all');
+  const [selectedArea, setSelectedArea] = useState<number | null>(null);
+  const [showEditPropsModal, setShowEditPropsModal] = useState(false);
 
   useEffect(() => {
     if (!buildingSlug) return;
@@ -335,44 +340,153 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
 
       {/* MANDATORY HIERARCHY: AVAILABLE PROPERTIES IN THIS BUILDING (SECTION 11) */}
       <section className="space-y-6" id="building-inventory">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
-                Immediate Inventory
+                Immediate Verified Inventory
               </span>
             </div>
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white font-['Outfit'] mt-0.5">
-              Available Properties in {building.name} ({properties.length})
-            </h2>
-          </div>
-        </div>
-
-        {properties.length === 0 ? (
-          <div className="py-12 text-center glass-card rounded-3xl p-8 space-y-3">
-            <p className="text-base font-semibold text-slate-700 dark:text-slate-300">
-              No live public vacancies found in {building.name}.
-            </p>
-            <p className="text-xs text-slate-500 max-w-md mx-auto">
-              Our office frequently handles private leases, whole floor plates, and lease renewals inside {building.name}. Submit your desired area to be notified first.
-            </p>
-            <div className="flex items-center justify-center gap-3 pt-2">
+            <div className="flex items-center gap-3 mt-0.5 flex-wrap">
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white font-['Outfit']">
+                Available Properties in {building.name} ({properties.length})
+              </h2>
               <button
-                onClick={() => onOpenEnquiry(properties[0] || undefined)}
-                className="btn-glass-primary px-5 py-2.5 rounded-xl text-xs font-semibold"
+                onClick={() => setShowEditPropsModal(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-cyan-600 hover:from-brand-500 hover:to-cyan-500 text-white text-xs font-bold transition-all shadow-md shadow-brand-500/20 active:scale-95 cursor-pointer"
+                title="Edit, add, or adjust rates for available units in this building"
               >
-                Enquire for {building.name}
+                <Edit3 className="w-3.5 h-3.5" />
+                <span>Edit Available Properties</span>
               </button>
             </div>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {properties.map((prop) => (
-              <PropertyCard key={prop.id} property={prop} onEnquire={onOpenEnquiry} />
-            ))}
+
+          {/* Category Tabs: All, Compact & Mid-Size, Enterprise Floors */}
+          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs self-start md:self-auto flex-wrap">
+            <button
+              onClick={() => { setUnitFilter('all'); setSelectedArea(null); }}
+              className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
+                unitFilter === 'all' && selectedArea === null
+                  ? 'bg-brand-600 text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              All Units ({properties.length})
+            </button>
+            <button
+              onClick={() => { setUnitFilter('compact'); setSelectedArea(null); }}
+              className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
+                unitFilter === 'compact' && selectedArea === null
+                  ? 'bg-brand-600 text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              Compact & Mid-Size (600 - 2.6K sq.ft)
+            </button>
+            <button
+              onClick={() => { setUnitFilter('enterprise'); setSelectedArea(null); }}
+              className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
+                unitFilter === 'enterprise' && selectedArea === null
+                  ? 'bg-brand-600 text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              Enterprise Floors (20K - 100K+ sq.ft)
+            </button>
           </div>
-        )}
+        </div>
+
+        {/* Quick Size Pills */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none text-xs">
+          <span className="text-slate-400 shrink-0 font-medium mr-1">Quick Size Filter:</span>
+          {[
+            { label: 'All', value: null },
+            { label: '600 sq.ft', value: 600 },
+            { label: '750 sq.ft', value: 750 },
+            { label: '900 sq.ft', value: 900 },
+            { label: '1,000 sq.ft', value: 1000 },
+            { label: '1,200 sq.ft', value: 1200 },
+            { label: '1,400 sq.ft', value: 1400 },
+            { label: '1,600 sq.ft', value: 1600 },
+            { label: '1,800 sq.ft', value: 1800 },
+            { label: '2,200 sq.ft', value: 2200 },
+            { label: '2,600 sq.ft', value: 2600 },
+            { label: '20,000 sq.ft', value: 20000 },
+            { label: '25,000 sq.ft', value: 25000 },
+            { label: '30,000 sq.ft', value: 30000 },
+            { label: '35,000 sq.ft', value: 35000 },
+            { label: '40,000 sq.ft', value: 40000 },
+            { label: '50,000 sq.ft', value: 50000 },
+            { label: '60,000 sq.ft', value: 60000 },
+            { label: '75,000 sq.ft', value: 75000 },
+            { label: '90,000 sq.ft', value: 90000 },
+            { label: '1,00,000+ sq.ft', value: 100000 },
+          ].map((pill, idx) => (
+            <button
+              key={idx}
+              onClick={() => {
+                setSelectedArea(pill.value);
+                if (pill.value === null) setUnitFilter('all');
+              }}
+              className={`px-2.5 py-1 rounded-lg shrink-0 font-semibold transition-all border ${
+                selectedArea === pill.value
+                  ? 'bg-brand-500 text-white border-brand-500 shadow-sm'
+                  : 'bg-white/60 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-brand-400'
+              }`}
+            >
+              {pill.label}
+            </button>
+          ))}
+        </div>
+
+        {(() => {
+          const filtered = properties.filter((prop) => {
+            if (selectedArea !== null && prop.built_up_area !== selectedArea) return false;
+            if (unitFilter === 'compact') return prop.built_up_area <= 2600;
+            if (unitFilter === 'enterprise') return prop.built_up_area >= 20000;
+            return true;
+          });
+
+          if (filtered.length === 0) {
+            return (
+              <div className="py-12 text-center glass-card rounded-3xl p-8 space-y-3">
+                <p className="text-base font-semibold text-slate-700 dark:text-slate-300">
+                  No matching units found for selected size filter.
+                </p>
+                <div className="flex items-center justify-center gap-3 pt-2">
+                  <button
+                    onClick={() => { setUnitFilter('all'); setSelectedArea(null); }}
+                    className="btn-glass-primary px-5 py-2.5 rounded-xl text-xs font-semibold"
+                  >
+                    View All {properties.length} Available Units
+                  </button>
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filtered.map((prop) => (
+                <PropertyCard key={prop.id} property={prop} onEnquire={onOpenEnquiry} />
+              ))}
+            </div>
+          );
+        })()}
       </section>
+
+      {/* Edit Building Available Properties Modal */}
+      {building && (
+        <EditBuildingPropertiesModal
+          isOpen={showEditPropsModal}
+          building={building}
+          onClose={() => setShowEditPropsModal(false)}
+          onPropertiesUpdated={(updated) => {
+            setProperties(updated);
+          }}
+        />
+      )}
     </div>
   );
 };

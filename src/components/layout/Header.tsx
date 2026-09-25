@@ -69,19 +69,19 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSearch, onOpenEnquiry }) =
             : 'bg-white/95 dark:bg-[#070C1E]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 py-2 sm:py-3'
         }`}
       >
-        <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 flex items-center justify-between min-h-[44px] sm:min-h-[48px]">
+        <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 flex items-center justify-between gap-3 xl:gap-6 min-h-[44px] sm:min-h-[48px]">
           {/* Logo */}
           <Logo />
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-1 xl:gap-1.5">
+          <nav className="hidden lg:flex items-center gap-0.5 xl:gap-1.5 shrink min-w-0">
             {navLinks.map((item) => {
               if (item.dropdown) {
                 const isCurrent = item.dropdown.some(d => location.pathname === d.path);
                 return (
                   <div key={item.name} className="relative group">
                     <button 
-                      className={`flex items-center gap-1 px-3 py-1.5 rounded-xl text-[13.5px] xl:text-sm font-medium tracking-normal transition-colors ${
+                      className={`flex items-center gap-1 px-2 xl:px-3 py-1.5 rounded-xl text-[13px] xl:text-sm font-medium tracking-normal transition-colors whitespace-nowrap ${
                         isCurrent 
                           ? 'text-brand-600 dark:text-brand-400 font-semibold bg-brand-50/80 dark:bg-brand-950/40' 
                           : 'text-slate-700 dark:text-slate-200 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-slate-100/70 dark:hover:bg-slate-800/50'
@@ -118,7 +118,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSearch, onOpenEnquiry }) =
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`px-3 py-1.5 rounded-xl text-[13.5px] xl:text-sm font-medium tracking-normal transition-colors whitespace-nowrap ${
+                  className={`px-2 xl:px-3 py-1.5 rounded-xl text-[13px] xl:text-sm font-medium tracking-normal transition-colors whitespace-nowrap ${
                     isActive
                       ? 'text-brand-600 dark:text-brand-400 font-semibold bg-brand-50/80 dark:bg-brand-950/40'
                       : 'text-slate-700 dark:text-slate-200 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-slate-100/70 dark:hover:bg-slate-800/50'
@@ -131,12 +131,12 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSearch, onOpenEnquiry }) =
           </nav>
 
           {/* Action Tools: Search, Theme Toggle, Enquire CTA */}
-          <div className="flex items-center gap-2 sm:gap-2.5">
+          <div className="flex items-center gap-1.5 sm:gap-2 xl:gap-2.5 shrink-0">
             {/* Quick Search */}
             <button
               onClick={onOpenSearch}
               aria-label="Search Properties"
-              className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
+              className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border border-transparent hover:border-slate-200 dark:border-slate-700"
             >
               <Search className="w-4 h-4" />
             </button>
@@ -145,15 +145,15 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSearch, onOpenEnquiry }) =
             <button
               onClick={toggleTheme}
               aria-label="Toggle Theme"
-              className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
+              className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border border-transparent hover:border-slate-200 dark:border-slate-700"
             >
               {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-700" />}
             </button>
 
-            {/* List Property Coloured CTA Button (Before Enquire) */}
+            {/* List Property Coloured CTA Button (Before Enquire on XL screens) */}
             <Link
               to="/list-your-property"
-              className="hidden sm:inline-flex items-center gap-1.5 px-3.5 xl:px-4 py-2 rounded-xl text-[13px] xl:text-sm font-semibold tracking-normal text-white bg-gradient-to-r from-teal-600 via-cyan-600 to-teal-600 hover:from-teal-500 hover:to-cyan-500 shadow-md shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all duration-200 border border-cyan-400/30 hover:-translate-y-0.5 active:scale-95 whitespace-nowrap"
+              className="hidden xl:inline-flex items-center gap-1.5 px-3.5 xl:px-4 py-2 rounded-xl text-xs xl:text-sm font-semibold tracking-normal text-white bg-gradient-to-r from-teal-600 via-cyan-600 to-teal-600 hover:from-teal-500 hover:to-cyan-500 shadow-md shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all duration-200 border border-cyan-400/30 hover:-translate-y-0.5 active:scale-95 whitespace-nowrap"
             >
               <Building2 className="w-4 h-4 text-white" />
               <span>List Property</span>
@@ -162,7 +162,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSearch, onOpenEnquiry }) =
             {/* Enquire CTA */}
             <button
               onClick={onOpenEnquiry}
-              className="btn-glass-primary hidden sm:inline-flex items-center gap-1.5 px-3.5 xl:px-4 py-2 rounded-xl text-[13px] xl:text-sm font-semibold tracking-normal whitespace-nowrap"
+              className="btn-glass-primary hidden sm:inline-flex items-center gap-1.5 px-3 xl:px-4 py-2 rounded-xl text-xs xl:text-sm font-semibold tracking-normal whitespace-nowrap"
             >
               <MessageSquare className="w-4 h-4" />
               <span>Enquire Now</span>

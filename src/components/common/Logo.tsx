@@ -58,7 +58,7 @@ export const Logo: React.FC<LogoProps> = ({
   return (
     <Link 
       to="/" 
-      className={`inline-flex items-center gap-2 sm:gap-2.5 group select-none ${className}`}
+      className={`inline-flex items-center gap-2 sm:gap-2.5 group select-none shrink-0 ${className}`}
       aria-label="Shristi Estate - Commercial Real Estate Home"
     >
       {/* Official 3-Towers Architectural Emblem - constrained strictly to max 32px on mobile */}
@@ -95,8 +95,8 @@ export const Logo: React.FC<LogoProps> = ({
         )}
       </div>
 
-      {/* Brand Company Name */}
-      <div className="flex items-center gap-1 sm:gap-1.5 leading-none select-none">
+      {/* Brand Company Name - strictly single line, no wrapping or font overlap */}
+      <div className="flex items-center gap-1 sm:gap-1.5 whitespace-nowrap select-none shrink-0 leading-tight">
         <span 
           className={`font-extrabold text-[16px] sm:text-[18px] md:text-[20px] tracking-tight transition-colors ${
             isDarkExplicit 

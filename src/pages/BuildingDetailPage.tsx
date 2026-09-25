@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
   Building2, 
@@ -22,7 +22,6 @@ import { Breadcrumbs } from '../components/common/Breadcrumbs';
 import { WhatsAppIcon } from '../components/common/SocialIcons';
 import { generateBuildingWhatsAppLink } from '../utils/whatsapp';
 import { getBuildingStructureDisplay } from '../utils/textFormat';
-import { TowerFloorSection } from '../components/common/TowerFloorSection';
 
 interface BuildingDetailPageProps {
   onOpenEnquiry: (property?: Property) => void;
@@ -34,8 +33,6 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
   const [properties, setProperties] = useState<Property[]>([]);
   const [activeImage, setActiveImage] = useState<string>('');
   const [loading, setLoading] = useState(true);
-  const [selectedTower, setSelectedTower] = useState<string | null>(null);
-  const [selectedFloor, setSelectedFloor] = useState<number | string | null>(null);
 
   useEffect(() => {
     if (!buildingSlug) return;
@@ -50,36 +47,6 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
       setLoading(false);
     });
   }, [buildingSlug]);
-
-  const filteredProperties = useMemo(() => {
-    return properties.filter(p => {
-      // 1. Tower filter
-      if (selectedTower) {
-        const matchesTower = (p.tower && p.tower.toLowerCase() === selectedTower.toLowerCase()) ||
-          (!p.tower && `${p.title} ${p.address} ${p.description}`.toLowerCase().includes(selectedTower.toLowerCase()));
-        if (!matchesTower) return false;
-      }
-
-      // 2. Floor filter
-      if (selectedFloor !== null && selectedFloor !== undefined) {
-        const pFloor = p.floor !== undefined && p.floor !== null ? String(p.floor).trim().toLowerCase() : '';
-        const targetFloor = String(selectedFloor).toLowerCase();
-        
-        if (targetFloor === 'g' || targetFloor === '0') {
-          if (pFloor === 'g' || pFloor === '0' || `${p.title} ${p.address}`.toLowerCase().includes('ground floor')) return true;
-        } else if (pFloor === targetFloor) {
-          return true;
-        }
-
-        const floorRegex = new RegExp(`\\b${selectedFloor}(?:st|nd|rd|th)?\\s*floor\\b`, 'i');
-        if (floorRegex.test(`${p.title} ${p.address} ${p.description}`)) return true;
-
-        return false;
-      }
-
-      return true;
-    });
-  }, [properties, selectedTower, selectedFloor]);
 
   if (loading) {
     return (
@@ -366,17 +333,6 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
         </div>
       </section>
 
-      {/* MULTI-TOWER & FLOOR OPTIONS SECTION */}
-      <TowerFloorSection
-        building={building}
-        properties={properties}
-        selectedTower={selectedTower}
-        selectedFloor={selectedFloor}
-        onSelectTower={(t) => setSelectedTower(t)}
-        onSelectFloor={(f) => setSelectedFloor(f)}
-        onOpenEnquiry={onOpenEnquiry}
-      />
-
       {/* MANDATORY HIERARCHY: AVAILABLE PROPERTIES IN THIS BUILDING (SECTION 11) */}
       <section className="space-y-6" id="building-inventory">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-4">
@@ -385,41 +341,17 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
               <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
                 Immediate Inventory
               </span>
-              {(selectedTower || selectedFloor !== null) && (
-                <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-brand-600 text-white uppercase tracking-wider">
-                  Filtered Selection
-                </span>
-              )}
             </div>
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white font-['Outfit'] mt-0.5">
-              Available Properties in {building.name} ({filteredProperties.length}{filteredProperties.length !== properties.length ? ` of ${properties.length}` : ''})
+              Available Properties in {building.name} ({properties.length})
             </h2>
           </div>
-
-          {(selectedTower || selectedFloor !== null) && (
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-600 dark:text-slate-300 font-semibold bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-xl border border-slate-200 dark:border-slate-700">
-                {selectedTower ? `${selectedTower}` : ''}
-                {selectedFloor !== null ? ` → ${selectedFloor}${typeof selectedFloor === 'number' ? 'th Floor' : ''}` : ''}
-              </span>
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedTower(null);
-                  setSelectedFloor(null);
-                }}
-                className="px-3 py-1 rounded-xl text-xs font-semibold bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 transition-colors cursor-pointer"
-              >
-                Reset Filter
-              </button>
-            </div>
-          )}
         </div>
 
-        {filteredProperties.length === 0 ? (
+        {properties.length === 0 ? (
           <div className="py-12 text-center glass-card rounded-3xl p-8 space-y-3">
             <p className="text-base font-semibold text-slate-700 dark:text-slate-300">
-              No live public vacancies found for {selectedTower || 'selected tower'}{selectedFloor !== null ? ` on ${selectedFloor} Floor` : ''}.
+              No live public vacancies found in {building.name}.
             </p>
             <p className="text-xs text-slate-500 max-w-md mx-auto">
               Our office frequently handles private leases, whole floor plates, and lease renewals inside {building.name}. Submit your desired area to be notified first.
@@ -429,25 +361,13 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
                 onClick={() => onOpenEnquiry(properties[0] || undefined)}
                 className="btn-glass-primary px-5 py-2.5 rounded-xl text-xs font-semibold"
               >
-                Enquire for {building.name} {selectedTower ? `(${selectedTower})` : ''}
+                Enquire for {building.name}
               </button>
-              {(selectedTower || selectedFloor !== null) && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedTower(null);
-                    setSelectedFloor(null);
-                  }}
-                  className="px-4 py-2.5 rounded-xl text-xs font-semibold border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
-                >
-                  View All {properties.length} Units
-                </button>
-              )}
             </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredProperties.map((prop) => (
+            {properties.map((prop) => (
               <PropertyCard key={prop.id} property={prop} onEnquire={onOpenEnquiry} />
             ))}
           </div>

@@ -13,8 +13,7 @@ import {
   PhoneCall, 
   Calendar, 
   Compass, 
-  CheckCircle2,
-  Edit3
+  CheckCircle2
 } from 'lucide-react';
 import { StorageService } from '../services/storageService';
 import { Building, Property } from '../types';
@@ -23,7 +22,6 @@ import { Breadcrumbs } from '../components/common/Breadcrumbs';
 import { WhatsAppIcon } from '../components/common/SocialIcons';
 import { generateBuildingWhatsAppLink } from '../utils/whatsapp';
 import { getBuildingStructureDisplay } from '../utils/textFormat';
-import { EditBuildingPropertiesModal } from '../components/modals/EditBuildingPropertiesModal';
 
 interface BuildingDetailPageProps {
   onOpenEnquiry: (property?: Property) => void;
@@ -37,7 +35,6 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
   const [loading, setLoading] = useState(true);
   const [unitFilter, setUnitFilter] = useState<'all' | 'compact' | 'enterprise'>('all');
   const [selectedArea, setSelectedArea] = useState<number | null>(null);
-  const [showEditPropsModal, setShowEditPropsModal] = useState(false);
 
   useEffect(() => {
     if (!buildingSlug) return;
@@ -347,19 +344,9 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
                 Immediate Verified Inventory
               </span>
             </div>
-            <div className="flex items-center gap-3 mt-0.5 flex-wrap">
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white font-['Outfit']">
-                Available Properties in {building.name} ({properties.length})
-              </h2>
-              <button
-                onClick={() => setShowEditPropsModal(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-cyan-600 hover:from-brand-500 hover:to-cyan-500 text-white text-xs font-bold transition-all shadow-md shadow-brand-500/20 active:scale-95 cursor-pointer"
-                title="Edit, add, or adjust rates for available units in this building"
-              >
-                <Edit3 className="w-3.5 h-3.5" />
-                <span>Edit Available Properties</span>
-              </button>
-            </div>
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white font-['Outfit'] mt-0.5">
+              Available Properties in {building.name} ({properties.length})
+            </h2>
           </div>
 
           {/* Category Tabs: All, Compact & Mid-Size, Enterprise Floors */}
@@ -476,17 +463,6 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
         })()}
       </section>
 
-      {/* Edit Building Available Properties Modal */}
-      {building && (
-        <EditBuildingPropertiesModal
-          isOpen={showEditPropsModal}
-          building={building}
-          onClose={() => setShowEditPropsModal(false)}
-          onPropertiesUpdated={(updated) => {
-            setProperties(updated);
-          }}
-        />
-      )}
     </div>
   );
 };

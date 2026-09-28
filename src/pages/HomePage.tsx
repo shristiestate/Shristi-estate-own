@@ -33,9 +33,9 @@ interface HomePageProps {
 }
 
 export const HomePage: React.FC<HomePageProps> = ({ onOpenEnquiry }) => {
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [buildings, setBuildings] = useState<Building[]>([]);
-  const [locations, setLocations] = useState<Location[]>([]);
+  const [properties, setProperties] = useState<Property[]>(() => StorageService.getInitialProperties());
+  const [buildings, setBuildings] = useState<Building[]>(() => StorageService.getInitialBuildings());
+  const [locations, setLocations] = useState<Location[]>(() => StorageService.getInitialLocations());
   const navigate = useNavigate();
 
   // Search filter state
@@ -45,9 +45,26 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenEnquiry }) => {
   const [selectedBuilding, setSelectedBuilding] = useState<string>('');
 
   useEffect(() => {
-    StorageService.getProperties().then(setProperties);
-    StorageService.getBuildings().then(setBuildings);
-    StorageService.getLocations().then(setLocations);
+    let isMounted = true;
+    const fetchFreshData = () => {
+      StorageService.getProperties().then((data) => { if (isMounted) setProperties(data); });
+      StorageService.getBuildings().then((data) => { if (isMounted) setBuildings(data); });
+      StorageService.getLocations().then((data) => { if (isMounted) setLocations(data); });
+    };
+
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      const handle = (window as any).requestIdleCallback(fetchFreshData, { timeout: 2000 });
+      return () => {
+        isMounted = false;
+        (window as any).cancelIdleCallback(handle);
+      };
+    } else {
+      const timer = setTimeout(fetchFreshData, 50);
+      return () => {
+        isMounted = false;
+        clearTimeout(timer);
+      };
+    }
   }, []);
 
   const handleSearchSubmit = (e: React.FormEvent) => {

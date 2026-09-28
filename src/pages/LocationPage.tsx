@@ -3,7 +3,6 @@ import { useParams, Link } from 'react-router-dom';
 import { MapPin, Building2, Layers, CheckCircle2, Shield, ArrowRight, HelpCircle } from 'lucide-react';
 import { StorageService } from '../services/storageService';
 import { Location, Building, Property } from '../types';
-import { PropertyCard } from '../components/common/PropertyCard';
 import { BuildingCard } from '../components/common/BuildingCard';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
 
@@ -13,37 +12,35 @@ interface LocationPageProps {
 
 export const LocationPage: React.FC<LocationPageProps> = ({ onOpenEnquiry }) => {
   const { locationSlug } = useParams<{ locationSlug: string }>();
-  const [location, setLocation] = useState<Location | null>(null);
-  const [buildings, setBuildings] = useState<Building[]>([]);
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [loading, setLoading] = useState(true);
+  
+  const initialLoc = locationSlug ? StorageService.getInitialLocationBySlug(locationSlug) : null;
+  const [location, setLocation] = useState<Location | null>(() => initialLoc);
+  const [buildings, setBuildings] = useState<Building[]>(() => 
+    initialLoc ? StorageService.getInitialBuildingsByLocation(initialLoc.id) : []
+  );
+  const [hasResolved, setHasResolved] = useState(() => Boolean(initialLoc));
 
   useEffect(() => {
     if (!locationSlug) return;
-    setLoading(true);
+    let isMounted = true;
     StorageService.getLocationBySlug(locationSlug).then(async (loc) => {
+      if (!isMounted) return;
       if (loc) {
         setLocation(loc);
-        const [blds, props] = await Promise.all([
-          StorageService.getBuildingsByLocation(loc.id),
-          StorageService.getPropertiesByLocation(loc.id)
-        ]);
-        setBuildings(blds);
-        setProperties(props);
+        const blds = await StorageService.getBuildingsByLocation(loc.id);
+        if (isMounted) {
+          setBuildings(blds);
+        }
       }
-      setLoading(false);
+      if (isMounted) setHasResolved(true);
+    }).catch(() => {
+      if (isMounted) setHasResolved(true);
     });
+
+    return () => { isMounted = false; };
   }, [locationSlug]);
 
-  if (loading) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 py-20 text-center text-slate-500">
-        Loading commercial inventory for this sector...
-      </div>
-    );
-  }
-
-  if (!location) {
+  if (!location && hasResolved) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-20 text-center space-y-4">
         <h2 className="text-2xl font-bold">Location Not Found</h2>
@@ -53,6 +50,10 @@ export const LocationPage: React.FC<LocationPageProps> = ({ onOpenEnquiry }) => 
         </Link>
       </div>
     );
+  }
+
+  if (!location) {
+    return null;
   }
 
   return (
@@ -88,8 +89,12 @@ export const LocationPage: React.FC<LocationPageProps> = ({ onOpenEnquiry }) => 
 
           <div className="pt-2 flex items-center gap-4 text-xs sm:text-sm text-slate-300">
             <span><strong>{buildings.length}</strong> Commercial Towers / Projects</span>
-            <span>•</span>
-            <span><strong>{properties.length}</strong> Available Properties</span>
+            {location.building_count && (
+              <>
+                <span>•</span>
+                <span><strong>Prime Sector Corridor</strong></span>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -109,50 +114,12 @@ export const LocationPage: React.FC<LocationPageProps> = ({ onOpenEnquiry }) => 
 
         {buildings.length === 0 ? (
           <div className="glass-card rounded-2xl p-6 text-center text-xs text-slate-500">
-            No independent multi-story buildings registered yet in this sector. Direct plots and units are displayed below.
+            No independent multi-story buildings registered yet in this sector.
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {buildings.map((b) => (
               <BuildingCard key={b.id} building={b} />
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* AVAILABLE PROPERTIES IN THIS LOCATION */}
-      <section className="space-y-6">
-        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
-          <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
-              Current Opportunities
-            </span>
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white font-['Outfit']">
-              Available Properties in {location.name} ({properties.length})
-            </h2>
-          </div>
-        </div>
-
-        {properties.length === 0 ? (
-          <div className="py-12 text-center glass-card rounded-3xl p-8 space-y-3">
-            <p className="text-base font-semibold text-slate-700 dark:text-slate-300">
-              No live public inventory currently listed in {location.name}.
-            </p>
-            <p className="text-xs text-slate-500 max-w-md mx-auto">
-              We frequently have off-market corporate leases and direct owner mandates in this sector.
-            </p>
-            <Link
-              to="/tell-us-requirement"
-              className="btn-glass-primary inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold mt-2"
-            >
-              <span>Submit Requirement for {location.name}</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {properties.map((prop) => (
-              <PropertyCard key={prop.id} property={prop} onEnquire={onOpenEnquiry} />
             ))}
           </div>
         )}

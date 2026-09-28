@@ -12,9 +12,8 @@ interface PropertiesPageProps {
 
 export const PropertiesPage: React.FC<PropertiesPageProps> = ({ onOpenEnquiry }) => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [locations, setLocations] = useState<Location[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [properties, setProperties] = useState<Property[]>(() => StorageService.getInitialProperties());
+  const [locations, setLocations] = useState<Location[]>(() => StorageService.getInitialLocations());
   const [showMobileFilter, setShowMobileFilter] = useState(false);
 
   // Filter states
@@ -27,15 +26,17 @@ export const PropertiesPage: React.FC<PropertiesPageProps> = ({ onOpenEnquiry })
   const [sortBy, setSortBy] = useState<'default' | 'price-asc' | 'price-desc' | 'area-desc'>('default');
 
   useEffect(() => {
-    setLoading(true);
+    let isMounted = true;
     Promise.all([
       StorageService.getProperties(),
       StorageService.getLocations(),
     ]).then(([props, locs]) => {
-      setProperties(props);
-      setLocations(locs);
-      setLoading(false);
+      if (isMounted) {
+        setProperties(props);
+        setLocations(locs);
+      }
     });
+    return () => { isMounted = false; };
   }, []);
 
   // Sync params if URL changes

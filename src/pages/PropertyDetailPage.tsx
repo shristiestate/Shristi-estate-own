@@ -32,37 +32,40 @@ interface PropertyDetailPageProps {
 
 export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEnquiry }) => {
   const { propertySlug } = useParams<{ propertySlug: string }>();
-  const [property, setProperty] = useState<Property | null>(null);
-  const [building, setBuilding] = useState<BuildingType | null>(null);
-  const [activeImage, setActiveImage] = useState<string>('');
+  
+  const initialProp = propertySlug ? StorageService.getInitialPropertyBySlug(propertySlug) : null;
+  const initialBld = initialProp && initialProp.building_id
+    ? StorageService.getInitialBuildings().find(b => b.id === initialProp.building_id) || null
+    : null;
+
+  const [property, setProperty] = useState<Property | null>(() => initialProp);
+  const [building, setBuilding] = useState<BuildingType | null>(() => initialBld);
+  const [activeImage, setActiveImage] = useState<string>(() => initialProp?.primary_image || '');
   const [copied, setCopied] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [hasResolved, setHasResolved] = useState(() => Boolean(initialProp));
 
   useEffect(() => {
     if (!propertySlug) return;
-    setLoading(true);
+    let isMounted = true;
     StorageService.getPropertyBySlug(propertySlug).then(async (prop) => {
+      if (!isMounted) return;
       if (prop) {
         setProperty(prop);
-        setActiveImage(prop.primary_image);
+        setActiveImage((prev) => prev || prop.primary_image);
         if (prop.building_id) {
           const bld = await StorageService.getBuildings().then(blds => blds.find(b => b.id === prop.building_id));
-          if (bld) setBuilding(bld);
+          if (isMounted && bld) setBuilding(bld);
         }
       }
-      setLoading(false);
+      if (isMounted) setHasResolved(true);
+    }).catch(() => {
+      if (isMounted) setHasResolved(true);
     });
+
+    return () => { isMounted = false; };
   }, [propertySlug]);
 
-  if (loading) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 py-20 text-center text-slate-500">
-        Loading verified property details...
-      </div>
-    );
-  }
-
-  if (!property) {
+  if (!property && hasResolved) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-20 text-center space-y-4">
         <h2 className="text-2xl font-bold">Property Not Found</h2>
@@ -72,6 +75,10 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
         </Link>
       </div>
     );
+  }
+
+  if (!property) {
+    return null;
   }
 
   // Pre-filled WhatsApp link with structured property inquiry details
@@ -107,6 +114,8 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
               <img
                 src={activeImage || property.primary_image}
                 alt={property.title}
+                fetchPriority="high"
+                decoding="async"
                 className="w-full h-full object-cover transition-all duration-300"
               />
 

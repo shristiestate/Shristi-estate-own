@@ -29,36 +29,37 @@ interface BuildingDetailPageProps {
 
 export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEnquiry }) => {
   const { buildingSlug } = useParams<{ buildingSlug: string }>();
-  const [building, setBuilding] = useState<Building | null>(null);
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [activeImage, setActiveImage] = useState<string>('');
-  const [loading, setLoading] = useState(true);
+  
+  const initialBld = buildingSlug ? StorageService.getInitialBuildingBySlug(buildingSlug) : null;
+  const [building, setBuilding] = useState<Building | null>(() => initialBld);
+  const [properties, setProperties] = useState<Property[]>(() => 
+    initialBld ? StorageService.getInitialPropertiesByBuilding(initialBld.id) : []
+  );
+  const [activeImage, setActiveImage] = useState<string>(() => initialBld?.hero_image || '');
+  const [hasResolved, setHasResolved] = useState(() => Boolean(initialBld));
   const [unitFilter, setUnitFilter] = useState<'all' | 'compact' | 'enterprise'>('all');
   const [selectedArea, setSelectedArea] = useState<number | null>(null);
 
   useEffect(() => {
     if (!buildingSlug) return;
-    setLoading(true);
+    let isMounted = true;
     StorageService.getBuildingBySlug(buildingSlug).then(async (bld) => {
+      if (!isMounted) return;
       if (bld) {
         setBuilding(bld);
-        setActiveImage(bld.hero_image);
+        setActiveImage((prev) => prev || bld.hero_image);
         const props = await StorageService.getPropertiesByBuilding(bld.id);
-        setProperties(props);
+        if (isMounted) setProperties(props);
       }
-      setLoading(false);
+      if (isMounted) setHasResolved(true);
+    }).catch(() => {
+      if (isMounted) setHasResolved(true);
     });
+
+    return () => { isMounted = false; };
   }, [buildingSlug]);
 
-  if (loading) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 py-20 text-center text-slate-500">
-        Loading building infrastructure and properties...
-      </div>
-    );
-  }
-
-  if (!building) {
+  if (!building && hasResolved) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-20 text-center space-y-4">
         <h2 className="text-2xl font-bold">Building Not Found</h2>
@@ -68,6 +69,10 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
         </Link>
       </div>
     );
+  }
+
+  if (!building) {
+    return null;
   }
 
   const waLink = generateBuildingWhatsAppLink(building);
@@ -91,6 +96,8 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
             <img
               src={activeImage || building.hero_image}
               alt={building.name}
+              fetchPriority="high"
+              decoding="async"
               className="w-full h-full object-cover transition-all duration-300"
             />
             <div className="absolute top-4 left-4">

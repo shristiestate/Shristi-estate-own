@@ -11,75 +11,271 @@ const STORAGE_KEYS = {
   LEADS: 'shristi_leads_v1',
 };
 
-// Initialize localStorage with initial seeds if not populated, and merge any new seeds
+let _memLocations: Location[] | null = null;
+let _memBuildings: Building[] | null = null;
+let _memProperties: Property[] | null = null;
+let _memLeads: Lead[] | null = null;
+
+// Initialize in-memory cache and localStorage with initial seeds if not populated
 const initStorage = () => {
   try {
     const storedLocs = localStorage.getItem(STORAGE_KEYS.LOCATIONS);
     if (!storedLocs) {
+      _memLocations = INITIAL_LOCATIONS;
       localStorage.setItem(STORAGE_KEYS.LOCATIONS, JSON.stringify(INITIAL_LOCATIONS));
     } else {
       const parsedLocs: Location[] = JSON.parse(storedLocs);
       const existingIds = new Set(parsedLocs.map(l => l.id));
       const missingLocs = INITIAL_LOCATIONS.filter(il => !existingIds.has(il.id));
-      const updatedLocs = [
-        ...parsedLocs.map(l => {
-          const initL = INITIAL_LOCATIONS.find(il => il.id === l.id);
-          return initL ? { ...l, building_count: Math.max(l.building_count || 0, initL.building_count || 0) } : l;
-        }),
-        ...missingLocs
-      ];
-      localStorage.setItem(STORAGE_KEYS.LOCATIONS, JSON.stringify(updatedLocs));
+      if (missingLocs.length > 0) {
+        _memLocations = [
+          ...parsedLocs.map(l => {
+            const initL = INITIAL_LOCATIONS.find(il => il.id === l.id);
+            return initL ? { ...l, building_count: Math.max(l.building_count || 0, initL.building_count || 0) } : l;
+          }),
+          ...missingLocs
+        ];
+        localStorage.setItem(STORAGE_KEYS.LOCATIONS, JSON.stringify(_memLocations));
+      } else {
+        _memLocations = parsedLocs;
+      }
     }
 
     const storedBlds = localStorage.getItem(STORAGE_KEYS.BUILDINGS);
     if (!storedBlds) {
+      _memBuildings = INITIAL_BUILDINGS.map(b => ({
+        ...b,
+        structure_display: getBuildingStructureDisplay(b),
+        property_count: Math.max(b.property_count || 0, 20)
+      }));
       localStorage.setItem(STORAGE_KEYS.BUILDINGS, JSON.stringify(INITIAL_BUILDINGS));
     } else {
       const parsedBlds: Building[] = JSON.parse(storedBlds);
       const existingIds = new Set(parsedBlds.map(b => b.id));
       const existingSlugs = new Set(parsedBlds.map(b => b.slug.toLowerCase()));
       const missingBlds = INITIAL_BUILDINGS.filter(b => !existingIds.has(b.id) && !existingSlugs.has(b.slug.toLowerCase()));
+      const source = missingBlds.length > 0 ? [...parsedBlds, ...missingBlds] : parsedBlds;
       if (missingBlds.length > 0) {
-        localStorage.setItem(STORAGE_KEYS.BUILDINGS, JSON.stringify([...parsedBlds, ...missingBlds]));
+        localStorage.setItem(STORAGE_KEYS.BUILDINGS, JSON.stringify(source));
       }
+      _memBuildings = source.map(b => ({
+        ...b,
+        structure_display: getBuildingStructureDisplay(b),
+        property_count: Math.max(b.property_count || 0, 20)
+      }));
     }
 
-    if (!localStorage.getItem(STORAGE_KEYS.PROPERTIES)) {
+    const storedProps = localStorage.getItem(STORAGE_KEYS.PROPERTIES);
+    if (!storedProps) {
+      _memProperties = [
+        ...INITIAL_PROPERTIES,
+        ...INITIAL_BUILDINGS.flatMap(b => generateAvailablePropertiesForBuilding(b))
+      ];
       localStorage.setItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(INITIAL_PROPERTIES));
-    }
-    if (!localStorage.getItem(STORAGE_KEYS.LEADS)) {
-      localStorage.setItem(STORAGE_KEYS.LEADS, JSON.stringify(INITIAL_LEADS));
+    } else {
+      const parsedProps: Property[] = JSON.parse(storedProps);
+      const buildings = _memBuildings || INITIAL_BUILDINGS;
+      const allGenerated = buildings.flatMap(b => generateAvailablePropertiesForBuilding(b));
+      const existingIds = new Set(parsedProps.map(p => p.id));
+      const existingSlugs = new Set(parsedProps.map(p => p.slug.toLowerCase()));
+      const missingGenerated = allGenerated.filter(p => !existingIds.has(p.id) && !existingSlugs.has(p.slug.toLowerCase()));
+      _memProperties = [...parsedProps, ...missingGenerated];
     }
   } catch (e) {
     console.warn('Init storage error:', e);
+    _memLocations = INITIAL_LOCATIONS;
+    _memBuildings = INITIAL_BUILDINGS.map(b => ({
+      ...b,
+      structure_display: getBuildingStructureDisplay(b),
+      property_count: Math.max(b.property_count || 0, 20)
+    }));
+    _memProperties = [
+      ...INITIAL_PROPERTIES,
+      ...INITIAL_BUILDINGS.flatMap(b => generateAvailablePropertiesForBuilding(b))
+    ];
   }
 };
+
+const SUPABASE_TIMEOUT_MS = 3500;
+
+async function withTimeout<T = any>(promise: any, timeoutMs = SUPABASE_TIMEOUT_MS): Promise<any> {
+  let timer: any;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error('Supabase request timeout')), timeoutMs);
+  });
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 if (typeof window !== 'undefined') {
   initStorage();
 }
 
 export const StorageService = {
-  // LOCATIONS
+  // SYNCHRONOUS IMMEDIATE GETTERS (Zero delay, instant page shell rendering)
+  getInitialLocations(): Location[] {
+    if (_memLocations && _memLocations.length > 0) return _memLocations;
+    try {
+      const data = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.LOCATIONS) : null;
+      const localLocs: Location[] = data ? JSON.parse(data) : INITIAL_LOCATIONS;
+      const existingIds = new Set(localLocs.map(l => l.id));
+      const missing = INITIAL_LOCATIONS.filter(l => !existingIds.has(l.id));
+      _memLocations = [...localLocs, ...missing];
+      return _memLocations;
+    } catch {
+      return INITIAL_LOCATIONS;
+    }
+  },
+
+  getInitialLocationBySlug(slug?: string): Location | null {
+    if (!slug) return null;
+    const locations = this.getInitialLocations();
+    return locations.find(l => l.slug.toLowerCase() === slug.toLowerCase()) || null;
+  },
+
+  getInitialBuildings(): Building[] {
+    if (_memBuildings && _memBuildings.length > 0) return _memBuildings;
+    try {
+      let localBuildings: Building[] = [];
+      const stored = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.BUILDINGS) : null;
+      if (stored) {
+        localBuildings = JSON.parse(stored);
+      }
+      const existingIds = new Set(localBuildings.map(b => b.id));
+      const existingSlugs = new Set(localBuildings.map(b => b.slug.toLowerCase()));
+      const missing = INITIAL_BUILDINGS.filter(b => !existingIds.has(b.id) && !existingSlugs.has(b.slug.toLowerCase()));
+      const source = [...localBuildings, ...missing];
+      _memBuildings = source.map(b => ({
+        ...b,
+        structure_display: getBuildingStructureDisplay(b),
+        property_count: Math.max(b.property_count || 0, 20)
+      }));
+      return _memBuildings;
+    } catch {
+      return INITIAL_BUILDINGS.map(b => ({
+        ...b,
+        structure_display: getBuildingStructureDisplay(b),
+        property_count: Math.max(b.property_count || 0, 20)
+      }));
+    }
+  },
+
+  getInitialBuildingBySlug(slug?: string): Building | null {
+    if (!slug) return null;
+    const buildings = this.getInitialBuildings();
+    return buildings.find(b => b.slug.toLowerCase() === slug.toLowerCase()) || null;
+  },
+
+  getInitialBuildingsByLocation(locationId?: string): Building[] {
+    if (!locationId) return [];
+    const buildings = this.getInitialBuildings();
+    return buildings.filter(b => b.location_id === locationId || (b.locations && b.locations.includes(locationId)));
+  },
+
+  getInitialProperties(): Property[] {
+    if (_memProperties && _memProperties.length > 0) return _memProperties;
+    try {
+      let localProps: Property[] = [];
+      const stored = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.PROPERTIES) : null;
+      if (stored) localProps = JSON.parse(stored);
+      const baseProps = localProps.length > 0 ? localProps : INITIAL_PROPERTIES;
+      const buildings = this.getInitialBuildings();
+      const allGenerated = buildings.flatMap(b => generateAvailablePropertiesForBuilding(b));
+      const existingIds = new Set(baseProps.map(p => p.id));
+      const existingSlugs = new Set(baseProps.map(p => p.slug.toLowerCase()));
+      const missingGenerated = allGenerated.filter(p => !existingIds.has(p.id) && !existingSlugs.has(p.slug.toLowerCase()));
+      _memProperties = [...baseProps, ...missingGenerated];
+      return _memProperties;
+    } catch {
+      return INITIAL_PROPERTIES;
+    }
+  },
+
+  getInitialPropertyBySlug(slug?: string): Property | null {
+    if (!slug) return null;
+    const properties = this.getInitialProperties();
+    const found = properties.find(p => p.slug.toLowerCase() === slug.toLowerCase());
+    if (found) return found;
+
+    const buildings = this.getInitialBuildings();
+    for (const bld of buildings) {
+      const units = generateAvailablePropertiesForBuilding(bld);
+      const match = units.find(u => u.slug.toLowerCase() === slug.toLowerCase());
+      if (match) return match;
+    }
+    return null;
+  },
+
+  getInitialPropertiesByBuilding(buildingId?: string): Property[] {
+    if (!buildingId) return [];
+    const buildings = this.getInitialBuildings();
+    const building = buildings.find(b => b.id === buildingId || b.slug.toLowerCase() === buildingId.toLowerCase());
+    const allProps = this.getInitialProperties();
+    const existing = allProps.filter(p => p.building_id === buildingId || (building && (p.building_name?.toLowerCase() === building.name.toLowerCase() || p.building_id === building.id)));
+
+    if (!building) return existing;
+
+    const standardUnits = generateAvailablePropertiesForBuilding(building);
+    const existingAreas = new Set(existing.map(p => p.built_up_area));
+    const merged = [
+      ...existing,
+      ...standardUnits.filter(u => !existingAreas.has(u.built_up_area))
+    ];
+
+    return merged.sort((a, b) => a.built_up_area - b.built_up_area);
+  },
+
+  getInitialPropertiesByLocation(locationId?: string): Property[] {
+    if (!locationId) return [];
+    const properties = this.getInitialProperties();
+    return properties.filter(p => p.location_id === locationId);
+  },
+
+  getInitialPropertiesByCategory(category?: string): Property[] {
+    if (!category) return [];
+    const properties = this.getInitialProperties();
+    return properties.filter(p => p.category === category);
+  },
+
+  getInitialLeads(): Lead[] {
+    if (_memLeads && _memLeads.length > 0) return _memLeads;
+    try {
+      const data = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.LEADS) : null;
+      _memLeads = data ? JSON.parse(data) : INITIAL_LEADS;
+      return _memLeads!;
+    } catch {
+      return INITIAL_LEADS;
+    }
+  },
+
+  // ASYNC LOCATIONS WITH BACKGROUND FALLBACK
   async getLocations(): Promise<Location[]> {
     if (isSupabaseConfigured && supabase) {
       try {
-        const { data, error } = await supabase.from('locations').select('*');
+        const { data, error } = await withTimeout(supabase.from('locations').select('*') as any);
         if (!error && data && data.length > 0) return data as Location[];
       } catch (e) {
         console.warn('Falling back to local storage for locations:', e);
       }
     }
-    const data = localStorage.getItem(STORAGE_KEYS.LOCATIONS);
-    const localLocs: Location[] = data ? JSON.parse(data) : INITIAL_LOCATIONS;
-    const existingIds = new Set(localLocs.map(l => l.id));
-    const missing = INITIAL_LOCATIONS.filter(l => !existingIds.has(l.id));
-    return [...localLocs, ...missing];
+    return this.getInitialLocations();
   },
 
   async getLocationBySlug(slug: string): Promise<Location | null> {
-    const locations = await this.getLocations();
-    return locations.find(l => l.slug.toLowerCase() === slug.toLowerCase()) || null;
+    if (!slug) return null;
+    const initial = this.getInitialLocationBySlug(slug);
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const locations = await this.getLocations();
+        return locations.find(l => l.slug.toLowerCase() === slug.toLowerCase()) || initial;
+      } catch {
+        return initial;
+      }
+    }
+    return initial;
   },
 
   async saveLocation(location: Location): Promise<void> {
@@ -142,7 +338,7 @@ export const StorageService = {
 
     if (isSupabaseConfigured && supabase) {
       try {
-        const { data, error } = await supabase.from('buildings').select('*');
+        const { data, error } = await withTimeout(supabase.from('buildings').select('*') as any);
         if (!error && data && data.length > 0) {
           const mergedList: Building[] = (data as any[]).map(supaBld => {
             const localBld = localBuildings.find(lb => lb.id === supaBld.id || lb.slug === supaBld.slug);
@@ -201,8 +397,17 @@ export const StorageService = {
   },
 
   async getBuildingBySlug(slug: string): Promise<Building | null> {
-    const buildings = await this.getBuildings();
-    return buildings.find(b => b.slug.toLowerCase() === slug.toLowerCase()) || null;
+    if (!slug) return null;
+    const initial = this.getInitialBuildingBySlug(slug);
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const buildings = await this.getBuildings();
+        return buildings.find(b => b.slug.toLowerCase() === slug.toLowerCase()) || initial;
+      } catch {
+        return initial;
+      }
+    }
+    return initial;
   },
 
   async getBuildingsByLocation(locationId: string): Promise<Building[]> {
@@ -331,7 +536,7 @@ export const StorageService = {
 
     if (isSupabaseConfigured && supabase) {
       try {
-        const { data, error } = await supabase.from('properties').select('*');
+        const { data, error } = await withTimeout(supabase.from('properties').select('*') as any);
         if (!error && data && data.length > 0) {
           baseProps = (data as any[]).map(supaProp => {
             const localProp = localProps.find(lp => lp.id === supaProp.id || lp.slug === supaProp.slug);
@@ -364,17 +569,25 @@ export const StorageService = {
   },
 
   async getPropertyBySlug(slug: string): Promise<Property | null> {
-    const properties = await this.getProperties();
-    const found = properties.find(p => p.slug.toLowerCase() === slug.toLowerCase());
-    if (found) return found;
+    if (!slug) return null;
+    const initial = this.getInitialPropertyBySlug(slug);
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const properties = await this.getProperties();
+        const found = properties.find(p => p.slug.toLowerCase() === slug.toLowerCase());
+        if (found) return found;
 
-    const buildings = await this.getBuildings();
-    for (const bld of buildings) {
-      const units = generateAvailablePropertiesForBuilding(bld);
-      const match = units.find(u => u.slug.toLowerCase() === slug.toLowerCase());
-      if (match) return match;
+        const buildings = await this.getBuildings();
+        for (const bld of buildings) {
+          const units = generateAvailablePropertiesForBuilding(bld);
+          const match = units.find(u => u.slug.toLowerCase() === slug.toLowerCase());
+          if (match) return match;
+        }
+      } catch {
+        return initial;
+      }
     }
-    return null;
+    return initial;
   },
 
   async getPropertiesByBuilding(buildingId: string): Promise<Property[]> {
@@ -484,14 +697,13 @@ export const StorageService = {
   async getLeads(): Promise<Lead[]> {
     if (isSupabaseConfigured && supabase) {
       try {
-        const { data, error } = await supabase.from('leads').select('*').order('created_at', { ascending: false });
+        const { data, error } = await withTimeout(supabase.from('leads').select('*').order('created_at', { ascending: false }) as any);
         if (!error && data && data.length > 0) return data as Lead[];
       } catch (e) {
         console.warn('Falling back to local storage for leads:', e);
       }
     }
-    const data = localStorage.getItem(STORAGE_KEYS.LEADS);
-    return data ? JSON.parse(data) : INITIAL_LEADS;
+    return this.getInitialLeads();
   },
 
   async createLead(leadData: Omit<Lead, 'id' | 'created_at' | 'status'>): Promise<Lead> {

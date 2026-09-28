@@ -150,7 +150,13 @@ export const EditBuildingPropertiesModal: React.FC<EditBuildingPropertiesModalPr
   // Load properties when modal opens for building
   useEffect(() => {
     if (!isOpen || !building) return;
-    setLoading(true);
+    const initialProps = StorageService.getInitialPropertiesByBuilding(building.id);
+    if (initialProps.length > 0) {
+      setProperties(initialProps);
+      setLoading(false);
+    } else {
+      setLoading(true);
+    }
     setSavedSuccess(false);
     setShowAddForm(false);
     setDeletedIds([]);

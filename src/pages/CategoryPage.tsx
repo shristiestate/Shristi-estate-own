@@ -25,35 +25,43 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
 
   const meta = CATEGORY_METADATA[normalizedCategory] || CATEGORY_METADATA['office-space'];
 
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [buildings, setBuildings] = useState<Building[]>([]);
-  const [locations, setLocations] = useState<Location[]>([]);
-  const [loading, setLoading] = useState(true);
+  const initialProps = StorageService.getInitialPropertiesByCategory(normalizedCategory);
+  const initialBlds = StorageService.getInitialBuildings().filter(b => 
+    b.category === normalizedCategory || 
+    (b.categories && b.categories.includes(normalizedCategory)) || 
+    initialProps.some(p => p.building_id === b.id)
+  );
+  const initialLocs = StorageService.getInitialLocations().filter(l => 
+    l.categories.includes(normalizedCategory) || initialProps.some(p => p.location_id === l.id)
+  );
+
+  const [properties, setProperties] = useState<Property[]>(() => initialProps);
+  const [buildings, setBuildings] = useState<Building[]>(() => initialBlds);
+  const [locations, setLocations] = useState<Location[]>(() => initialLocs);
 
   // Filters
   const [selectedType, setSelectedType] = useState<string>('All');
   const [selectedFurnishing, setSelectedFurnishing] = useState<string>('All');
 
   useEffect(() => {
-    setLoading(true);
+    let isMounted = true;
     Promise.all([
       StorageService.getPropertiesByCategory(normalizedCategory),
       StorageService.getBuildings(),
       StorageService.getLocations(),
     ]).then(([props, blds, locs]) => {
+      if (!isMounted) return;
       setProperties(props);
-      // Filter buildings that belong to this category or have properties in this category
       const matchingBlds = blds.filter(b => 
         b.category === normalizedCategory || 
         (b.categories && b.categories.includes(normalizedCategory)) || 
         props.some(p => p.building_id === b.id)
       );
       setBuildings(matchingBlds);
-      // Filter locations where inventory exists per section 7
       const matchingLocs = locs.filter(l => l.categories.includes(normalizedCategory) || props.some(p => p.location_id === l.id));
       setLocations(matchingLocs);
-      setLoading(false);
     });
+    return () => { isMounted = false; };
   }, [normalizedCategory]);
 
   const filteredProperties = properties.filter(p => {

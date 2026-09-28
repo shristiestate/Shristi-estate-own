@@ -5,11 +5,15 @@ import { LocationCard } from '../components/common/LocationCard';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
 
 export const LocationsDirectoryPage: React.FC = () => {
-  const [locations, setLocations] = useState<Location[]>([]);
+  const [locations, setLocations] = useState<Location[]>(() => StorageService.getInitialLocations());
   const [cityFilter, setCityFilter] = useState<string>('All');
 
   useEffect(() => {
-    StorageService.getLocations().then(setLocations);
+    let isMounted = true;
+    StorageService.getLocations().then((data) => {
+      if (isMounted) setLocations(data);
+    });
+    return () => { isMounted = false; };
   }, []);
 
   const cities = ['All', ...Array.from(new Set(locations.map(l => l.city)))];

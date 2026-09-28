@@ -25,7 +25,9 @@ import { ServicesPage } from './pages/ServicesPage';
 import { ContactPage } from './pages/ContactPage';
 import { BlogPage } from './pages/BlogPage';
 import { LegalPage } from './pages/LegalPage';
-import { AdminPage } from './pages/AdminPage';
+
+// Lazy load heavy admin dashboard off the critical path (zero delay for public visitors)
+const AdminPage = React.lazy(() => import('./pages/AdminPage').then(m => ({ default: m.AdminPage })));
 
 // Scroll to top helper on route transitions
 const ScrollToTop: React.FC = () => {
@@ -127,7 +129,14 @@ export const AppContent: React.FC = () => {
           <Route path="/legal" element={<LegalPage />} />
 
           {/* Admin Dashboard */}
-          <Route path="/admin" element={<AdminPage />} />
+          <Route 
+            path="/admin" 
+            element={
+              <React.Suspense fallback={null}>
+                <AdminPage />
+              </React.Suspense>
+            } 
+          />
 
           {/* 404 Fallback */}
           <Route path="*" element={<NotFoundPage />} />

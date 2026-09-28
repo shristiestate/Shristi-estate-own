@@ -233,11 +233,11 @@ export const AdminPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'leads' | 'properties' | 'buildings' | 'locations' | 'media'>('properties');
 
   // Data
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [buildings, setBuildings] = useState<Building[]>([]);
-  const [locations, setLocations] = useState<Location[]>([]);
-  const [leads, setLeads] = useState<Lead[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [properties, setProperties] = useState<Property[]>(() => StorageService.getInitialProperties());
+  const [buildings, setBuildings] = useState<Building[]>(() => StorageService.getInitialBuildings());
+  const [locations, setLocations] = useState<Location[]>(() => StorageService.getInitialLocations());
+  const [leads, setLeads] = useState<Lead[]>(() => StorageService.getInitialLeads());
+  const [loading, setLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   // Search & Filter for Leads & Properties

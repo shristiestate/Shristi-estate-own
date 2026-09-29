@@ -329,7 +329,9 @@ export function generateAvailablePropertiesForBuilding(building: Building): Prop
       building_id: building.id,
       building_name: building.name,
       tower: towerName,
-      address: `${unit.floor}, ${towerName}, ${building.name}, ${building.address}`,
+      address: building.address.toLowerCase().includes(building.name.toLowerCase())
+        ? building.address
+        : `${building.name}, ${building.address}`,
       city: 'Noida',
       built_up_area: unit.area,
       carpet_area: Math.round(unit.area * 0.72),

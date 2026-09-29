@@ -3,6 +3,7 @@ import { INITIAL_LOCATIONS, INITIAL_BUILDINGS, INITIAL_PROPERTIES, INITIAL_LEADS
 import { supabase, isSupabaseConfigured } from './supabaseClient';
 import { getBuildingStructureDisplay } from '../utils/textFormat';
 import { generateAvailablePropertiesForBuilding } from '../utils/buildingUnits';
+import { cleanPropertyAddress } from '../utils/propertyLocation';
 
 const STORAGE_KEYS = {
   LOCATIONS: 'shristi_locations_v1',
@@ -79,7 +80,12 @@ const initStorage = () => {
       const existingIds = new Set(parsedProps.map(p => p.id));
       const existingSlugs = new Set(parsedProps.map(p => p.slug.toLowerCase()));
       const missingGenerated = allGenerated.filter(p => !existingIds.has(p.id) && !existingSlugs.has(p.slug.toLowerCase()));
-      _memProperties = [...parsedProps, ...missingGenerated];
+      const cleanedExisting = parsedProps.map(p => ({
+        ...p,
+        title: p.title.replace(/\s+in\s+I-Thum\s+Tower\s+[A-Za-z0-9-]+\b/i, ' in I-Thum'),
+        address: cleanPropertyAddress(p.address, p.building_name)
+      }));
+      _memProperties = [...cleanedExisting, ...missingGenerated];
     }
   } catch (e) {
     console.warn('Init storage error:', e);
@@ -187,7 +193,12 @@ export const StorageService = {
       const existingIds = new Set(baseProps.map(p => p.id));
       const existingSlugs = new Set(baseProps.map(p => p.slug.toLowerCase()));
       const missingGenerated = allGenerated.filter(p => !existingIds.has(p.id) && !existingSlugs.has(p.slug.toLowerCase()));
-      _memProperties = [...baseProps, ...missingGenerated];
+      const cleanedBaseProps = baseProps.map(p => ({
+        ...p,
+        title: p.title.replace(/\s+in\s+I-Thum\s+Tower\s+[A-Za-z0-9-]+\b/i, ' in I-Thum'),
+        address: cleanPropertyAddress(p.address, p.building_name)
+      }));
+      _memProperties = [...cleanedBaseProps, ...missingGenerated];
       return _memProperties;
     } catch {
       return INITIAL_PROPERTIES;
@@ -564,8 +575,13 @@ export const StorageService = {
     const existingIds = new Set(baseProps.map(p => p.id));
     const existingSlugs = new Set(baseProps.map(p => p.slug.toLowerCase()));
     const missingGenerated = allGenerated.filter(p => !existingIds.has(p.id) && !existingSlugs.has(p.slug.toLowerCase()));
+    const cleanedBaseProps = baseProps.map(p => ({
+      ...p,
+      title: p.title.replace(/\s+in\s+I-Thum\s+Tower\s+[A-Za-z0-9-]+\b/i, ' in I-Thum'),
+      address: cleanPropertyAddress(p.address, p.building_name)
+    }));
 
-    return [...baseProps, ...missingGenerated];
+    return [...cleanedBaseProps, ...missingGenerated];
   },
 
   async getPropertyBySlug(slug: string): Promise<Property | null> {

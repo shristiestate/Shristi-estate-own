@@ -43,7 +43,36 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
   const [selectedType, setSelectedType] = useState<string>('All');
   const [selectedFurnishing, setSelectedFurnishing] = useState<string>('All');
 
+  // Progressive loading / show few
+  const INITIAL_VISIBLE_COUNT = 6;
+  const [visibleCount, setVisibleCount] = useState<number>(INITIAL_VISIBLE_COUNT);
+
+  const INITIAL_VISIBLE_BUILDINGS = 4;
+  const [visibleBuildingsCount, setVisibleBuildingsCount] = useState<number>(INITIAL_VISIBLE_BUILDINGS);
+
+  const INITIAL_VISIBLE_LOCATIONS = 3;
+  const [visibleLocationsCount, setVisibleLocationsCount] = useState<number>(INITIAL_VISIBLE_LOCATIONS);
+
   useEffect(() => {
+    setVisibleCount(INITIAL_VISIBLE_COUNT);
+  }, [selectedType, selectedFurnishing]);
+
+  useEffect(() => {
+    // Instant synchronous sync to avoid old data flash when navigating between category pages
+    const syncProps = StorageService.getInitialPropertiesByCategory(normalizedCategory);
+    setProperties(syncProps);
+    setBuildings(StorageService.getInitialBuildings().filter(b => 
+      b.category === normalizedCategory || 
+      (b.categories && b.categories.includes(normalizedCategory)) || 
+      syncProps.some(p => p.building_id === b.id)
+    ));
+    setLocations(StorageService.getInitialLocations().filter(l => 
+      l.categories.includes(normalizedCategory) || syncProps.some(p => p.location_id === l.id)
+    ));
+    setVisibleCount(INITIAL_VISIBLE_COUNT);
+    setVisibleBuildingsCount(INITIAL_VISIBLE_BUILDINGS);
+    setVisibleLocationsCount(INITIAL_VISIBLE_LOCATIONS);
+
     let isMounted = true;
     Promise.all([
       StorageService.getPropertiesByCategory(normalizedCategory),
@@ -111,57 +140,137 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
 
       {/* MANDATORY HIERARCHY LAYER 1: LOCATIONS */}
       {locations.length > 0 && (
-        <section className="space-y-6">
-          <div className="flex items-center justify-between">
+        <section className="space-y-6" id="locations-section">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-4">
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
                 Step 1: Select Your Strategic Sector
               </span>
               <h2 className="text-2xl font-bold text-slate-900 dark:text-white font-['Outfit']">
-                {meta.title} by Location
+                {meta.title} by Location {visibleLocationsCount < locations.length ? `(${Math.min(visibleLocationsCount, locations.length)} of ${locations.length})` : `(${locations.length})`}
               </h2>
             </div>
+
+            {locations.length > INITIAL_VISIBLE_LOCATIONS && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-500 dark:text-slate-400">
+                  Showing top {Math.min(visibleLocationsCount, locations.length)} of {locations.length} sectors
+                </span>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {locations.map((loc) => (
+            {locations.slice(0, visibleLocationsCount).map((loc) => (
               <LocationCard key={loc.id} location={loc} />
             ))}
           </div>
+
+          {locations.length > visibleLocationsCount && (
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4 border-t border-slate-200/80 dark:border-slate-800/80">
+              <button
+                onClick={() => setVisibleLocationsCount((prev) => Math.min(prev + 3, locations.length))}
+                className="btn-glass-primary px-6 py-3 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2 shadow-sm"
+              >
+                <span>Load More Sectors ({locations.length - visibleLocationsCount} more)</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setVisibleLocationsCount(locations.length)}
+                className="px-5 py-3 rounded-2xl text-xs sm:text-sm font-semibold border border-slate-200 dark:border-slate-700 bg-white/60 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors"
+              >
+                View All Sectors ({locations.length})
+              </button>
+            </div>
+          )}
+
+          {visibleLocationsCount >= locations.length && locations.length > INITIAL_VISIBLE_LOCATIONS && (
+            <div className="flex items-center justify-center pt-4 border-t border-slate-200/80 dark:border-slate-800/80">
+              <button
+                onClick={() => {
+                  setVisibleLocationsCount(INITIAL_VISIBLE_LOCATIONS);
+                  document.getElementById('locations-section')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="px-5 py-2.5 rounded-2xl text-xs font-semibold border border-slate-200 dark:border-slate-700 bg-white/60 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors"
+              >
+                Show Fewer (Top {INITIAL_VISIBLE_LOCATIONS})
+              </button>
+            </div>
+          )}
         </section>
       )}
 
       {/* MANDATORY HIERARCHY LAYER 2: BUILDINGS / PROJECTS */}
       {buildings.length > 0 && (
-        <section className="space-y-6">
-          <div className="flex items-center justify-between">
+        <section className="space-y-6" id="commercial-projects-section">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-4">
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
                 Step 2: Commercial Buildings & Projects
               </span>
               <h2 className="text-2xl font-bold text-slate-900 dark:text-white font-['Outfit']">
-                Commercial Projects for {meta.title}
+                Commercial Projects for {meta.title} {visibleBuildingsCount < buildings.length ? `(${Math.min(visibleBuildingsCount, buildings.length)} of ${buildings.length})` : `(${buildings.length})`}
               </h2>
             </div>
+
+            {buildings.length > INITIAL_VISIBLE_BUILDINGS && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-500 dark:text-slate-400">
+                  Showing top {Math.min(visibleBuildingsCount, buildings.length)} of {buildings.length} projects
+                </span>
+              </div>
+            )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {buildings.map((b) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {buildings.slice(0, visibleBuildingsCount).map((b) => (
               <BuildingCard key={b.id} building={b} />
             ))}
           </div>
+
+          {buildings.length > visibleBuildingsCount && (
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4 border-t border-slate-200/80 dark:border-slate-800/80">
+              <button
+                onClick={() => setVisibleBuildingsCount((prev) => Math.min(prev + 4, buildings.length))}
+                className="btn-glass-primary px-6 py-3 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2 shadow-sm"
+              >
+                <span>Load More Projects ({buildings.length - visibleBuildingsCount} more)</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setVisibleBuildingsCount(buildings.length)}
+                className="px-5 py-3 rounded-2xl text-xs sm:text-sm font-semibold border border-slate-200 dark:border-slate-700 bg-white/60 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors"
+              >
+                View All Projects ({buildings.length})
+              </button>
+            </div>
+          )}
+
+          {visibleBuildingsCount >= buildings.length && buildings.length > INITIAL_VISIBLE_BUILDINGS && (
+            <div className="flex items-center justify-center pt-4 border-t border-slate-200/80 dark:border-slate-800/80">
+              <button
+                onClick={() => {
+                  setVisibleBuildingsCount(INITIAL_VISIBLE_BUILDINGS);
+                  document.getElementById('commercial-projects-section')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="px-5 py-2.5 rounded-2xl text-xs font-semibold border border-slate-200 dark:border-slate-700 bg-white/60 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors"
+              >
+                Show Fewer (Top {INITIAL_VISIBLE_BUILDINGS})
+              </button>
+            </div>
+          )}
         </section>
       )}
 
       {/* MANDATORY HIERARCHY LAYER 3: AVAILABLE PROPERTIES WITH FILTERS */}
       <section className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4" id="available-inventory-section">
           <div>
             <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
               Step 3: Direct Verified Inventory
             </span>
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white font-['Outfit']">
-              Available {meta.title} ({filteredProperties.length})
+              Available {meta.title} {visibleCount < filteredProperties.length ? `(${Math.min(visibleCount, filteredProperties.length)} of ${filteredProperties.length})` : `(${filteredProperties.length})`}
             </h2>
           </div>
 
@@ -209,10 +318,44 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredProperties.map((prop) => (
-              <PropertyCard key={prop.id} property={prop} onEnquire={onOpenEnquiry} />
-            ))}
+          <div className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredProperties.slice(0, visibleCount).map((prop) => (
+                <PropertyCard key={prop.id} property={prop} onEnquire={onOpenEnquiry} />
+              ))}
+            </div>
+
+            {filteredProperties.length > visibleCount && (
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4 border-t border-slate-200/80 dark:border-slate-800/80">
+                <button
+                  onClick={() => setVisibleCount((prev) => Math.min(prev + 6, filteredProperties.length))}
+                  className="btn-glass-primary px-6 py-3 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2 shadow-sm"
+                >
+                  <span>Load More Spaces ({filteredProperties.length - visibleCount} more)</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setVisibleCount(filteredProperties.length)}
+                  className="px-5 py-3 rounded-2xl text-xs sm:text-sm font-semibold border border-slate-200 dark:border-slate-700 bg-white/60 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors"
+                >
+                  View All ({filteredProperties.length})
+                </button>
+              </div>
+            )}
+
+            {visibleCount >= filteredProperties.length && filteredProperties.length > INITIAL_VISIBLE_COUNT && (
+              <div className="flex items-center justify-center pt-4 border-t border-slate-200/80 dark:border-slate-800/80">
+                <button
+                  onClick={() => {
+                    setVisibleCount(INITIAL_VISIBLE_COUNT);
+                    document.getElementById('available-inventory-section')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className="px-5 py-2.5 rounded-2xl text-xs font-semibold border border-slate-200 dark:border-slate-700 bg-white/60 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors"
+                >
+                  Show Fewer (Top {INITIAL_VISIBLE_COUNT})
+                </button>
+              </div>
+            )}
           </div>
         )}
       </section>

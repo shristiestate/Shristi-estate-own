@@ -309,7 +309,9 @@ export const EditBuildingPropertiesModal: React.FC<EditBuildingPropertiesModalPr
       building_id: building.id,
       building_name: building.name,
       tower: building.towers && building.towers.length > 0 ? building.towers[0] : (building.tower_details || 'Main Tower'),
-      address: `${customFloor}, ${building.name}, ${building.address}`,
+      address: building.address.toLowerCase().includes(building.name.toLowerCase())
+        ? building.address
+        : `${building.name}, ${building.address}`,
       city: 'Noida',
       built_up_area: customArea,
       carpet_area: Math.round(customArea * 0.72),

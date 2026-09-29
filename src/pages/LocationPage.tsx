@@ -19,6 +19,9 @@ export const LocationPage: React.FC<LocationPageProps> = ({ onOpenEnquiry }) => 
     initialLoc ? StorageService.getInitialBuildingsByLocation(initialLoc.id) : []
   );
   const [hasResolved, setHasResolved] = useState(() => Boolean(initialLoc));
+  
+  const INITIAL_VISIBLE_BUILDINGS = 4;
+  const [visibleBuildingsCount, setVisibleBuildingsCount] = useState<number>(INITIAL_VISIBLE_BUILDINGS);
 
   useEffect(() => {
     if (!locationSlug) return;
@@ -38,6 +41,10 @@ export const LocationPage: React.FC<LocationPageProps> = ({ onOpenEnquiry }) => 
     });
 
     return () => { isMounted = false; };
+  }, [locationSlug]);
+
+  useEffect(() => {
+    setVisibleBuildingsCount(INITIAL_VISIBLE_BUILDINGS);
   }, [locationSlug]);
 
   if (!location && hasResolved) {
@@ -100,16 +107,24 @@ export const LocationPage: React.FC<LocationPageProps> = ({ onOpenEnquiry }) => 
       </div>
 
       {/* MANDATORY HIERARCHY: BUILDINGS IN THIS LOCATION (SECTION 8 & 29) */}
-      <section className="space-y-6">
+      <section className="space-y-6" id="location-buildings-section">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-4">
           <div>
             <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
               Commercial Infrastructure
             </span>
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white font-['Outfit']">
-              Buildings & Projects in {location.name}
+              Buildings & Projects in {location.name} {visibleBuildingsCount < buildings.length ? `(${Math.min(visibleBuildingsCount, buildings.length)} of ${buildings.length})` : `(${buildings.length})`}
             </h2>
           </div>
+
+          {buildings.length > INITIAL_VISIBLE_BUILDINGS && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-500 dark:text-slate-400">
+                Showing top {Math.min(visibleBuildingsCount, buildings.length)} of {buildings.length} projects
+              </span>
+            </div>
+          )}
         </div>
 
         {buildings.length === 0 ? (
@@ -117,10 +132,44 @@ export const LocationPage: React.FC<LocationPageProps> = ({ onOpenEnquiry }) => 
             No independent multi-story buildings registered yet in this sector.
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {buildings.map((b) => (
-              <BuildingCard key={b.id} building={b} />
-            ))}
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {buildings.slice(0, visibleBuildingsCount).map((b) => (
+                <BuildingCard key={b.id} building={b} />
+              ))}
+            </div>
+
+            {buildings.length > visibleBuildingsCount && (
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4 border-t border-slate-200/80 dark:border-slate-800/80">
+                <button
+                  onClick={() => setVisibleBuildingsCount((prev) => Math.min(prev + 4, buildings.length))}
+                  className="btn-glass-primary px-6 py-3 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2 shadow-sm"
+                >
+                  <span>Load More Projects ({buildings.length - visibleBuildingsCount} more)</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setVisibleBuildingsCount(buildings.length)}
+                  className="px-5 py-3 rounded-2xl text-xs sm:text-sm font-semibold border border-slate-200 dark:border-slate-700 bg-white/60 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors"
+                >
+                  View All Projects ({buildings.length})
+                </button>
+              </div>
+            )}
+
+            {visibleBuildingsCount >= buildings.length && buildings.length > INITIAL_VISIBLE_BUILDINGS && (
+              <div className="flex items-center justify-center pt-4 border-t border-slate-200/80 dark:border-slate-800/80">
+                <button
+                  onClick={() => {
+                    setVisibleBuildingsCount(INITIAL_VISIBLE_BUILDINGS);
+                    document.getElementById('location-buildings-section')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className="px-5 py-2.5 rounded-2xl text-xs font-semibold border border-slate-200 dark:border-slate-700 bg-white/60 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors"
+                >
+                  Show Fewer (Top {INITIAL_VISIBLE_BUILDINGS})
+                </button>
+              </div>
+            )}
           </div>
         )}
       </section>

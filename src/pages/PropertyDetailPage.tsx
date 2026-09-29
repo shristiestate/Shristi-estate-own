@@ -25,6 +25,7 @@ import { Breadcrumbs } from '../components/common/Breadcrumbs';
 import { WhatsAppIcon } from '../components/common/SocialIcons';
 import { generatePropertyWhatsAppLink } from '../utils/whatsapp';
 import { getBuildingStructureDisplay } from '../utils/textFormat';
+import { cleanPropertyAddress } from '../utils/propertyLocation';
 
 interface PropertyDetailPageProps {
   onOpenEnquiry: (property: Property) => void;
@@ -178,7 +179,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
 
             <div className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400">
               <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
-              <span>{property.address}</span>
+              <span>{cleanPropertyAddress(property.address, property.building_name)}</span>
             </div>
           </div>
 

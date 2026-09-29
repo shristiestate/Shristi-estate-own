@@ -1,43 +1,24 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, ArrowRight, BookOpen, Clock } from 'lucide-react';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
+import { StorageService } from '../services/storageService';
+import { MarketGuide } from '../types';
 
 export const BlogPage: React.FC = () => {
-  const posts = [
-    {
-      title: 'Commercial Office Space in Sector 62, Noida: Complete Corporate Guide',
-      excerpt: 'Why Sector 62 remains the institutional tech capital of Noida. An analysis of major landmarks including I-Thum, Noida One, Corenthum, and Stellar IT Park.',
-      readTime: '6 min read',
-      date: 'March 2026',
-      category: 'Office Market',
-      image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80'
-    },
-    {
-      title: 'Leasing Warehouses in Sector 83 & Greater Noida: Critical Checks for Logistics',
-      excerpt: 'Understanding key operational requirements: clear ceiling heights, truck turning radiuses, hydraulic dock levelers, and power backup sanctions.',
-      readTime: '8 min read',
-      date: 'February 2026',
-      category: 'Warehousing & 3PL',
-      image: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=800&q=80'
-    },
-    {
-      title: 'Commercial Real Estate Trends Along the Noida-Greater Noida Expressway',
-      excerpt: 'Grade-A towers, LEED certified business campuses, and metro connectivity driving IT/ITES relocations along the high-growth corporate corridor.',
-      readTime: '5 min read',
-      date: 'February 2026',
-      category: 'Market Trends',
-      image: 'https://images.unsplash.com/photo-1577495508048-b635879837f1?auto=format&fit=crop&w=800&q=80'
-    },
-    {
-      title: 'Understanding Bare Shell vs. Fully Furnished Commercial Leases in NCR',
-      excerpt: 'Cost-benefit breakdown for business tenants: capital expenditures, fit-out rent-free periods, and lock-in covenants.',
-      readTime: '7 min read',
-      date: 'January 2026',
-      category: 'Lease Advisory',
-      image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80'
-    }
-  ];
+  const [guides, setGuides] = useState<MarketGuide[]>(() => 
+    StorageService.getInitialGuides().filter(g => g.published !== false)
+  );
+
+  useEffect(() => {
+    let isMounted = true;
+    StorageService.getGuides().then((all) => {
+      if (isMounted) {
+        setGuides(all.filter(g => g.published !== false));
+      }
+    });
+    return () => { isMounted = false; };
+  }, []);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
@@ -60,9 +41,9 @@ export const BlogPage: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {posts.map((post, idx) => (
+        {guides.map((post) => (
           <div
-            key={idx}
+            key={post.id}
             className="glass-card rounded-3xl overflow-hidden border border-slate-200/90 dark:border-slate-800 bg-white/70 dark:bg-[#0B132B]/75 flex flex-col group transition-all"
           >
             <div className="relative aspect-[16/9] overflow-hidden bg-slate-100 dark:bg-slate-800">

@@ -175,3 +175,20 @@ export interface Lead {
   assigned_agent?: string;
   created_at: string;
 }
+
+export interface MarketGuide {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string;
+  content?: string;
+  readTime: string;
+  date: string;
+  category: string;
+  image: string;
+  published: boolean;
+  featured?: boolean;
+  author?: string;
+  created_at?: string;
+  updated_at?: string;
+}

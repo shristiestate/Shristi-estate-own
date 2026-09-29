@@ -1,5 +1,5 @@
-import { Location, Building, Property, Lead, LeadStatus } from '../types';
-import { INITIAL_LOCATIONS, INITIAL_BUILDINGS, INITIAL_PROPERTIES, INITIAL_LEADS } from '../data/mockData';
+import { Location, Building, Property, Lead, LeadStatus, MarketGuide } from '../types';
+import { INITIAL_LOCATIONS, INITIAL_BUILDINGS, INITIAL_PROPERTIES, INITIAL_LEADS, INITIAL_MARKET_GUIDES } from '../data/mockData';
 import { supabase, isSupabaseConfigured } from './supabaseClient';
 import { getBuildingStructureDisplay } from '../utils/textFormat';
 import { generateAvailablePropertiesForBuilding } from '../utils/buildingUnits';
@@ -10,12 +10,14 @@ const STORAGE_KEYS = {
   BUILDINGS: 'shristi_buildings_v1',
   PROPERTIES: 'shristi_properties_v1',
   LEADS: 'shristi_leads_v1',
+  GUIDES: 'shristi_guides_v1',
 };
 
 let _memLocations: Location[] | null = null;
 let _memBuildings: Building[] | null = null;
 let _memProperties: Property[] | null = null;
 let _memLeads: Lead[] | null = null;
+let _memGuides: MarketGuide[] | null = null;
 
 // Initialize in-memory cache and localStorage with initial seeds if not populated
 const initStorage = () => {
@@ -87,6 +89,17 @@ const initStorage = () => {
       }));
       _memProperties = [...cleanedExisting, ...missingGenerated];
     }
+
+    const storedGuides = localStorage.getItem(STORAGE_KEYS.GUIDES);
+    if (!storedGuides) {
+      _memGuides = INITIAL_MARKET_GUIDES;
+      localStorage.setItem(STORAGE_KEYS.GUIDES, JSON.stringify(INITIAL_MARKET_GUIDES));
+    } else {
+      const parsedGuides: MarketGuide[] = JSON.parse(storedGuides);
+      const existingIds = new Set(parsedGuides.map(g => g.id));
+      const missingGuides = INITIAL_MARKET_GUIDES.filter(g => !existingIds.has(g.id));
+      _memGuides = missingGuides.length > 0 ? [...parsedGuides, ...missingGuides] : parsedGuides;
+    }
   } catch (e) {
     console.warn('Init storage error:', e);
     _memLocations = INITIAL_LOCATIONS;
@@ -99,6 +112,7 @@ const initStorage = () => {
       ...INITIAL_PROPERTIES,
       ...INITIAL_BUILDINGS.flatMap(b => generateAvailablePropertiesForBuilding(b))
     ];
+    _memGuides = INITIAL_MARKET_GUIDES;
   }
 };
 
@@ -825,11 +839,74 @@ export const StorageService = {
     }
   },
 
+  // GUIDES & MARKET INSIGHTS
+  getInitialGuides(): MarketGuide[] {
+    if (_memGuides && _memGuides.length > 0) return _memGuides;
+    try {
+      const data = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.GUIDES) : null;
+      const localGuides: MarketGuide[] = data ? JSON.parse(data) : INITIAL_MARKET_GUIDES;
+      _memGuides = localGuides;
+      return _memGuides;
+    } catch {
+      return INITIAL_MARKET_GUIDES;
+    }
+  },
+
+  getInitialGuideBySlug(slug?: string): MarketGuide | null {
+    if (!slug) return null;
+    const guides = this.getInitialGuides();
+    return guides.find(g => g.slug.toLowerCase() === slug.toLowerCase()) || null;
+  },
+
+  async getGuides(): Promise<MarketGuide[]> {
+    try {
+      const local = this.getInitialGuides();
+      return local;
+    } catch {
+      return INITIAL_MARKET_GUIDES;
+    }
+  },
+
+  async getGuideBySlug(slug: string): Promise<MarketGuide | null> {
+    const guides = await this.getGuides();
+    return guides.find(g => g.slug.toLowerCase() === slug.toLowerCase()) || null;
+  },
+
+  async saveGuide(guide: MarketGuide): Promise<MarketGuide> {
+    const guides = await this.getGuides();
+    const existingIndex = guides.findIndex(g => g.id === guide.id);
+    let updatedGuides: MarketGuide[];
+
+    if (existingIndex >= 0) {
+      updatedGuides = [...guides];
+      updatedGuides[existingIndex] = { ...guide, updated_at: new Date().toISOString() };
+    } else {
+      updatedGuides = [{ ...guide, created_at: guide.created_at || new Date().toISOString() }, ...guides];
+    }
+
+    _memGuides = updatedGuides;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(STORAGE_KEYS.GUIDES, JSON.stringify(updatedGuides));
+    }
+    return guide;
+  },
+
+  async deleteGuide(guideId: string): Promise<boolean> {
+    const guides = await this.getGuides();
+    const filtered = guides.filter(g => g.id !== guideId);
+    _memGuides = filtered;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(STORAGE_KEYS.GUIDES, JSON.stringify(filtered));
+    }
+    return true;
+  },
+
   // Reset database back to default seed data
   resetDefaults(): void {
     localStorage.setItem(STORAGE_KEYS.LOCATIONS, JSON.stringify(INITIAL_LOCATIONS));
     localStorage.setItem(STORAGE_KEYS.BUILDINGS, JSON.stringify(INITIAL_BUILDINGS));
     localStorage.setItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(INITIAL_PROPERTIES));
     localStorage.setItem(STORAGE_KEYS.LEADS, JSON.stringify(INITIAL_LEADS));
+    localStorage.setItem(STORAGE_KEYS.GUIDES, JSON.stringify(INITIAL_MARKET_GUIDES));
   }
 };

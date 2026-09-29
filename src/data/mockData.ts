@@ -1,4 +1,4 @@
-import { Location, Building, Property, Lead } from '../types';
+import { Location, Building, Property, Lead, MarketGuide } from '../types';
 
 export const INITIAL_LOCATIONS: Location[] = [
   {
@@ -2147,3 +2147,62 @@ export const CATEGORY_METADATA: Record<string, { title: string; subtitle: string
     image: 'https://images.unsplash.com/photo-1519999482648-25049ddd37b1?auto=format&fit=crop&w=1200&q=80'
   }
 };
+
+export const INITIAL_MARKET_GUIDES: MarketGuide[] = [
+  {
+    id: 'guide-sec-62',
+    slug: 'commercial-office-space-sector-62-noida',
+    title: 'Commercial Office Space in Sector 62, Noida: Complete Corporate Guide',
+    excerpt: 'Why Sector 62 remains the institutional tech capital of Noida. An analysis of major landmarks including I-Thum, Noida One, Corenthum, and Stellar IT Park.',
+    content: 'Why Sector 62 remains the institutional tech capital of Noida. An analysis of major landmarks including I-Thum, Noida One, Corenthum, and Stellar IT Park. With rapid metro connectivity via the Blue Line Electronic City station, robust power backup infrastructure, and institutional zoning, Sector 62 continues to attract Fortune 500 tech giants and high-growth technology startups.',
+    readTime: '6 min read',
+    date: 'March 2026',
+    category: 'Office Market',
+    image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80',
+    published: true,
+    featured: true,
+    author: 'Shristi Estate Advisory Desk'
+  },
+  {
+    id: 'guide-warehouse-sec-83',
+    slug: 'leasing-warehouses-sector-83-greater-noida',
+    title: 'Leasing Warehouses in Sector 83 & Greater Noida: Critical Checks for Logistics',
+    excerpt: 'Understanding key operational requirements: clear ceiling heights, truck turning radiuses, hydraulic dock levelers, and power backup sanctions.',
+    content: 'Understanding key operational requirements: clear ceiling heights, truck turning radiuses, hydraulic dock levelers, and power backup sanctions. Warehousing in Delhi-NCR requires compliance with modern fire safety norms (K-factor sprinklers), laser-leveled FM2 flooring for high-reach forklifts, and container vehicle turning radiuses.',
+    readTime: '8 min read',
+    date: 'February 2026',
+    category: 'Warehousing & 3PL',
+    image: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=800&q=80',
+    published: true,
+    featured: true,
+    author: 'Logistics Advisory Desk'
+  },
+  {
+    id: 'guide-noida-exp-trends',
+    slug: 'commercial-real-estate-trends-noida-expressway',
+    title: 'Commercial Real Estate Trends Along the Noida-Greater Noida Expressway',
+    excerpt: 'Grade-A towers, LEED certified business campuses, and metro connectivity driving IT/ITES relocations along the high-growth corporate corridor.',
+    content: 'Grade-A towers, LEED certified business campuses, and metro connectivity driving IT/ITES relocations along the high-growth corporate corridor. Projects like Advant Navis, Express Trade Towers, and Candor TechSpace offer multi-tenant campus ecosystems with state-of-the-art sustainability standards.',
+    readTime: '5 min read',
+    date: 'February 2026',
+    category: 'Market Trends',
+    image: 'https://images.unsplash.com/photo-1577495508048-b635879837f1?auto=format&fit=crop&w=800&q=80',
+    published: true,
+    featured: false,
+    author: 'Research & Intelligence'
+  },
+  {
+    id: 'guide-bare-shell-vs-furnished',
+    slug: 'bare-shell-vs-fully-furnished-commercial-leases',
+    title: 'Understanding Bare Shell vs. Fully Furnished Commercial Leases in NCR',
+    excerpt: 'Cost-benefit breakdown for business tenants: capital expenditures, fit-out rent-free periods, and lock-in covenants.',
+    content: 'Cost-benefit breakdown for business tenants: capital expenditures, fit-out rent-free periods, and lock-in covenants. When deciding between bare shell and plug-and-play furnished offices, enterprise teams must factor in lease tenures, amortization of capital expenditure, and standard 60-90 day fit-out rent-free moratoriums.',
+    readTime: '7 min read',
+    date: 'January 2026',
+    category: 'Lease Advisory',
+    image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80',
+    published: true,
+    featured: false,
+    author: 'Tenant Representation Desk'
+  }
+];

@@ -41,10 +41,13 @@ import {
   Eye,
   PlusCircle,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  BookOpen,
+  Clock,
+  Calendar
 } from 'lucide-react';
 import { StorageService } from '../services/storageService';
-import { Property, Building, Location, Lead, LeadStatus, PropertyStatus, PropertyCategory } from '../types';
+import { Property, Building, Location, Lead, LeadStatus, PropertyStatus, PropertyCategory, MarketGuide } from '../types';
 import { handleOverviewPaste, computeStructureDisplay, getBuildingStructureDisplay } from '../utils/textFormat';
 import { EditBuildingPropertiesModal } from '../components/modals/EditBuildingPropertiesModal';
 
@@ -230,13 +233,33 @@ export const AdminPage: React.FC = () => {
   const [authError, setAuthError] = useState('');
 
   // Active Tab
-  const [activeTab, setActiveTab] = useState<'leads' | 'properties' | 'buildings' | 'locations' | 'media'>('properties');
+  const [activeTab, setActiveTab] = useState<'leads' | 'properties' | 'buildings' | 'locations' | 'media' | 'guides'>('properties');
 
   // Data
   const [properties, setProperties] = useState<Property[]>(() => StorageService.getInitialProperties());
   const [buildings, setBuildings] = useState<Building[]>(() => StorageService.getInitialBuildings());
   const [locations, setLocations] = useState<Location[]>(() => StorageService.getInitialLocations());
   const [leads, setLeads] = useState<Lead[]>(() => StorageService.getInitialLeads());
+  const [guides, setGuides] = useState<MarketGuide[]>(() => StorageService.getInitialGuides());
+
+  // Market Guides Admin State
+  const [guideSearch, setGuideSearch] = useState('');
+  const [guideCategoryFilter, setGuideCategoryFilter] = useState('All');
+  const [showGuideModal, setShowGuideModal] = useState(false);
+  const [isEditingGuide, setIsEditingGuide] = useState(false);
+  const [currentGuide, setCurrentGuide] = useState<Partial<MarketGuide>>({
+    title: '',
+    slug: '',
+    category: 'Office Market',
+    date: 'March 2026',
+    readTime: '6 min read',
+    excerpt: '',
+    content: '',
+    image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80',
+    published: true,
+    featured: false,
+    author: 'Shristi Estate Advisory Desk'
+  });
   const [loading, setLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -721,17 +744,110 @@ export const AdminPage: React.FC = () => {
 
   const loadAllData = async () => {
     setLoading(true);
-    const [p, b, l, ld] = await Promise.all([
+    const [p, b, l, ld, gd] = await Promise.all([
       StorageService.getProperties(),
       StorageService.getBuildings(),
       StorageService.getLocations(),
       StorageService.getLeads(),
+      StorageService.getGuides(),
     ]);
     setProperties(p);
     setBuildings(b);
     setLocations(l);
     setLeads(ld);
+    setGuides(gd);
     setLoading(false);
+  };
+
+  // --- MARKET GUIDE ACTIONS ---
+  const handleGuideImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const compressed = await compressImageFile(file);
+    if (compressed) {
+      setCurrentGuide(prev => ({ ...prev, image: compressed }));
+    }
+    e.target.value = '';
+  };
+
+  const handleOpenAddGuide = () => {
+    setIsEditingGuide(false);
+    setCurrentGuide({
+      id: `guide-${Date.now()}`,
+      title: '',
+      slug: '',
+      category: 'Office Market',
+      date: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+      readTime: '5 min read',
+      excerpt: '',
+      content: '',
+      image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80',
+      published: true,
+      featured: false,
+      author: 'Shristi Estate Advisory Desk'
+    });
+    setShowGuideModal(true);
+  };
+
+  const handleOpenEditGuide = (guide: MarketGuide) => {
+    setIsEditingGuide(true);
+    setCurrentGuide({ ...guide });
+    setShowGuideModal(true);
+  };
+
+  const handleSaveGuide = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentGuide.title?.trim()) {
+      alert('Please enter a guide title.');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const slug = currentGuide.slug?.trim() || currentGuide.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      const guideToSave: MarketGuide = {
+        id: currentGuide.id || `guide-${Date.now()}`,
+        slug: slug || `guide-${Date.now()}`,
+        title: currentGuide.title.trim(),
+        excerpt: currentGuide.excerpt?.trim() || '',
+        content: currentGuide.content?.trim() || currentGuide.excerpt?.trim() || '',
+        readTime: currentGuide.readTime?.trim() || '5 min read',
+        date: currentGuide.date?.trim() || new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+        category: currentGuide.category?.trim() || 'Market Trends',
+        image: currentGuide.image?.trim() || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80',
+        published: currentGuide.published ?? true,
+        featured: currentGuide.featured ?? false,
+        author: currentGuide.author?.trim() || 'Shristi Estate Advisory Desk'
+      };
+
+      await StorageService.saveGuide(guideToSave);
+      const updated = await StorageService.getGuides();
+      setGuides(updated);
+      setShowGuideModal(false);
+    } catch (err) {
+      console.error('Error saving guide:', err);
+      alert('Failed to save market guide. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDeleteGuide = async (guideId: string) => {
+    if (window.confirm('Are you sure you want to delete this Market Guide / Insight? This action cannot be undone.')) {
+      await StorageService.deleteGuide(guideId);
+      const updated = await StorageService.getGuides();
+      setGuides(updated);
+    }
+  };
+
+  const handleTogglePublishGuide = async (guide: MarketGuide) => {
+    const updatedGuide: MarketGuide = {
+      ...guide,
+      published: !guide.published
+    };
+    await StorageService.saveGuide(updatedGuide);
+    const updated = await StorageService.getGuides();
+    setGuides(updated);
   };
 
   useEffect(() => {
@@ -1697,6 +1813,15 @@ export const AdminPage: React.FC = () => {
           }`}
         >
           Locations ({locations.length})
+        </button>
+        <button
+          onClick={() => setActiveTab('guides')}
+          className={`px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 sm:gap-2 ${
+            activeTab === 'guides' ? 'bg-brand-600 text-white shadow-md' : 'glass-card hover:bg-slate-100 dark:hover:bg-slate-800'
+          }`}
+        >
+          <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+          <span>Market Insights & Guides ({guides.length})</span>
         </button>
         <button
           onClick={() => setActiveTab('media')}
@@ -2809,6 +2934,244 @@ export const AdminPage: React.FC = () => {
               </p>
             </div>
           )}
+        </div>
+      )}
+
+      {/* TAB 6: MARKET INSIGHTS & GUIDES MANAGER */}
+      {activeTab === 'guides' && (
+        <div className="space-y-6">
+          {/* Top Header & Actions */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-4">
+            <div>
+              <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
+                Editorial & Content Strategy
+              </span>
+              <h2 className="text-xl sm:text-2xl font-bold font-['Outfit'] text-slate-900 dark:text-white mt-0.5">
+                Market Insights & Guides ({guides.length})
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Manage commercial leasing guides, sector analyses, and corporate real estate reports displayed on the website.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Link
+                to="/blog"
+                target="_blank"
+                className="px-3.5 py-2 rounded-xl text-xs font-semibold glass-card border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-1.5 text-slate-700 dark:text-slate-300"
+              >
+                <span>View Public Page</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </Link>
+              <button
+                type="button"
+                onClick={handleOpenAddGuide}
+                className="btn-glass-primary px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-sm"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Add Guide / Insight</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Quick Metrics Bar */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+            <div className="glass-card rounded-2xl p-3.5 border border-slate-200/90 dark:border-slate-800 bg-white/60 dark:bg-slate-900/60">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Total Articles</span>
+              <div className="text-2xl font-extrabold text-slate-900 dark:text-white font-['Outfit'] mt-1">
+                {guides.length}
+              </div>
+            </div>
+            <div className="glass-card rounded-2xl p-3.5 border border-slate-200/90 dark:border-slate-800 bg-white/60 dark:bg-slate-900/60">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Published Live</span>
+              <div className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 font-['Outfit'] mt-1">
+                {guides.filter(g => g.published !== false).length}
+              </div>
+            </div>
+            <div className="glass-card rounded-2xl p-3.5 border border-slate-200/90 dark:border-slate-800 bg-white/60 dark:bg-slate-900/60">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Drafts / Hidden</span>
+              <div className="text-2xl font-extrabold text-amber-600 dark:text-amber-400 font-['Outfit'] mt-1">
+                {guides.filter(g => g.published === false).length}
+              </div>
+            </div>
+            <div className="glass-card rounded-2xl p-3.5 border border-slate-200/90 dark:border-slate-800 bg-white/60 dark:bg-slate-900/60">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Featured</span>
+              <div className="text-2xl font-extrabold text-brand-600 dark:text-brand-400 font-['Outfit'] mt-1">
+                {guides.filter(g => g.featured).length}
+              </div>
+            </div>
+          </div>
+
+          {/* Search & Category Filter Pills */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="relative flex-1 max-w-md">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+              <input
+                type="text"
+                placeholder="Search guides by title, category, topic, or author..."
+                value={guideSearch}
+                onChange={(e) => setGuideSearch(e.target.value)}
+                className="glass-input w-full pl-9 pr-3 py-2 rounded-xl text-xs"
+              />
+            </div>
+
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar text-xs">
+              {['All', ...Array.from(new Set(guides.map(g => g.category)))].map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => setGuideCategoryFilter(cat)}
+                  className={`px-3 py-1.5 rounded-xl font-semibold whitespace-nowrap transition-all ${
+                    guideCategoryFilter === cat
+                      ? 'bg-brand-600 text-white shadow-sm'
+                      : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Guides Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {guides
+              .filter((g) => {
+                if (guideCategoryFilter !== 'All' && g.category !== guideCategoryFilter) return false;
+                if (guideSearch.trim()) {
+                  const q = guideSearch.toLowerCase();
+                  return (
+                    g.title.toLowerCase().includes(q) ||
+                    g.category.toLowerCase().includes(q) ||
+                    g.excerpt.toLowerCase().includes(q) ||
+                    (g.author && g.author.toLowerCase().includes(q))
+                  );
+                }
+                return true;
+              })
+              .map((guide) => (
+                <div
+                  key={guide.id}
+                  className="glass-card rounded-3xl overflow-hidden border border-slate-200/90 dark:border-slate-800 bg-white/70 dark:bg-[#0B132B]/75 flex flex-col justify-between shadow-md hover:shadow-xl transition-all group"
+                >
+                  {/* Hero / Cover */}
+                  <div className="relative aspect-[16/9] overflow-hidden bg-slate-100 dark:bg-slate-800">
+                    <img
+                      src={guide.image}
+                      alt={guide.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent pointer-events-none" />
+
+                    {/* Top Badges */}
+                    <div className="absolute top-3 left-3 flex items-center gap-1.5">
+                      <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-brand-600 text-white shadow-md">
+                        {guide.category}
+                      </span>
+                      {guide.featured && (
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-amber-500 text-white shadow-sm">
+                          Featured
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Top Right Status & Quick Toggle */}
+                    <div className="absolute top-3 right-3 flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => handleTogglePublishGuide(guide)}
+                        className={`px-2.5 py-1 rounded-lg text-[10px] font-bold backdrop-blur-md border shadow transition-all flex items-center gap-1 ${
+                          guide.published !== false
+                            ? 'bg-emerald-500/90 text-white border-emerald-400/40 hover:bg-emerald-600'
+                            : 'bg-slate-800/90 text-slate-300 border-slate-700 hover:bg-slate-700'
+                        }`}
+                        title={guide.published !== false ? 'Click to unpublish (hide from website)' : 'Click to publish live'}
+                      >
+                        <span className={`w-1.5 h-1.5 rounded-full ${guide.published !== false ? 'bg-white' : 'bg-amber-400'}`} />
+                        <span>{guide.published !== false ? 'Live' : 'Draft'}</span>
+                      </button>
+                    </div>
+
+                    {/* Meta date / readtime at bottom of cover */}
+                    <div className="absolute bottom-2.5 left-3 right-3 flex items-center justify-between text-[11px] text-slate-300">
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3 text-slate-400" />
+                        {guide.date}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3 text-slate-400" />
+                        {guide.readTime}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                    <div className="space-y-2">
+                      <h3 className="font-bold text-base text-slate-900 dark:text-white font-['Outfit'] line-clamp-2 leading-snug">
+                        {guide.title}
+                      </h3>
+                      <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed">
+                        {guide.excerpt}
+                      </p>
+                      {guide.author && (
+                        <span className="text-[10px] text-slate-400 font-medium block">
+                          By {guide.author}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEditGuide(guide)}
+                        className="flex-1 py-2 px-3 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-950 font-semibold text-xs hover:bg-brand-600 dark:hover:bg-brand-400 transition-colors flex items-center justify-center gap-1.5"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                        <span>Edit Guide</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteGuide(guide.id)}
+                        className="p-2 rounded-xl border border-rose-200 dark:border-rose-900/50 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 transition-colors"
+                        title="Delete Guide"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+            {guides.filter((g) => {
+              if (guideCategoryFilter !== 'All' && g.category !== guideCategoryFilter) return false;
+              if (guideSearch.trim()) {
+                const q = guideSearch.toLowerCase();
+                return (
+                  g.title.toLowerCase().includes(q) ||
+                  g.category.toLowerCase().includes(q) ||
+                  g.excerpt.toLowerCase().includes(q) ||
+                  (g.author && g.author.toLowerCase().includes(q))
+                );
+              }
+              return true;
+            }).length === 0 && (
+              <div className="col-span-full py-16 text-center glass-card rounded-3xl p-8 space-y-3">
+                <BookOpen className="w-10 h-10 text-slate-400 mx-auto" />
+                <p className="text-base font-semibold text-slate-700 dark:text-slate-300">
+                  No market guides matched your search or category filter.
+                </p>
+                <button
+                  onClick={handleOpenAddGuide}
+                  className="btn-glass-primary inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold mt-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Create First Guide</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -4697,6 +5060,225 @@ export const AdminPage: React.FC = () => {
             StorageService.getProperties().then(setProperties);
           }}
         />
+      )}
+
+      {/* MARKET GUIDE ADD / EDIT MODAL */}
+      {showGuideModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto p-2 sm:p-4 md:p-6 flex min-h-full items-start sm:items-center justify-center bg-slate-950/80 backdrop-blur-md">
+          <div className="relative w-full max-w-2xl glass-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 bg-white dark:bg-[#0B132B] border border-slate-200 dark:border-slate-800 shadow-2xl my-auto max-h-[96vh] sm:max-h-[90vh] flex flex-col">
+            <button 
+              type="button"
+              onClick={() => setShowGuideModal(false)}
+              className="absolute top-3.5 right-3.5 sm:top-5 sm:right-5 p-2 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 bg-slate-100/80 dark:bg-slate-800/80 sm:bg-transparent z-10 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="mb-3 sm:mb-4 shrink-0 pr-8">
+              <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
+                {isEditingGuide ? 'Edit Market Guide & Insight' : 'New Market Guide & Insight'}
+              </span>
+              <h2 className="text-xl sm:text-2xl font-bold font-['Outfit']">
+                {isEditingGuide ? `Edit: ${currentGuide.title}` : 'Add Market Research & Advisory Guide'}
+              </h2>
+            </div>
+
+            <form onSubmit={handleSaveGuide} className="space-y-4 overflow-y-auto pr-1 flex-1 -mr-1">
+              {/* Title */}
+              <div>
+                <label className="block text-xs font-semibold mb-1">Guide / Article Title *</label>
+                <input
+                  type="text"
+                  required
+                  value={currentGuide.title || ''}
+                  onChange={(e) => {
+                    const title = e.target.value;
+                    const autoSlug = !isEditingGuide 
+                      ? title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+                      : currentGuide.slug;
+                    setCurrentGuide(prev => ({ ...prev, title, slug: autoSlug }));
+                  }}
+                  placeholder="e.g. Commercial Office Space in Sector 62, Noida: Complete Corporate Guide"
+                  className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                />
+              </div>
+
+              {/* Slug & Category */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold mb-1">URL Slug</label>
+                  <input
+                    type="text"
+                    value={currentGuide.slug || ''}
+                    onChange={(e) => setCurrentGuide(prev => ({ ...prev, slug: e.target.value }))}
+                    placeholder="e.g. commercial-office-space-sector-62-noida"
+                    className="glass-input w-full px-3 py-2 rounded-xl text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold mb-1">Category *</label>
+                  <input
+                    type="text"
+                    required
+                    list="guide-category-suggestions"
+                    value={currentGuide.category || ''}
+                    onChange={(e) => setCurrentGuide(prev => ({ ...prev, category: e.target.value }))}
+                    placeholder="e.g. Office Market, Warehousing & 3PL, Market Trends..."
+                    className="glass-input w-full px-3 py-2 rounded-xl text-xs"
+                  />
+                  <datalist id="guide-category-suggestions">
+                    <option value="Office Market" />
+                    <option value="Warehousing & 3PL" />
+                    <option value="Market Trends" />
+                    <option value="Lease Advisory" />
+                    <option value="Factory & Industrial" />
+                    <option value="Commercial Land" />
+                    <option value="Retail & Showrooms" />
+                  </datalist>
+                </div>
+              </div>
+
+              {/* Date, Read Time & Author */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold mb-1">Date *</label>
+                  <input
+                    type="text"
+                    required
+                    value={currentGuide.date || ''}
+                    onChange={(e) => setCurrentGuide(prev => ({ ...prev, date: e.target.value }))}
+                    placeholder="e.g. March 2026"
+                    className="glass-input w-full px-3 py-2 rounded-xl text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold mb-1">Read Time *</label>
+                  <input
+                    type="text"
+                    required
+                    value={currentGuide.readTime || ''}
+                    onChange={(e) => setCurrentGuide(prev => ({ ...prev, readTime: e.target.value }))}
+                    placeholder="e.g. 6 min read"
+                    className="glass-input w-full px-3 py-2 rounded-xl text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold mb-1">Author / Desk</label>
+                  <input
+                    type="text"
+                    value={currentGuide.author || ''}
+                    onChange={(e) => setCurrentGuide(prev => ({ ...prev, author: e.target.value }))}
+                    placeholder="e.g. Shristi Estate Advisory Desk"
+                    className="glass-input w-full px-3 py-2 rounded-xl text-xs"
+                  />
+                </div>
+              </div>
+
+              {/* Cover Image Upload & URL */}
+              <div>
+                <label className="block text-xs font-semibold mb-1">Cover Image</label>
+                <div className="flex flex-col sm:flex-row items-center gap-3">
+                  <div className="relative aspect-[16/9] w-36 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shrink-0">
+                    {currentGuide.image ? (
+                      <img src={currentGuide.image} alt="Preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-slate-400">
+                        <ImageIcon className="w-6 h-6" />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex-1 w-full space-y-2">
+                    <label className="btn-glass-primary px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer w-full sm:w-auto">
+                      <UploadCloud className="w-4 h-4" />
+                      <span>Upload Local Photo</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleGuideImageUpload}
+                        className="hidden"
+                      />
+                    </label>
+                    <input
+                      type="text"
+                      value={currentGuide.image || ''}
+                      onChange={(e) => setCurrentGuide(prev => ({ ...prev, image: e.target.value }))}
+                      placeholder="Or enter direct image URL (https://...)"
+                      className="glass-input w-full px-3 py-1.5 rounded-xl text-xs"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Excerpt */}
+              <div>
+                <label className="block text-xs font-semibold mb-1">Excerpt / Summary *</label>
+                <textarea
+                  rows={2}
+                  required
+                  value={currentGuide.excerpt || ''}
+                  onChange={(e) => setCurrentGuide(prev => ({ ...prev, excerpt: e.target.value }))}
+                  placeholder="Summary shown on market guide cards and SEO descriptions (2-3 sentences)..."
+                  className="glass-input w-full px-3 py-2 rounded-xl text-xs"
+                />
+              </div>
+
+              {/* Full Content */}
+              <div>
+                <label className="block text-xs font-semibold mb-1">Full Article / Advisory Content</label>
+                <textarea
+                  rows={5}
+                  value={currentGuide.content || ''}
+                  onChange={(e) => setCurrentGuide(prev => ({ ...prev, content: e.target.value }))}
+                  placeholder="Detailed market analysis, tenant guidance, regulations, or financial calculations..."
+                  className="glass-input w-full px-3 py-2 rounded-xl text-xs"
+                />
+              </div>
+
+              {/* Toggles: Published & Featured */}
+              <div className="flex items-center gap-6 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <label className="flex items-center gap-2 text-xs font-semibold cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={currentGuide.published ?? true}
+                    onChange={(e) => setCurrentGuide(prev => ({ ...prev, published: e.target.checked }))}
+                    className="rounded border-slate-300 text-brand-600 focus:ring-brand-500 w-4 h-4"
+                  />
+                  <span>Publish Live on Website</span>
+                </label>
+
+                <label className="flex items-center gap-2 text-xs font-semibold cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={currentGuide.featured ?? false}
+                    onChange={(e) => setCurrentGuide(prev => ({ ...prev, featured: e.target.checked }))}
+                    className="rounded border-slate-300 text-brand-600 focus:ring-brand-500 w-4 h-4"
+                  />
+                  <span>Mark as Featured Article</span>
+                </label>
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setShowGuideModal(false)}
+                  className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSaving}
+                  className="btn-glass-primary px-5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm disabled:opacity-50"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>{isSaving ? 'Saving...' : isEditingGuide ? 'Update Guide' : 'Save Guide'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

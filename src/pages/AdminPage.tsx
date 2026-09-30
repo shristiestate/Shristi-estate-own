@@ -44,12 +44,32 @@ import {
   ChevronRight,
   BookOpen,
   Clock,
-  Calendar
+  Calendar,
+  Link2,
+  Globe,
+  Mail,
+  Sparkles,
+  ArrowRight,
+  FileText,
+  AlertCircle,
+  Share2
 } from 'lucide-react';
 import { StorageService } from '../services/storageService';
-import { Property, Building, Location, Lead, LeadStatus, PropertyStatus, PropertyCategory, MarketGuide } from '../types';
+import { Property, Building, Location, Lead, LeadStatus, PropertyStatus, PropertyCategory, MarketGuide, HyperlinkConfig } from '../types';
 import { handleOverviewPaste, computeStructureDisplay, getBuildingStructureDisplay } from '../utils/textFormat';
 import { EditBuildingPropertiesModal } from '../components/modals/EditBuildingPropertiesModal';
+import { INTERNAL_PAGE_PRESETS, formatHyperlinkUrl, applyHyperlinksToContent } from '../utils/hyperlinks';
+import { DEFAULT_BLOG_PLACEHOLDER_IMAGE, getBlogFeaturedImage, getBlogImageAlt, generateBlogSlug } from '../utils/blogConstants';
+import { AdminSeoPreviewSection } from '../components/common/AdminSeoPreviewSection';
+import { AdminMediaManager } from '../components/common/AdminMediaManager';
+import { AdminHyperlinksManager } from '../components/common/AdminHyperlinksManager';
+import { 
+  computeSeoStatus, 
+  getTowerImageAlt, 
+  getPropertyImageAlt, 
+  getTowerCanonicalUrl, 
+  getPropertyCanonicalUrl 
+} from '../utils/seoHelpers';
 
 export const CATEGORY_CONFIG: Record<PropertyCategory, {
   label: string;
@@ -247,6 +267,20 @@ export const AdminPage: React.FC = () => {
   const [guideCategoryFilter, setGuideCategoryFilter] = useState('All');
   const [showGuideModal, setShowGuideModal] = useState(false);
   const [isEditingGuide, setIsEditingGuide] = useState(false);
+  const [guideModalTab, setGuideModalTab] = useState<'edit' | 'preview'>('edit');
+  const [guidePreviewSubTab, setGuidePreviewSubTab] = useState<'card' | 'article'>('card');
+  const [isUploadingGuideImage, setIsUploadingGuideImage] = useState(false);
+  const [showHyperlinkForm, setShowHyperlinkForm] = useState(false);
+  const [editingHyperlinkIndex, setEditingHyperlinkIndex] = useState<number | null>(null);
+  const [hyperlinkInput, setHyperlinkInput] = useState<HyperlinkConfig>({
+    text: '',
+    url: '',
+    type: 'internal',
+    open_in_new_tab: false,
+    title: '',
+    match_mode: 'first',
+    max_occurrences: 1
+  });
   const [currentGuide, setCurrentGuide] = useState<Partial<MarketGuide>>({
     title: '',
     slug: '',
@@ -255,7 +289,13 @@ export const AdminPage: React.FC = () => {
     readTime: '6 min read',
     excerpt: '',
     content: '',
-    image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80',
+    image: '',
+    featured_image_url: '',
+    featured_image_alt: '',
+    featured_image_caption: '',
+    seo_title: '',
+    seo_description: '',
+    hyperlinks: [],
     published: true,
     featured: false,
     author: 'Shristi Estate Advisory Desk'
@@ -306,9 +346,37 @@ export const AdminPage: React.FC = () => {
     published: true,
   });
 
+  // Active Tab inside Property Modal
+  const [propertyModalTab, setPropertyModalTab] = useState<'specs' | 'content' | 'images' | 'seo' | 'hyperlinks' | 'preview'>('specs');
+  const [showPropertyHyperlinkForm, setShowPropertyHyperlinkForm] = useState(false);
+  const [editingPropertyHyperlinkIdx, setEditingPropertyHyperlinkIdx] = useState<number | null>(null);
+  const [propertyHyperlinkInput, setPropertyHyperlinkInput] = useState<HyperlinkConfig>({
+    text: '',
+    url: '',
+    type: 'internal',
+    open_in_new_tab: false,
+    title: '',
+    match_mode: 'first',
+    max_occurrences: 1
+  });
+  const [isUploadingPropertyImg, setIsUploadingPropertyImg] = useState(false);
+
   // Building Modal Form (Add & Edit)
   const [showBuildingModal, setShowBuildingModal] = useState(false);
   const [isEditingBuilding, setIsEditingBuilding] = useState(false);
+  const [buildingModalTab, setBuildingModalTab] = useState<'specs' | 'content' | 'images' | 'seo' | 'hyperlinks' | 'preview'>('specs');
+  const [showBuildingHyperlinkForm, setShowBuildingHyperlinkForm] = useState(false);
+  const [editingBuildingHyperlinkIdx, setEditingBuildingHyperlinkIdx] = useState<number | null>(null);
+  const [buildingHyperlinkInput, setBuildingHyperlinkInput] = useState<HyperlinkConfig>({
+    text: '',
+    url: '',
+    type: 'internal',
+    open_in_new_tab: false,
+    title: '',
+    match_mode: 'first',
+    max_occurrences: 1
+  });
+  const [isUploadingBuildingImg, setIsUploadingBuildingImg] = useState(false);
   const [showQuickLocationModal, setShowQuickLocationModal] = useState(false);
   const [quickLocationName, setQuickLocationName] = useState('');
   const [quickLocationCity, setQuickLocationCity] = useState('Noida');
@@ -579,21 +647,39 @@ export const AdminPage: React.FC = () => {
   const handlePropertyImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const compressed = await compressImageFile(file);
-    if (compressed) {
-      setCurrentProperty(prev => ({ ...prev, primary_image: compressed }));
+    setIsUploadingPropertyImg(true);
+    try {
+      const compressed = await compressImageFile(file);
+      if (compressed) {
+        setCurrentProperty(prev => ({ 
+          ...prev, 
+          primary_image: compressed,
+          og_image: prev.og_image || compressed 
+        }));
+      }
+    } finally {
+      setIsUploadingPropertyImg(false);
+      e.target.value = '';
     }
-    e.target.value = '';
   };
 
   const handleBuildingImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const compressed = await compressImageFile(file);
-    if (compressed) {
-      setCurrentBuilding(prev => ({ ...prev, hero_image: compressed }));
+    setIsUploadingBuildingImg(true);
+    try {
+      const compressed = await compressImageFile(file);
+      if (compressed) {
+        setCurrentBuilding(prev => ({ 
+          ...prev, 
+          hero_image: compressed,
+          og_image: prev.og_image || compressed 
+        }));
+      }
+    } finally {
+      setIsUploadingBuildingImg(false);
+      e.target.value = '';
     }
-    e.target.value = '';
   };
 
   const handleLocationImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -763,15 +849,37 @@ export const AdminPage: React.FC = () => {
   const handleGuideImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const compressed = await compressImageFile(file);
-    if (compressed) {
-      setCurrentGuide(prev => ({ ...prev, image: compressed }));
+    setIsUploadingGuideImage(true);
+    try {
+      const prevImg = currentGuide.featured_image_url || currentGuide.image;
+      const uploadedUrl = await StorageService.uploadBlogImage(file, prevImg);
+      setCurrentGuide(prev => ({
+        ...prev,
+        image: uploadedUrl,
+        featured_image_url: uploadedUrl
+      }));
+    } catch (err) {
+      console.error('Guide image upload failed:', err);
+      alert('Failed to upload image. Please try again.');
+    } finally {
+      setIsUploadingGuideImage(false);
+      e.target.value = '';
     }
-    e.target.value = '';
+  };
+
+  const handleRemoveGuideImage = () => {
+    setCurrentGuide(prev => ({
+      ...prev,
+      image: '',
+      featured_image_url: ''
+    }));
   };
 
   const handleOpenAddGuide = () => {
     setIsEditingGuide(false);
+    setGuideModalTab('edit');
+    setShowHyperlinkForm(false);
+    setEditingHyperlinkIndex(null);
     setCurrentGuide({
       id: `guide-${Date.now()}`,
       title: '',
@@ -781,7 +889,13 @@ export const AdminPage: React.FC = () => {
       readTime: '5 min read',
       excerpt: '',
       content: '',
-      image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80',
+      image: '',
+      featured_image_url: '',
+      featured_image_alt: '',
+      featured_image_caption: '',
+      seo_title: '',
+      seo_description: '',
+      hyperlinks: [],
       published: true,
       featured: false,
       author: 'Shristi Estate Advisory Desk'
@@ -791,7 +905,20 @@ export const AdminPage: React.FC = () => {
 
   const handleOpenEditGuide = (guide: MarketGuide) => {
     setIsEditingGuide(true);
-    setCurrentGuide({ ...guide });
+    setGuideModalTab('edit');
+    setShowHyperlinkForm(false);
+    setEditingHyperlinkIndex(null);
+    const existingImg = guide.featured_image_url || guide.image || '';
+    setCurrentGuide({
+      ...guide,
+      image: existingImg,
+      featured_image_url: existingImg,
+      featured_image_alt: guide.featured_image_alt || '',
+      featured_image_caption: guide.featured_image_caption || '',
+      seo_title: guide.seo_title || '',
+      seo_description: guide.seo_description || '',
+      hyperlinks: Array.isArray(guide.hyperlinks) ? [...guide.hyperlinks] : []
+    });
     setShowGuideModal(true);
   };
 
@@ -804,17 +931,26 @@ export const AdminPage: React.FC = () => {
 
     setIsSaving(true);
     try {
-      const slug = currentGuide.slug?.trim() || currentGuide.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      const generatedSlug = generateBlogSlug(currentGuide.title);
+      const slug = currentGuide.slug?.trim() || generatedSlug || `guide-${Date.now()}`;
+      const featuredImg = currentGuide.featured_image_url?.trim() || currentGuide.image?.trim() || '';
+
       const guideToSave: MarketGuide = {
         id: currentGuide.id || `guide-${Date.now()}`,
-        slug: slug || `guide-${Date.now()}`,
+        slug,
         title: currentGuide.title.trim(),
         excerpt: currentGuide.excerpt?.trim() || '',
         content: currentGuide.content?.trim() || currentGuide.excerpt?.trim() || '',
         readTime: currentGuide.readTime?.trim() || '5 min read',
         date: currentGuide.date?.trim() || new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
-        category: currentGuide.category?.trim() || 'Market Trends',
-        image: currentGuide.image?.trim() || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80',
+        category: currentGuide.category?.trim() || 'Office Market',
+        image: featuredImg,
+        featured_image_url: featuredImg,
+        featured_image_alt: currentGuide.featured_image_alt?.trim() || '',
+        featured_image_caption: currentGuide.featured_image_caption?.trim() || '',
+        seo_title: currentGuide.seo_title?.trim() || '',
+        seo_description: currentGuide.seo_description?.trim() || '',
+        hyperlinks: currentGuide.hyperlinks || [],
         published: currentGuide.published ?? true,
         featured: currentGuide.featured ?? false,
         author: currentGuide.author?.trim() || 'Shristi Estate Advisory Desk'
@@ -830,6 +966,69 @@ export const AdminPage: React.FC = () => {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleOpenAddHyperlink = () => {
+    setEditingHyperlinkIndex(null);
+    setHyperlinkInput({
+      text: '',
+      url: '',
+      type: 'internal',
+      open_in_new_tab: false,
+      title: '',
+      match_mode: 'first',
+      max_occurrences: 1
+    });
+    setShowHyperlinkForm(true);
+  };
+
+  const handleOpenEditHyperlink = (index: number) => {
+    const target = (currentGuide.hyperlinks || [])[index];
+    if (!target) return;
+    setEditingHyperlinkIndex(index);
+    setHyperlinkInput({ ...target });
+    setShowHyperlinkForm(true);
+  };
+
+  const handleSaveHyperlink = () => {
+    if (!hyperlinkInput.text.trim()) {
+      alert('Please enter a word or phrase to link.');
+      return;
+    }
+    if (!hyperlinkInput.url.trim()) {
+      alert('Please enter or select a destination URL.');
+      return;
+    }
+
+    const formattedUrl = formatHyperlinkUrl(hyperlinkInput.url.trim(), hyperlinkInput.type);
+
+    const newHl: HyperlinkConfig = {
+      id: hyperlinkInput.id || `hl-${Date.now()}`,
+      text: hyperlinkInput.text.trim(),
+      url: formattedUrl,
+      type: hyperlinkInput.type,
+      open_in_new_tab: hyperlinkInput.open_in_new_tab ?? (hyperlinkInput.type === 'external'),
+      title: hyperlinkInput.title?.trim() || hyperlinkInput.text.trim(),
+      match_mode: hyperlinkInput.match_mode || 'first',
+      max_occurrences: hyperlinkInput.match_mode === 'all' ? (hyperlinkInput.max_occurrences || 99) : 1
+    };
+
+    const updatedList = [...(currentGuide.hyperlinks || [])];
+    if (editingHyperlinkIndex !== null && editingHyperlinkIndex >= 0) {
+      updatedList[editingHyperlinkIndex] = newHl;
+    } else {
+      updatedList.push(newHl);
+    }
+
+    setCurrentGuide(prev => ({ ...prev, hyperlinks: updatedList }));
+    setShowHyperlinkForm(false);
+    setEditingHyperlinkIndex(null);
+  };
+
+  const handleDeleteHyperlink = (index: number) => {
+    const updatedList = [...(currentGuide.hyperlinks || [])];
+    updatedList.splice(index, 1);
+    setCurrentGuide(prev => ({ ...prev, hyperlinks: updatedList }));
   };
 
   const handleDeleteGuide = async (guideId: string) => {
@@ -926,8 +1125,28 @@ export const AdminPage: React.FC = () => {
         : 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1000&q=80',
       gallery: [],
       tower: '',
+      block_name: '',
+      unit_number: '',
+      sector: locations[0]?.name || 'Sector 62, Noida',
+      short_description: '',
+      overview: '',
+      location_connectivity: '',
+      highlights: '',
+      primary_image_alt: '',
+      primary_image_title: '',
+      primary_image_caption: '',
+      image_details: [],
+      seo_title: '',
+      seo_description: '',
+      seo_keywords: '',
+      canonical_url: '',
+      og_title: '',
+      og_description: '',
+      og_image: '',
+      hyperlinks: [],
       published: true,
     });
+    setPropertyModalTab('specs');
     setCustomPropertyTypeInput('');
     setNewFeatureTag('');
     setNewPropertyGalleryUrl('');
@@ -936,6 +1155,7 @@ export const AdminPage: React.FC = () => {
 
   const handleOpenEditProperty = (prop: Property) => {
     setIsEditingProperty(true);
+    setPropertyModalTab('specs');
     setCurrentProperty({
       ...prop,
       category: prop.category || 'office-space',
@@ -945,10 +1165,29 @@ export const AdminPage: React.FC = () => {
       floor: prop.floor || 'Ground Floor',
       total_floors: prop.total_floors || 1,
       tower: prop.tower || '',
+      block_name: prop.block_name || '',
+      unit_number: prop.unit_number || '',
+      sector: prop.sector || prop.location_name || '',
       power_load: prop.power_load || '',
       road_width: prop.road_width || '',
       possession: prop.possession || 'Ready to Move',
       parking: prop.parking || '',
+      short_description: prop.short_description || '',
+      overview: prop.overview || prop.description || '',
+      location_connectivity: prop.location_connectivity || '',
+      highlights: prop.highlights || '',
+      primary_image_alt: prop.primary_image_alt || '',
+      primary_image_title: prop.primary_image_title || '',
+      primary_image_caption: prop.primary_image_caption || '',
+      image_details: prop.image_details || [],
+      seo_title: prop.seo_title || '',
+      seo_description: prop.seo_description || '',
+      seo_keywords: prop.seo_keywords || '',
+      canonical_url: prop.canonical_url || '',
+      og_title: prop.og_title || '',
+      og_description: prop.og_description || '',
+      og_image: prop.og_image || prop.primary_image || '',
+      hyperlinks: Array.isArray(prop.hyperlinks) ? [...prop.hyperlinks] : [],
       features: prop.features && Array.isArray(prop.features) ? [...prop.features] : [],
       amenities: prop.amenities && Array.isArray(prop.amenities) ? [...prop.amenities] : [],
       gallery: prop.gallery && Array.isArray(prop.gallery) ? [...prop.gallery] : []
@@ -1040,6 +1279,27 @@ export const AdminPage: React.FC = () => {
         amenities: Array.isArray(currentProperty.amenities) ? currentProperty.amenities : [],
         primary_image: currentProperty.primary_image || 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1000&q=80',
         gallery: Array.isArray(currentProperty.gallery) ? currentProperty.gallery : [],
+        block_name: currentProperty.block_name || undefined,
+        unit_number: currentProperty.unit_number || undefined,
+        sector: currentProperty.sector || loc?.name || currentProperty.location_name,
+        rent_price: currentProperty.rent_price !== undefined ? Number(currentProperty.rent_price) : undefined,
+        sale_price: currentProperty.sale_price !== undefined ? Number(currentProperty.sale_price) : undefined,
+        short_description: currentProperty.short_description || undefined,
+        overview: currentProperty.overview || currentProperty.description || '',
+        location_connectivity: currentProperty.location_connectivity || undefined,
+        highlights: currentProperty.highlights || undefined,
+        primary_image_alt: currentProperty.primary_image_alt || undefined,
+        primary_image_title: currentProperty.primary_image_title || undefined,
+        primary_image_caption: currentProperty.primary_image_caption || undefined,
+        image_details: currentProperty.image_details || [],
+        seo_title: currentProperty.seo_title || undefined,
+        seo_description: currentProperty.seo_description || undefined,
+        seo_keywords: currentProperty.seo_keywords || undefined,
+        canonical_url: currentProperty.canonical_url || undefined,
+        og_title: currentProperty.og_title || undefined,
+        og_description: currentProperty.og_description || undefined,
+        og_image: currentProperty.og_image || currentProperty.primary_image || undefined,
+        hyperlinks: Array.isArray(currentProperty.hyperlinks) ? currentProperty.hyperlinks : [],
         published: true,
         created_at: currentProperty.created_at || new Date().toISOString(),
       };
@@ -1061,13 +1321,132 @@ export const AdminPage: React.FC = () => {
     }
   };
 
-  // --- BUILDING ACTIONS ---
+  // --- PROPERTY HYPERLINK HANDLERS ---
+  const handleSavePropertyHyperlink = () => {
+    if (!propertyHyperlinkInput.text.trim() || !propertyHyperlinkInput.url.trim()) {
+      alert('Please enter both Words/Phrase and Destination URL.');
+      return;
+    }
+    const formattedUrl = formatHyperlinkUrl(propertyHyperlinkInput.url.trim(), propertyHyperlinkInput.type);
+    const item: HyperlinkConfig = {
+      ...propertyHyperlinkInput,
+      id: propertyHyperlinkInput.id || `hl-${Date.now()}`,
+      text: propertyHyperlinkInput.text.trim(),
+      url: formattedUrl,
+      title: propertyHyperlinkInput.title?.trim() || propertyHyperlinkInput.text.trim()
+    };
+    const current = currentProperty.hyperlinks || [];
+    let updated: HyperlinkConfig[];
+    if (editingPropertyHyperlinkIdx !== null && editingPropertyHyperlinkIdx >= 0) {
+      updated = [...current];
+      updated[editingPropertyHyperlinkIdx] = item;
+    } else {
+      updated = [...current, item];
+    }
+    setCurrentProperty(prev => ({ ...prev, hyperlinks: updated }));
+    setPropertyHyperlinkInput({
+      text: '',
+      url: '',
+      type: 'internal',
+      open_in_new_tab: false,
+      title: '',
+      match_mode: 'first',
+      max_occurrences: 1
+    });
+    setEditingPropertyHyperlinkIdx(null);
+    setShowPropertyHyperlinkForm(false);
+  };
+
+  const handleDeletePropertyHyperlink = (index: number) => {
+    const updated = (currentProperty.hyperlinks || []).filter((_, i) => i !== index);
+    setCurrentProperty(prev => ({ ...prev, hyperlinks: updated }));
+  };
+
+  const handleOpenEditPropertyHyperlink = (index: number) => {
+    const hl = (currentProperty.hyperlinks || [])[index];
+    if (!hl) return;
+    setPropertyHyperlinkInput({ ...hl });
+    setEditingPropertyHyperlinkIdx(index);
+    setShowPropertyHyperlinkForm(true);
+  };
+
+  // --- BUILDING ACTIONS & HYPERLINK HANDLERS ---
+  const handleSaveBuildingHyperlink = () => {
+    if (!buildingHyperlinkInput.text.trim() || !buildingHyperlinkInput.url.trim()) {
+      alert('Please enter both Words/Phrase and Destination URL.');
+      return;
+    }
+    const formattedUrl = formatHyperlinkUrl(buildingHyperlinkInput.url.trim(), buildingHyperlinkInput.type);
+    const item: HyperlinkConfig = {
+      ...buildingHyperlinkInput,
+      id: buildingHyperlinkInput.id || `hl-${Date.now()}`,
+      text: buildingHyperlinkInput.text.trim(),
+      url: formattedUrl,
+      title: buildingHyperlinkInput.title?.trim() || buildingHyperlinkInput.text.trim()
+    };
+    const current = currentBuilding.hyperlinks || [];
+    let updated: HyperlinkConfig[];
+    if (editingBuildingHyperlinkIdx !== null && editingBuildingHyperlinkIdx >= 0) {
+      updated = [...current];
+      updated[editingBuildingHyperlinkIdx] = item;
+    } else {
+      updated = [...current, item];
+    }
+    setCurrentBuilding(prev => ({ ...prev, hyperlinks: updated }));
+    setBuildingHyperlinkInput({
+      text: '',
+      url: '',
+      type: 'internal',
+      open_in_new_tab: false,
+      title: '',
+      match_mode: 'first',
+      max_occurrences: 1
+    });
+    setEditingBuildingHyperlinkIdx(null);
+    setShowBuildingHyperlinkForm(false);
+  };
+
+  const handleDeleteBuildingHyperlink = (index: number) => {
+    const updated = (currentBuilding.hyperlinks || []).filter((_, i) => i !== index);
+    setCurrentBuilding(prev => ({ ...prev, hyperlinks: updated }));
+  };
+
+  const handleOpenEditBuildingHyperlink = (index: number) => {
+    const hl = (currentBuilding.hyperlinks || [])[index];
+    if (!hl) return;
+    setBuildingHyperlinkInput({ ...hl });
+    setEditingBuildingHyperlinkIdx(index);
+    setShowBuildingHyperlinkForm(true);
+  };
+
   const handleOpenAddBuilding = () => {
     setIsEditingBuilding(false);
+    setBuildingModalTab('specs');
     const initialLoc = locations[0]?.id || 'loc-sec-62';
     const initialLocName = locations[0]?.name || 'Sector 62, Noida';
     setCurrentBuilding({
       name: '',
+      building_name: '',
+      block_name: '',
+      tower_number: '',
+      sector: initialLocName,
+      gmaps_direction: '',
+      status: 'Active',
+      short_description: '',
+      overview: '',
+      location_connectivity: '',
+      hero_image_alt: '',
+      hero_image_title: '',
+      hero_image_caption: '',
+      image_details: [],
+      seo_title: '',
+      seo_description: '',
+      seo_keywords: '',
+      canonical_url: '',
+      og_title: '',
+      og_description: '',
+      og_image: '',
+      hyperlinks: [],
       location_id: initialLoc,
       location_name: initialLocName,
       locations: [initialLoc],
@@ -1105,6 +1484,7 @@ export const AdminPage: React.FC = () => {
 
   const handleOpenEditBuilding = (bld: Building) => {
     setIsEditingBuilding(true);
+    setBuildingModalTab('specs');
     const existingCats: PropertyCategory[] = Array.isArray(bld.categories) && bld.categories.length > 0 
       ? bld.categories 
       : [bld.category || 'office-space'];
@@ -1119,6 +1499,27 @@ export const AdminPage: React.FC = () => {
 
     setCurrentBuilding({
       ...bld,
+      building_name: bld.building_name || bld.name || '',
+      block_name: bld.block_name || '',
+      tower_number: bld.tower_number || '',
+      sector: bld.sector || bld.location_name || '',
+      gmaps_direction: bld.gmaps_direction || '',
+      status: bld.status || 'Active',
+      short_description: bld.short_description || '',
+      overview: bld.overview || bld.description || '',
+      location_connectivity: bld.location_connectivity || '',
+      hero_image_alt: bld.hero_image_alt || '',
+      hero_image_title: bld.hero_image_title || '',
+      hero_image_caption: bld.hero_image_caption || '',
+      image_details: bld.image_details || [],
+      seo_title: bld.seo_title || '',
+      seo_description: bld.seo_description || '',
+      seo_keywords: bld.seo_keywords || '',
+      canonical_url: bld.canonical_url || '',
+      og_title: bld.og_title || '',
+      og_description: bld.og_description || '',
+      og_image: bld.og_image || bld.hero_image || '',
+      hyperlinks: Array.isArray(bld.hyperlinks) ? [...bld.hyperlinks] : [],
       categories: existingCats,
       locations: existingLocs,
       towers: existingTowers,
@@ -1207,6 +1608,12 @@ export const AdminPage: React.FC = () => {
       const buildingObj: Building = {
         id: currentBuilding.id || `bld-${Date.now()}`,
         name: currentBuilding.name.trim(),
+        building_name: currentBuilding.building_name || currentBuilding.name.trim(),
+        block_name: currentBuilding.block_name || undefined,
+        tower_number: currentBuilding.tower_number || undefined,
+        sector: currentBuilding.sector || primaryLoc?.name || currentBuilding.location_name,
+        gmaps_direction: currentBuilding.gmaps_direction || undefined,
+        status: currentBuilding.status || 'Active',
         slug: currentBuilding.slug || currentBuilding.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
         location_id: primaryLocId,
         location_name: primaryLoc ? primaryLoc.name : (currentBuilding.location_name || 'Sector 62, Noida'),
@@ -1216,8 +1623,24 @@ export const AdminPage: React.FC = () => {
         categories: selectedCategories,
         address: currentBuilding.address || (primaryLoc ? primaryLoc.name : 'Sector 62, Noida'),
         description: currentBuilding.description || '',
+        short_description: currentBuilding.short_description || undefined,
+        overview: currentBuilding.overview || currentBuilding.description || '',
+        location_connectivity: currentBuilding.location_connectivity || undefined,
+        specs: currentBuilding.specs || undefined,
         hero_image: currentBuilding.hero_image || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80',
+        hero_image_alt: currentBuilding.hero_image_alt || undefined,
+        hero_image_title: currentBuilding.hero_image_title || undefined,
+        hero_image_caption: currentBuilding.hero_image_caption || undefined,
+        image_details: currentBuilding.image_details || [],
         gallery: Array.isArray(currentBuilding.gallery) ? currentBuilding.gallery : [],
+        seo_title: currentBuilding.seo_title || undefined,
+        seo_description: currentBuilding.seo_description || undefined,
+        seo_keywords: currentBuilding.seo_keywords || undefined,
+        canonical_url: currentBuilding.canonical_url || undefined,
+        og_title: currentBuilding.og_title || undefined,
+        og_description: currentBuilding.og_description || undefined,
+        og_image: currentBuilding.og_image || currentBuilding.hero_image || undefined,
+        hyperlinks: Array.isArray(currentBuilding.hyperlinks) ? currentBuilding.hyperlinks : [],
         total_floors: Number(currentBuilding.total_floors) || 1,
         basement_floors: currentBuilding.basement_floors || '2 Basements (2B)',
         ground_option: currentBuilding.ground_option || 'Ground (G)',
@@ -1921,6 +2344,7 @@ export const AdminPage: React.FC = () => {
                     <th className="p-3.5">Area & Technical Specs</th>
                     <th className="p-3.5">Tariff / Price</th>
                     <th className="p-3.5">Status</th>
+                    <th className="p-3.5">SEO Status</th>
                     <th className="p-3.5">Actions</th>
                   </tr>
                 </thead>
@@ -2033,6 +2457,38 @@ export const AdminPage: React.FC = () => {
                             <option value="Leased">Leased</option>
                             <option value="Sold">Sold</option>
                           </select>
+                        </td>
+
+                        {/* SEO Status */}
+                        <td className="p-3.5">
+                          {(() => {
+                            const seoStatus = computeSeoStatus(prop, 'property');
+                            return (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  handleOpenEditProperty(prop);
+                                  setPropertyModalTab('seo');
+                                }}
+                                className="group/seo text-left cursor-pointer"
+                                title={seoStatus.isComplete ? 'SEO Complete. Click to review SEO settings.' : `Missing: ${seoStatus.missingFields.join(', ')}. Click to fix.`}
+                              >
+                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border transition-all ${
+                                  seoStatus.isComplete
+                                    ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 group-hover/seo:bg-emerald-500/25'
+                                    : 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30 group-hover/seo:bg-amber-500/25'
+                                }`}>
+                                  {seoStatus.isComplete ? <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" /> : <AlertCircle className="w-3 h-3 text-amber-500 shrink-0" />}
+                                  <span>{seoStatus.isComplete ? 'Complete' : 'Needs Attention'}</span>
+                                </span>
+                                {!seoStatus.isComplete && (
+                                  <span className="block text-[10px] text-slate-400 mt-0.5 truncate max-w-[110px]">
+                                    {seoStatus.missingFields.length} missing
+                                  </span>
+                                )}
+                              </button>
+                            );
+                          })()}
                         </td>
 
                         {/* Action buttons: Edit, View, Delete */}
@@ -2157,6 +2613,31 @@ export const AdminPage: React.FC = () => {
                     </select>
                   </div>
 
+                  {/* Mobile SEO Badge */}
+                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+                    <span className="text-[11px] font-semibold text-slate-500">SEO Status:</span>
+                    {(() => {
+                      const seoStatus = computeSeoStatus(prop, 'property');
+                      return (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleOpenEditProperty(prop);
+                            setPropertyModalTab('seo');
+                          }}
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                            seoStatus.isComplete
+                              ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
+                              : 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30'
+                          }`}
+                        >
+                          {seoStatus.isComplete ? <CheckCircle2 className="w-3 h-3 text-emerald-500" /> : <AlertCircle className="w-3 h-3 text-amber-500" />}
+                          <span>{seoStatus.isComplete ? 'Complete' : 'Needs Attention'}</span>
+                        </button>
+                      );
+                    })()}
+                  </div>
+
                   <div className="grid grid-cols-3 gap-2 pt-1">
                     <button
                       onClick={() => handleOpenEditProperty(prop)}
@@ -2215,98 +2696,142 @@ export const AdminPage: React.FC = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {buildings.map((bld) => (
-              <div key={bld.id} className="glass-card rounded-3xl overflow-hidden border border-slate-200/90 dark:border-slate-800 bg-white/70 dark:bg-[#0B132B]/75 flex flex-col justify-between shadow-md group">
+              <div key={bld.id} className="glass-card rounded-3xl overflow-hidden border border-slate-200/90 dark:border-slate-800 bg-white/70 dark:bg-[#0B132B]/75 flex flex-col justify-between shadow-md hover:shadow-xl transition-all duration-300 group">
+                {/* Card Image Header with Non-overlapping Badge and Actions */}
                 <div className="relative aspect-[16/10] overflow-hidden bg-slate-100 dark:bg-slate-800">
-                  <img src={bld.hero_image} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent pointer-events-none" />
+                  <img 
+                    src={bld.hero_image || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80'} 
+                    alt={bld.name} 
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80';
+                    }}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/30 to-slate-950/20 pointer-events-none" />
                   
-                  <div className="absolute top-3 right-3 flex items-center gap-1.5">
+                  {/* Top Bar: Left = SEO Status Badge, Right = Delete Action */}
+                  <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2 z-10">
+                    {/* SEO Status Badge */}
+                    {(() => {
+                      const seoStatus = computeSeoStatus(bld, 'building');
+                      return (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleOpenEditBuilding(bld);
+                            setBuildingModalTab('seo');
+                          }}
+                          className={`px-2.5 py-1 rounded-xl text-[11px] font-bold shadow-md backdrop-blur-md flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer shrink-0 ${
+                            seoStatus.isComplete
+                              ? 'bg-emerald-600/90 text-white hover:bg-emerald-500'
+                              : 'bg-amber-600/90 text-white hover:bg-amber-500'
+                          }`}
+                          title={seoStatus.isComplete ? 'SEO Complete. Click to review SEO settings.' : `Missing: ${seoStatus.missingFields.join(', ')}. Click to fix.`}
+                        >
+                          {seoStatus.isComplete ? <CheckCircle2 className="w-3.5 h-3.5 text-white" /> : <AlertCircle className="w-3.5 h-3.5 text-white" />}
+                          <span>{seoStatus.isComplete ? 'SEO Complete' : 'Needs Attention'}</span>
+                        </button>
+                      );
+                    })()}
+
+                    {/* Compact Delete Button */}
                     <button
-                      onClick={() => {
-                        setManagingBuildingProps(bld);
-                        setShowManagePropsModal(true);
-                      }}
-                      className="px-2.5 py-1.5 rounded-xl bg-white/95 dark:bg-slate-900/95 text-indigo-600 dark:text-indigo-400 shadow-md backdrop-blur-md hover:bg-brand-600 hover:text-white dark:hover:bg-brand-600 dark:hover:text-white transition-all text-xs font-semibold flex items-center gap-1 group/btn cursor-pointer"
-                      title="Edit Available Properties (20 Units)"
-                    >
-                      <Layers className="w-3.5 h-3.5" />
-                      <span className="hidden sm:inline">Properties ({bld.property_count || 20})</span>
-                    </button>
-                    <button
-                      onClick={() => handleOpenEditBuilding(bld)}
-                      className="px-2.5 py-1.5 rounded-xl bg-white/95 dark:bg-slate-900/95 text-brand-600 dark:text-brand-400 shadow-md backdrop-blur-md hover:bg-brand-600 hover:text-white dark:hover:bg-brand-600 dark:hover:text-white transition-all text-xs font-semibold flex items-center gap-1 group/btn cursor-pointer"
-                      title="Update Building Details & Tariff"
-                    >
-                      <Edit3 className="w-3.5 h-3.5 transition-transform group-hover/btn:rotate-12" />
-                      <span className="hidden sm:inline">Update</span>
-                    </button>
-                    <button
+                      type="button"
                       onClick={() => handleDeleteBuilding(bld.id)}
-                      className="p-2 rounded-xl bg-white/90 dark:bg-slate-900/90 text-rose-500 shadow-md backdrop-blur-md hover:scale-105 transition-all"
-                      title="Delete Building"
+                      className="p-1.5 rounded-xl bg-slate-950/60 hover:bg-rose-600 text-white/90 hover:text-white shadow-md backdrop-blur-md transition-all active:scale-95 cursor-pointer shrink-0"
+                      title="Delete Commercial Building"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
 
-                  <div className="absolute bottom-3 left-3 right-3">
-                    <h3 className="font-bold text-base text-white font-['Outfit'] drop-shadow-sm">{bld.name}</h3>
-                    <div className="text-xs text-slate-300">{bld.location_name}</div>
+                  {/* Title & Location Overlay */}
+                  <div className="absolute bottom-3 left-3 right-3 pointer-events-none">
+                    <h3 className="font-bold text-base text-white font-['Outfit'] drop-shadow-sm leading-tight line-clamp-1">{bld.name}</h3>
+                    <div className="text-xs text-slate-200/90 flex items-center gap-1 mt-0.5">
+                      <MapPin className="w-3 h-3 text-brand-400 shrink-0" />
+                      <span className="truncate">{bld.location_name}</span>
+                    </div>
                   </div>
                 </div>
 
-                <div className="p-4 sm:p-5 space-y-3">
-                  <div className="grid grid-cols-2 gap-2 text-xs py-2 border-y border-slate-100 dark:border-slate-800">
-                    <div>
-                      <span className="text-slate-400 block">Tariff Range:</span>
-                      <span className="font-bold text-brand-600 dark:text-brand-400">{bld.rent_range || 'On Request'}</span>
+                {/* Card Body & Specs */}
+                <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3.5">
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="p-2 rounded-xl bg-slate-50/80 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800/80">
+                        <span className="text-[11px] text-slate-400 block font-medium">Tariff Range:</span>
+                        <span className="font-bold text-brand-600 dark:text-brand-400 block text-xs truncate">
+                          {bld.rent_range || 'On Request'}
+                        </span>
+                      </div>
+                      <div className="p-2 rounded-xl bg-slate-50/80 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800/80">
+                        <span className="text-[11px] text-slate-400 block font-medium">Structure:</span>
+                        <span className="font-semibold text-slate-800 dark:text-slate-200 block text-xs truncate">
+                          {getBuildingStructureDisplay(bld)}
+                        </span>
+                      </div>
+                      <div className="p-2 rounded-xl bg-slate-50/80 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800/80">
+                        <span className="text-[11px] text-slate-400 block font-medium">Size Range:</span>
+                        <span className="font-semibold text-slate-800 dark:text-slate-200 block text-xs truncate">
+                          {bld.size_range || 'Flexible'}
+                        </span>
+                      </div>
+                      <div className="p-2 rounded-xl bg-slate-50/80 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800/80">
+                        <span className="text-[11px] text-slate-400 block font-medium">Power Backup:</span>
+                        <span className="font-semibold text-slate-800 dark:text-slate-200 block text-xs truncate">
+                          {bld.power_backup || '100% DG'}
+                        </span>
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-slate-400 block">Structure:</span>
-                      <span className="font-semibold text-slate-800 dark:text-slate-200">
-                        {getBuildingStructureDisplay(bld)}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-slate-400 block">Size Range:</span>
-                      <span className="font-semibold text-slate-800 dark:text-slate-200">{bld.size_range}</span>
-                    </div>
+
                     {bld.towers && bld.towers.length > 0 && (
-                      <div className="col-span-2 pt-1 border-t border-slate-100 dark:border-slate-800/60 flex items-center gap-1 text-[11px] text-brand-700 dark:text-brand-300 font-semibold truncate">
+                      <div className="px-2.5 py-1.5 rounded-xl bg-brand-50/60 dark:bg-brand-950/30 border border-brand-200/70 dark:border-brand-800/60 flex items-center gap-1.5 text-[11px] text-brand-700 dark:text-brand-300 font-semibold truncate">
                         <Building2 className="w-3.5 h-3.5 text-brand-500 shrink-0" />
                         <span className="truncate">{bld.tower_details || `${bld.towers.length} Towers (${bld.towers.join(', ')})`}</span>
                       </div>
                     )}
-                    <div>
-                      <span className="text-slate-400 block">Power:</span>
-                      <span className="font-semibold text-slate-800 dark:text-slate-200">{bld.power_backup}</span>
-                    </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center justify-between pt-2 gap-2">
-                    <button
-                      onClick={() => handleOpenEditBuilding(bld)}
-                      className="flex-1 sm:flex-none justify-center px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-brand-600 to-cyan-600 hover:from-brand-500 hover:to-cyan-500 shadow-md shadow-brand-500/20 active:scale-95 flex items-center gap-1.5 transition-all group cursor-pointer"
-                    >
-                      <Edit3 className="w-3.5 h-3.5 transition-transform group-hover:scale-110 group-hover:-rotate-12" />
-                      <span>Update Specs & Tariff</span>
-                    </button>
+                  {/* Clean 2-Button Action Bar */}
+                  <div className="space-y-2 pt-1 border-t border-slate-100 dark:border-slate-800/80">
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEditBuilding(bld)}
+                        className="w-full px-3 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-brand-600 to-cyan-600 hover:from-brand-500 hover:to-cyan-500 shadow-md shadow-brand-500/20 active:scale-95 flex items-center justify-center gap-1.5 transition-all cursor-pointer truncate"
+                        title="Update Building Specs, Content, Images & SEO"
+                      >
+                        <Edit3 className="w-3.5 h-3.5 shrink-0" />
+                        <span className="truncate">Edit Specs & SEO</span>
+                      </button>
 
-                    <button
-                      onClick={() => {
-                        setManagingBuildingProps(bld);
-                        setShowManagePropsModal(true);
-                      }}
-                      className="flex-1 sm:flex-none justify-center px-3 py-2 rounded-xl text-xs font-bold text-slate-800 dark:text-white bg-slate-100 hover:bg-brand-50 hover:text-brand-600 dark:bg-slate-800 dark:hover:bg-brand-950/80 dark:hover:text-brand-400 border border-slate-200 dark:border-slate-700 active:scale-95 flex items-center gap-1.5 transition-all cursor-pointer"
-                      title="Manage and edit available units, monthly rents, rates and sizes for this building"
-                    >
-                      <Layers className="w-3.5 h-3.5 text-brand-500" />
-                      <span>Available Properties ({bld.property_count || 20})</span>
-                    </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setManagingBuildingProps(bld);
+                          setShowManagePropsModal(true);
+                        }}
+                        className="w-full px-3 py-2 rounded-xl text-xs font-bold text-slate-800 dark:text-white bg-slate-100 hover:bg-brand-50 hover:text-brand-600 dark:bg-slate-800 dark:hover:bg-brand-950/80 dark:hover:text-brand-400 border border-slate-200 dark:border-slate-700 active:scale-95 flex items-center justify-center gap-1.5 transition-all cursor-pointer truncate"
+                        title="Manage individual units, monthly rents, rates and sizes for this building"
+                      >
+                        <Layers className="w-3.5 h-3.5 text-brand-500 shrink-0" />
+                        <span className="truncate">Units ({bld.property_count || 20})</span>
+                      </button>
+                    </div>
 
-                    <Link to={`/buildings/${bld.slug}`} className="text-xs text-slate-500 hover:text-brand-500 font-semibold flex items-center gap-1 shrink-0 py-1">
-                      View Page <ExternalLink className="w-3 h-3" />
-                    </Link>
+                    <div className="flex items-center justify-between pt-1">
+                      <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                        {CATEGORY_CONFIG[bld.category || 'office-space']?.label || 'Commercial'}
+                      </span>
+                      <Link 
+                        to={`/buildings/${bld.slug}`} 
+                        className="text-xs text-slate-500 hover:text-brand-600 dark:hover:text-brand-400 font-semibold flex items-center gap-1 transition-colors"
+                      >
+                        <span>View Live Page</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </Link>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -3056,8 +3581,8 @@ export const AdminPage: React.FC = () => {
                   {/* Hero / Cover */}
                   <div className="relative aspect-[16/9] overflow-hidden bg-slate-100 dark:bg-slate-800">
                     <img
-                      src={guide.image}
-                      alt={guide.title}
+                      src={getBlogFeaturedImage(guide)}
+                      alt={getBlogImageAlt(guide)}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent pointer-events-none" />
@@ -3118,6 +3643,13 @@ export const AdminPage: React.FC = () => {
                           By {guide.author}
                         </span>
                       )}
+
+                      {guide.hyperlinks && guide.hyperlinks.length > 0 && (
+                        <div className="pt-1 flex items-center gap-1 text-[10px] font-semibold text-brand-600 dark:text-brand-400">
+                          <Link2 className="w-3 h-3" />
+                          <span>{guide.hyperlinks.length} text links</span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Actions */}
@@ -3130,6 +3662,15 @@ export const AdminPage: React.FC = () => {
                         <Edit3 className="w-3.5 h-3.5" />
                         <span>Edit Guide</span>
                       </button>
+
+                      <Link
+                        to={`/blog/${guide.slug}`}
+                        target="_blank"
+                        className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors"
+                        title="View Public Article"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </Link>
 
                       <button
                         type="button"
@@ -3178,7 +3719,7 @@ export const AdminPage: React.FC = () => {
       {/* PROPERTY ADD / EDIT MODAL */}
       {showPropertyModal && (
         <div className="fixed inset-0 z-50 overflow-y-auto p-2 sm:p-4 md:p-6 flex min-h-full items-start sm:items-center justify-center bg-slate-950/80 backdrop-blur-md">
-          <div className="relative w-full max-w-2xl glass-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 bg-white dark:bg-[#0B132B] border border-slate-200 dark:border-slate-800 shadow-2xl my-auto max-h-[96vh] sm:max-h-[90vh] flex flex-col">
+          <div className="relative w-full max-w-4xl glass-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 bg-white dark:bg-[#0B132B] border border-slate-200 dark:border-slate-800 shadow-2xl my-auto max-h-[96vh] sm:max-h-[90vh] flex flex-col">
             <button 
               onClick={() => setShowPropertyModal(false)}
               className="absolute top-3.5 right-3.5 sm:top-5 sm:right-5 p-2 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 bg-slate-100/80 dark:bg-slate-800/80 sm:bg-transparent z-10 transition-colors"
@@ -3186,688 +3727,999 @@ export const AdminPage: React.FC = () => {
               <X className="w-5 h-5" />
             </button>
 
-            <div className="mb-3 sm:mb-4 shrink-0 pr-8">
+            <div className="mb-3 shrink-0 pr-8">
               <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
-                {isEditingProperty ? 'Edit Property Listing' : 'New Commercial Listing'}
+                {isEditingProperty ? 'Edit Property Listing & SEO' : 'New Commercial Listing'}
               </span>
               <h2 className="text-xl sm:text-2xl font-bold font-['Outfit']">
-                {isEditingProperty ? `Edit: ${currentProperty.reference_number}` : 'Add Commercial Property'}
+                {isEditingProperty ? `Edit: ${currentProperty.title || currentProperty.reference_number}` : 'Add Commercial Property'}
               </h2>
+            </div>
+
+            {/* TAB SELECTOR */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-2 mb-3 border-b border-slate-200 dark:border-slate-800 no-scrollbar shrink-0 text-xs">
+              <button
+                type="button"
+                onClick={() => setPropertyModalTab('specs')}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+                  propertyModalTab === 'specs'
+                    ? 'bg-brand-600 text-white shadow-sm'
+                    : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'
+                }`}
+              >
+                <Layers className="w-3.5 h-3.5" />
+                <span>1. Basic & Specs</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setPropertyModalTab('content')}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+                  propertyModalTab === 'content'
+                    ? 'bg-brand-600 text-white shadow-sm'
+                    : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'
+                }`}
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span>2. Content & Overview</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setPropertyModalTab('images')}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+                  propertyModalTab === 'images'
+                    ? 'bg-brand-600 text-white shadow-sm'
+                    : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'
+                }`}
+              >
+                <ImageIcon className="w-3.5 h-3.5" />
+                <span>3. Images & Alt Text ({(currentProperty.gallery?.length || 0) + (currentProperty.primary_image ? 1 : 0)})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setPropertyModalTab('seo')}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+                  propertyModalTab === 'seo'
+                    ? 'bg-brand-600 text-white shadow-sm'
+                    : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'
+                }`}
+              >
+                <Globe className="w-3.5 h-3.5" />
+                <span>4. SEO & URLs</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setPropertyModalTab('hyperlinks')}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+                  propertyModalTab === 'hyperlinks'
+                    ? 'bg-brand-600 text-white shadow-sm'
+                    : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'
+                }`}
+              >
+                <Link2 className="w-3.5 h-3.5" />
+                <span>5. Hyperlink Words ({currentProperty.hyperlinks?.length || 0})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setPropertyModalTab('preview')}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+                  propertyModalTab === 'preview'
+                    ? 'bg-brand-600 text-white shadow-sm'
+                    : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'
+                }`}
+              >
+                <Eye className="w-3.5 h-3.5" />
+                <span>6. SEO Preview</span>
+              </button>
             </div>
             
             <form onSubmit={handleSaveProperty} className="space-y-4 overflow-y-auto pr-1 flex-1 -mr-1">
-              {/* Title & Ref */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="sm:col-span-2">
-                  <label className="block text-xs font-semibold mb-1">Property Title *</label>
-                  <input
-                    type="text"
-                    required
-                    value={currentProperty.title}
-                    onChange={(e) => setCurrentProperty({ ...currentProperty, title: e.target.value })}
-                    placeholder="e.g. 1,150 sq.ft Furnished Corporate Office in I-Thum"
-                    className="glass-input w-full px-3 py-2 rounded-xl text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold mb-1">Ref ID</label>
-                  <input
-                    type="text"
-                    value={currentProperty.reference_number || ''}
-                    onChange={(e) => setCurrentProperty({ ...currentProperty, reference_number: e.target.value })}
-                    placeholder="e.g. SE-6201"
-                    className="glass-input w-full px-3 py-2 rounded-xl text-sm font-mono"
-                  />
-                </div>
-              </div>
-
-              {/* IMAGE URL & LIVE PREVIEW & UPLOAD */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="block text-xs font-semibold">Primary Property Image URL *</label>
-                  <label className="text-[11px] font-bold text-brand-600 dark:text-brand-400 hover:underline cursor-pointer flex items-center gap-1">
-                    <UploadCloud className="w-3.5 h-3.5" />
-                    <span>Upload from Device</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handlePropertyImageUpload}
-                      className="hidden"
-                    />
-                  </label>
-                </div>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="text"
-                    required
-                    value={currentProperty.primary_image}
-                    onChange={(e) => setCurrentProperty({ ...currentProperty, primary_image: e.target.value })}
-                    placeholder="Paste image link or click 'Upload from Device' above"
-                    className="glass-input flex-1 px-3 py-2 rounded-xl text-sm"
-                  />
-                  {currentProperty.primary_image && (
-                    <div className="w-12 h-9 rounded-lg overflow-hidden border border-slate-300 dark:border-slate-700 shrink-0">
-                      <img src={currentProperty.primary_image} alt="Preview" className="w-full h-full object-cover" />
+              {/* TAB 1: BASIC & SPECS */}
+              {propertyModalTab === 'specs' && (
+                <div className="space-y-4">
+                  {/* Title & Ref */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-semibold mb-1">Property Title *</label>
+                      <input
+                        type="text"
+                        required
+                        value={currentProperty.title}
+                        onChange={(e) => setCurrentProperty({ ...currentProperty, title: e.target.value })}
+                        placeholder="e.g. 1,150 sq.ft Furnished Corporate Office in I-Thum"
+                        className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                      />
                     </div>
-                  )}
-                </div>
-              </div>
+                    <div>
+                      <label className="block text-xs font-semibold mb-1">Ref ID</label>
+                      <input
+                        type="text"
+                        value={currentProperty.reference_number || ''}
+                        onChange={(e) => setCurrentProperty({ ...currentProperty, reference_number: e.target.value })}
+                        placeholder="e.g. SE-6201"
+                        className="glass-input w-full px-3 py-2 rounded-xl text-sm font-mono"
+                      />
+                    </div>
+                  </div>
 
-              {/* PROPERTY GALLERY (REST OF IMAGES - EDITABLE) */}
-              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-3">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div>
+                  {/* TARIFF / PRICING */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3.5 rounded-2xl bg-brand-50/50 dark:bg-brand-950/20 border border-brand-200 dark:border-brand-800/50">
+                    <div>
+                      <label className="block text-xs font-bold text-brand-700 dark:text-brand-300 mb-1">
+                        Tariff Display Text *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={currentProperty.price_display}
+                        onChange={(e) => setCurrentProperty({ ...currentProperty, price_display: e.target.value })}
+                        placeholder="e.g. ₹65,000/month or ₹1.85 Cr"
+                        className="glass-input w-full px-3 py-2 rounded-xl text-sm font-bold"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold mb-1">Numeric Amount (₹) *</label>
+                      <input
+                        type="number"
+                        required
+                        value={currentProperty.price}
+                        onChange={(e) => setCurrentProperty({ ...currentProperty, price: Number(e.target.value) })}
+                        className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold mb-1">Rate / Tariff per sq.ft</label>
+                      <input
+                        type="text"
+                        value={currentProperty.rate_per_sqft || ''}
+                        onChange={(e) => setCurrentProperty({ ...currentProperty, rate_per_sqft: e.target.value })}
+                        placeholder="e.g. ₹56.5/sq.ft"
+                        className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  {/* CATEGORY & PROPERTY TYPE */}
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                        <Tag className="w-3.5 h-3.5 text-brand-500" />
+                        <span>Commercial Category & Asset Class *</span>
+                      </span>
+                      {currentProperty.category && (
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${CATEGORY_CONFIG[currentProperty.category as PropertyCategory]?.badgeClass}`}>
+                          {CATEGORY_CONFIG[currentProperty.category as PropertyCategory]?.label}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold mb-1">Select Asset Class *</label>
+                        <select
+                          value={currentProperty.category}
+                          onChange={(e) => {
+                            const newCat = e.target.value as PropertyCategory;
+                            const config = CATEGORY_CONFIG[newCat] || CATEGORY_CONFIG['office-space'];
+                            setCurrentProperty({ 
+                              ...currentProperty, 
+                              category: newCat,
+                              property_type: config.defaultType,
+                              power_load: currentProperty.power_load || config.defaultPower,
+                              road_width: currentProperty.road_width || config.defaultRoad,
+                              listing_type: newCat === 'land' ? 'Sale' : (currentProperty.listing_type || 'Rent'),
+                              area_unit: newCat === 'land' ? 'sq.meter' : (currentProperty.area_unit || 'sq.ft'),
+                              features: currentProperty.features && currentProperty.features.length > 0 
+                                ? currentProperty.features 
+                                : [...config.suggestedFeatures.slice(0, 4)],
+                            });
+                          }}
+                          className="glass-input w-full px-3 py-2 rounded-xl text-sm font-semibold"
+                        >
+                          <option value="it-business-parks">IT & Business Parks</option>
+                          <option value="warehouses">Warehouses & Logistics</option>
+                          <option value="factory-industrial">Factories & Industrial</option>
+                          <option value="land">Commercial Land & Industrial Plots</option>
+                          <option value="shops-retail">Shops & Retail Showrooms</option>
+                          <option value="office-space">Commercial Office Space</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold mb-1">
+                          Property Type ({CATEGORY_CONFIG[(currentProperty.category || 'office-space') as PropertyCategory]?.label}) *
+                        </label>
+                        <select
+                          value={currentProperty.property_type || ''}
+                          onChange={(e) => {
+                            if (e.target.value === '__custom__') {
+                              setCurrentProperty({ ...currentProperty, property_type: '' });
+                              setCustomPropertyTypeInput('custom');
+                            } else {
+                              setCurrentProperty({ ...currentProperty, property_type: e.target.value });
+                            }
+                          }}
+                          className="glass-input w-full px-3 py-2 rounded-xl text-sm font-semibold"
+                        >
+                          {(CATEGORY_CONFIG[(currentProperty.category || 'office-space') as PropertyCategory]?.types || []).map((t) => (
+                            <option key={t} value={t}>{t}</option>
+                          ))}
+                          <option value="__custom__">✍️ Custom Property Type...</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {(!CATEGORY_CONFIG[(currentProperty.category || 'office-space') as PropertyCategory]?.types.includes(currentProperty.property_type || '') || customPropertyTypeInput !== '') && (
+                      <div>
+                        <label className="block text-[11px] font-semibold text-slate-500 mb-1">
+                          Custom Property Type Description
+                        </label>
+                        <input
+                          type="text"
+                          value={currentProperty.property_type || ''}
+                          onChange={(e) => {
+                            setCurrentProperty({ ...currentProperty, property_type: e.target.value });
+                            setCustomPropertyTypeInput(e.target.value);
+                          }}
+                          placeholder="e.g. Temperature Controlled Cold Storage or High-Street Anchor Store"
+                          className="glass-input w-full px-3 py-2 rounded-xl text-xs"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* LISTING TYPE & STATUS */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold mb-1">Listing Commercial Model *</label>
+                      <select
+                        value={currentProperty.listing_type}
+                        onChange={(e) => setCurrentProperty({ ...currentProperty, listing_type: e.target.value as any })}
+                        className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                      >
+                        <option value="Rent">Rent (Monthly / Lease)</option>
+                        <option value="Lease">Long-term Leasehold</option>
+                        <option value="Sale">Direct Sale / Freehold Outright</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold mb-1">Live Inventory Status *</label>
+                      <select
+                        value={currentProperty.status}
+                        onChange={(e) => setCurrentProperty({ ...currentProperty, status: e.target.value as any })}
+                        className="glass-input w-full px-3 py-2 rounded-xl text-sm font-semibold"
+                      >
+                        <option value="Available">Available</option>
+                        <option value="Ready to Move">Ready to Move</option>
+                        <option value="Under Negotiation">Under Negotiation</option>
+                        <option value="Rented">Rented</option>
+                        <option value="Leased">Leased</option>
+                        <option value="Sold">Sold</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* LOCATION, BUILDING, TOWER & FLOOR HIERARCHY */}
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-3">
+                    <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                      <MapPin className="w-3.5 h-3.5 text-brand-500" />
+                      <span>Building, Tower, Sector & Floor Association</span>
+                    </span>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold mb-1">Sector / Locality *</label>
+                        <select
+                          value={currentProperty.location_id}
+                          onChange={(e) => {
+                            const loc = locations.find(l => l.id === e.target.value);
+                            setCurrentProperty({ 
+                              ...currentProperty, 
+                              location_id: e.target.value,
+                              location_name: loc ? loc.name : currentProperty.location_name,
+                              sector: loc ? loc.name : currentProperty.sector
+                            });
+                          }}
+                          className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                        >
+                          {locations.map(l => (
+                            <option key={l.id} value={l.id}>{l.name}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold mb-1">Building Association</label>
+                        <select
+                          value={currentProperty.building_id || ''}
+                          onChange={(e) => {
+                            const bld = buildings.find(b => b.id === e.target.value);
+                            setCurrentProperty({ 
+                              ...currentProperty, 
+                              building_id: e.target.value || undefined,
+                              building_name: bld ? bld.name : undefined,
+                              tower: bld && bld.towers && bld.towers.length > 0 ? bld.towers[0] : (currentProperty.tower || '')
+                            });
+                          }}
+                          className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                        >
+                          <option value="">Independent / Standalone Premises</option>
+                          {buildings.map(b => (
+                            <option key={b.id} value={b.id}>{b.name} ({b.location_name})</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                      {/* Tower Name */}
+                      <div>
+                        <label className="block text-xs font-semibold mb-1">Tower / Wing</label>
+                        {(() => {
+                          const selectedBld = buildings.find(b => b.id === currentProperty.building_id);
+                          if (selectedBld && selectedBld.towers && selectedBld.towers.length > 0) {
+                            return (
+                              <select
+                                value={currentProperty.tower || ''}
+                                onChange={(e) => setCurrentProperty({ ...currentProperty, tower: e.target.value })}
+                                className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                              >
+                                {selectedBld.towers.map(t => (
+                                  <option key={t} value={t}>{t}</option>
+                                ))}
+                                <option value="">Other / Standalone</option>
+                              </select>
+                            );
+                          }
+                          return (
+                            <input
+                              type="text"
+                              value={currentProperty.tower || ''}
+                              onChange={(e) => setCurrentProperty({ ...currentProperty, tower: e.target.value })}
+                              placeholder="e.g. Tower A"
+                              className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                            />
+                          );
+                        })()}
+                      </div>
+
+                      {/* Block Name */}
+                      <div>
+                        <label className="block text-xs font-semibold mb-1">Block Name</label>
+                        <input
+                          type="text"
+                          value={currentProperty.block_name || ''}
+                          onChange={(e) => setCurrentProperty({ ...currentProperty, block_name: e.target.value })}
+                          placeholder="e.g. Block B"
+                          className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                        />
+                      </div>
+
+                      {/* Floor */}
+                      <div>
+                        <label className="block text-xs font-semibold mb-1">Floor Level</label>
+                        <input
+                          type="text"
+                          value={currentProperty.floor || ''}
+                          onChange={(e) => setCurrentProperty({ ...currentProperty, floor: e.target.value })}
+                          placeholder="e.g. 4th Floor"
+                          className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                        />
+                      </div>
+
+                      {/* Unit Number */}
+                      <div>
+                        <label className="block text-xs font-semibold mb-1">Unit / Suite #</label>
+                        <input
+                          type="text"
+                          value={currentProperty.unit_number || ''}
+                          onChange={(e) => setCurrentProperty({ ...currentProperty, unit_number: e.target.value })}
+                          placeholder="e.g. Unit 402"
+                          className="glass-input w-full px-3 py-2 rounded-xl text-sm font-mono"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold mb-1">City</label>
+                      <input
+                        type="text"
+                        value={currentProperty.city || 'Noida'}
+                        onChange={(e) => setCurrentProperty({ ...currentProperty, city: e.target.value })}
+                        placeholder="Noida"
+                        className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  {/* AREA MEASUREMENTS */}
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                        <Layers className="w-3.5 h-3.5 text-brand-500" />
+                        <span>Area & Dimensions</span>
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold mb-1">Built-Up Area *</label>
+                        <input
+                          type="number"
+                          required
+                          value={currentProperty.built_up_area || ''}
+                          onChange={(e) => setCurrentProperty({ ...currentProperty, built_up_area: Number(e.target.value) })}
+                          placeholder="e.g. 4500"
+                          className="glass-input w-full px-3 py-2 rounded-xl text-sm font-semibold"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold mb-1">Carpet Area</label>
+                        <input
+                          type="number"
+                          value={currentProperty.carpet_area || ''}
+                          onChange={(e) => setCurrentProperty({ ...currentProperty, carpet_area: Number(e.target.value) || undefined })}
+                          placeholder="e.g. 3600"
+                          className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold mb-1">
+                          Plot / Land Area {currentProperty.category === 'land' ? '*' : ''}
+                        </label>
+                        <input
+                          type="number"
+                          value={currentProperty.land_area || ''}
+                          onChange={(e) => setCurrentProperty({ ...currentProperty, land_area: Number(e.target.value) || undefined })}
+                          placeholder="e.g. 1000"
+                          className="glass-input w-full px-3 py-2 rounded-xl text-sm font-semibold border-brand-300 dark:border-brand-700"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold mb-1">Area Unit</label>
+                        <select
+                          value={currentProperty.area_unit || 'sq.ft'}
+                          onChange={(e) => setCurrentProperty({ ...currentProperty, area_unit: e.target.value as any })}
+                          className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                        >
+                          <option value="sq.ft">sq.ft</option>
+                          <option value="sq.meter">sq.meter</option>
+                          <option value="acres">acres</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* TECHNICAL INFRASTRUCTURE */}
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-3">
+                    <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                      <Zap className="w-3.5 h-3.5 text-amber-500" />
+                      <span>Technical & Industrial Infrastructure Details</span>
+                    </span>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold mb-1">Power Load / DG Backup</label>
+                        <input
+                          type="text"
+                          value={currentProperty.power_load || ''}
+                          onChange={(e) => setCurrentProperty({ ...currentProperty, power_load: e.target.value })}
+                          placeholder="e.g. 150 KVA Sanctioned Industrial Load or 100% DG Backup"
+                          className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold mb-1">Approach Road Width / Frontage</label>
+                        <input
+                          type="text"
+                          value={currentProperty.road_width || ''}
+                          onChange={(e) => setCurrentProperty({ ...currentProperty, road_width: e.target.value })}
+                          placeholder="e.g. 60 Feet Wide Arterial Road (40ft Trailer access)"
+                          className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold mb-1">Furnishing / Shell</label>
+                        <select
+                          value={currentProperty.furnishing}
+                          onChange={(e) => setCurrentProperty({ ...currentProperty, furnishing: e.target.value as any })}
+                          className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                        >
+                          <option value="Furnished">Furnished</option>
+                          <option value="Plug-and-Play">Plug-and-Play</option>
+                          <option value="Semi-Furnished">Semi-Furnished</option>
+                          <option value="Bare Shell">Bare Shell</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold mb-1">Possession Timeline</label>
+                        <input
+                          type="text"
+                          value={currentProperty.possession || ''}
+                          onChange={(e) => setCurrentProperty({ ...currentProperty, possession: e.target.value })}
+                          placeholder="e.g. Immediate or Ready to Move"
+                          className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold mb-1">Parking & Loading Bays</label>
+                        <input
+                          type="text"
+                          value={currentProperty.parking || ''}
+                          onChange={(e) => setCurrentProperty({ ...currentProperty, parking: e.target.value })}
+                          placeholder="e.g. 2 Covered Bays or Trailer Maneuvering"
+                          className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* FEATURES & KEY HIGHLIGHTS */}
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                        <Tag className="w-3.5 h-3.5 text-brand-500" />
+                        <span>Key Features & Specifications ({currentProperty.features?.length || 0})</span>
+                      </span>
+                      <span className="text-[11px] text-slate-400">
+                        Click suggested pills to add
+                      </span>
+                    </div>
+
+                    {CATEGORY_CONFIG[(currentProperty.category || 'office-space') as PropertyCategory]?.suggestedFeatures && (
+                      <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                        {CATEGORY_CONFIG[(currentProperty.category || 'office-space') as PropertyCategory].suggestedFeatures.map((sug) => {
+                          const isAdded = (currentProperty.features || []).includes(sug);
+                          return (
+                            <button
+                              key={sug}
+                              type="button"
+                              disabled={isAdded}
+                              onClick={() => handleAddFeatureTag(sug)}
+                              className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all flex items-center gap-1 ${
+                                isAdded
+                                  ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 opacity-60 cursor-not-allowed'
+                                  : 'bg-white dark:bg-slate-800 hover:bg-brand-50 dark:hover:bg-brand-950/60 text-slate-700 dark:text-slate-200 hover:text-brand-600 border border-slate-200 dark:border-slate-700 active:scale-95 cursor-pointer'
+                              }`}
+                            >
+                              <Plus className="w-3 h-3 text-brand-500" />
+                              <span>{sug}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {currentProperty.features && currentProperty.features.length > 0 && (
+                      <div className="flex flex-wrap items-center gap-1.5 pt-1.5">
+                        {currentProperty.features.map((feat, idx) => (
+                          <span
+                            key={idx}
+                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-semibold bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800/80"
+                          >
+                            <span>{feat}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveFeatureTag(idx)}
+                              className="hover:text-red-500 rounded-full p-0.5 cursor-pointer"
+                              title="Remove feature"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-2 pt-1">
+                      <input
+                        type="text"
+                        value={newFeatureTag}
+                        onChange={(e) => setNewFeatureTag(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAddFeatureTag();
+                          }
+                        }}
+                        placeholder="Type custom feature and click Add (e.g. 5-Ton Overhead Crane)..."
+                        className="glass-input flex-1 px-3 py-1.5 rounded-xl text-xs"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleAddFeatureTag()}
+                        className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-200 dark:bg-slate-800 hover:bg-brand-600 hover:text-white text-slate-700 dark:text-slate-200 flex items-center gap-1 transition-all cursor-pointer"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Add Tag</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 2: CONTENT & OVERVIEW */}
+              {propertyModalTab === 'content' && (
+                <div className="space-y-4">
+                  {/* Short Description */}
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2">
                     <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
-                      Property Photo Gallery (Rest of Images - {currentProperty.gallery?.length || 0})
+                      Property Short Description
                     </label>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                      Edit, upload, replace, or reorder all gallery thumbnails displayed on the property page.
+                      Used for property cards, search previews, and snippet summaries across the site.
                     </p>
-                  </div>
-
-                  {/* Multi-file upload button */}
-                  <label className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-brand-600 hover:bg-brand-700 text-white shadow-sm hover:shadow cursor-pointer flex items-center gap-1.5 transition-all">
-                    <UploadCloud className="w-4 h-4" />
-                    <span>Upload Photos from Device</span>
-                    <input
-                      type="file"
-                      multiple
-                      accept="image/*"
-                      onChange={handlePropertyGalleryMultiUpload}
-                      className="hidden"
-                    />
-                  </label>
-                </div>
-
-                {/* Add via URL input bar */}
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={newPropertyGalleryUrl}
-                    onChange={(e) => setNewPropertyGalleryUrl(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddPropertyGalleryUrl(); } }}
-                    placeholder="Paste image URL here and click 'Add Photo'..."
-                    className="glass-input flex-1 px-3 py-1.5 rounded-xl text-xs"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleAddPropertyGalleryUrl}
-                    className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-200 dark:bg-slate-800 hover:bg-brand-50 hover:text-brand-600 dark:hover:text-brand-400 border border-slate-300 dark:border-slate-700 flex items-center gap-1 transition-all"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Add Photo</span>
-                  </button>
-                </div>
-
-                {/* Gallery List Cards */}
-                {(!currentProperty.gallery || currentProperty.gallery.length === 0) ? (
-                  <div className="p-4 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 text-center text-xs text-slate-500">
-                    No extra gallery photos yet. Click "Upload Photos from Device" or paste a URL above to add images.
-                  </div>
-                ) : (
-                  <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
-                    {currentProperty.gallery.map((imgUrl, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center gap-3 p-2.5 rounded-xl bg-white dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/70 shadow-sm"
-                      >
-                        {/* Thumbnail */}
-                        <div className="relative w-16 h-12 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 shrink-0 bg-slate-100 dark:bg-slate-900">
-                          <img
-                            src={imgUrl}
-                            alt={`Gallery ${idx + 1}`}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=400&q=80';
-                            }}
-                          />
-                          <span className="absolute bottom-0.5 right-0.5 px-1 py-0.2 text-[9px] font-mono font-bold bg-black/70 text-white rounded">
-                            #{idx + 1}
-                          </span>
-                        </div>
-
-                        {/* Editable URL input */}
-                        <div className="flex-1 min-w-0">
-                          <input
-                            type="text"
-                            value={imgUrl}
-                            onChange={(e) => handleUpdatePropertyGalleryUrl(idx, e.target.value)}
-                            placeholder="Image URL"
-                            className="glass-input w-full px-2.5 py-1.5 rounded-lg text-xs font-mono"
-                          />
-                        </div>
-
-                        {/* Action buttons */}
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          {/* Replace button with file input */}
-                          <label
-                            title="Replace image from device"
-                            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-brand-600 cursor-pointer border border-slate-200 dark:border-slate-700 transition-colors"
-                          >
-                            <UploadCloud className="w-3.5 h-3.5" />
-                            <input
-                              type="file"
-                              accept="image/*"
-                              onChange={(e) => handlePropertyGalleryReplace(idx, e)}
-                              className="hidden"
-                            />
-                          </label>
-
-                          {/* Swap with Primary Cover Image */}
-                          <button
-                            type="button"
-                            title="Update Primary Cover (swaps with current cover image)"
-                            onClick={() => handleSetPropertyPrimary(idx)}
-                            className="px-2.5 py-1 rounded-lg bg-brand-50 hover:bg-brand-600 dark:bg-brand-950/60 dark:hover:bg-brand-600 text-brand-700 dark:text-brand-300 hover:text-white border border-brand-200/90 dark:border-brand-800/80 transition-all flex items-center gap-1 text-[11px] font-semibold active:scale-95 group/cover cursor-pointer"
-                          >
-                            <ArrowLeftRight className="w-3.5 h-3.5 transition-transform group-hover/cover:rotate-180 duration-300" />
-                            <span>Update Cover</span>
-                          </button>
-
-                          {/* Delete from gallery */}
-                          <button
-                            type="button"
-                            title="Remove this photo"
-                            onClick={() => handleDeletePropertyGalleryItem(idx)}
-                            className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/40 text-slate-400 hover:text-red-600 border border-slate-200 dark:border-slate-700 transition-colors"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* TARIFF / PRICING (USER REQUEST) */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3.5 rounded-2xl bg-brand-50/50 dark:bg-brand-950/20 border border-brand-200 dark:border-brand-800/50">
-                <div>
-                  <label className="block text-xs font-bold text-brand-700 dark:text-brand-300 mb-1">
-                    Tariff Display Text *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={currentProperty.price_display}
-                    onChange={(e) => setCurrentProperty({ ...currentProperty, price_display: e.target.value })}
-                    placeholder="e.g. ₹65,000/month or ₹1.85 Cr"
-                    className="glass-input w-full px-3 py-2 rounded-xl text-sm font-bold"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold mb-1">Numeric Amount (₹) *</label>
-                  <input
-                    type="number"
-                    required
-                    value={currentProperty.price}
-                    onChange={(e) => setCurrentProperty({ ...currentProperty, price: Number(e.target.value) })}
-                    className="glass-input w-full px-3 py-2 rounded-xl text-sm"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold mb-1">Rate / Tariff per sq.ft</label>
-                  <input
-                    type="text"
-                    value={currentProperty.rate_per_sqft || ''}
-                    onChange={(e) => setCurrentProperty({ ...currentProperty, rate_per_sqft: e.target.value })}
-                    placeholder="e.g. ₹56.5/sq.ft"
-                    className="glass-input w-full px-3 py-2 rounded-xl text-sm"
-                  />
-                </div>
-              </div>
-
-              {/* CATEGORY & PROPERTY TYPE (ALL 6 ASSET CLASSES) */}
-              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                    <Tag className="w-3.5 h-3.5 text-brand-500" />
-                    <span>Commercial Category & Asset Class *</span>
-                  </span>
-                  {currentProperty.category && (
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${CATEGORY_CONFIG[currentProperty.category as PropertyCategory]?.badgeClass}`}>
-                      {CATEGORY_CONFIG[currentProperty.category as PropertyCategory]?.label}
-                    </span>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-semibold mb-1">Select Asset Class *</label>
-                    <select
-                      value={currentProperty.category}
-                      onChange={(e) => {
-                        const newCat = e.target.value as PropertyCategory;
-                        const config = CATEGORY_CONFIG[newCat] || CATEGORY_CONFIG['office-space'];
-                        setCurrentProperty({ 
-                          ...currentProperty, 
-                          category: newCat,
-                          property_type: config.defaultType,
-                          power_load: currentProperty.power_load || config.defaultPower,
-                          road_width: currentProperty.road_width || config.defaultRoad,
-                          listing_type: newCat === 'land' ? 'Sale' : (currentProperty.listing_type || 'Rent'),
-                          area_unit: newCat === 'land' ? 'sq.meter' : (currentProperty.area_unit || 'sq.ft'),
-                          features: currentProperty.features && currentProperty.features.length > 0 
-                            ? currentProperty.features 
-                            : [...config.suggestedFeatures.slice(0, 4)],
-                        });
-                      }}
-                      className="glass-input w-full px-3 py-2 rounded-xl text-sm font-semibold"
-                    >
-                      <option value="it-business-parks">IT & Business Parks</option>
-                      <option value="warehouses">Warehouses & Logistics</option>
-                      <option value="factory-industrial">Factories & Industrial</option>
-                      <option value="land">Commercial Land & Industrial Plots</option>
-                      <option value="shops-retail">Shops & Retail Showrooms</option>
-                      <option value="office-space">Commercial Office Space</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold mb-1">
-                      Property Type ({CATEGORY_CONFIG[(currentProperty.category || 'office-space') as PropertyCategory]?.label}) *
-                    </label>
-                    <select
-                      value={currentProperty.property_type || ''}
-                      onChange={(e) => {
-                        if (e.target.value === '__custom__') {
-                          setCurrentProperty({ ...currentProperty, property_type: '' });
-                          setCustomPropertyTypeInput('custom');
-                        } else {
-                          setCurrentProperty({ ...currentProperty, property_type: e.target.value });
-                        }
-                      }}
-                      className="glass-input w-full px-3 py-2 rounded-xl text-sm font-semibold"
-                    >
-                      {(CATEGORY_CONFIG[(currentProperty.category || 'office-space') as PropertyCategory]?.types || []).map((t) => (
-                        <option key={t} value={t}>{t}</option>
-                      ))}
-                      <option value="__custom__">✍️ Custom Property Type...</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Custom Property Type Input if selected */}
-                {(!CATEGORY_CONFIG[(currentProperty.category || 'office-space') as PropertyCategory]?.types.includes(currentProperty.property_type || '') || customPropertyTypeInput !== '') && (
-                  <div>
-                    <label className="block text-[11px] font-semibold text-slate-500 mb-1">
-                      Custom Property Type Description
-                    </label>
-                    <input
-                      type="text"
-                      value={currentProperty.property_type || ''}
-                      onChange={(e) => {
-                        setCurrentProperty({ ...currentProperty, property_type: e.target.value });
-                        setCustomPropertyTypeInput(e.target.value);
-                      }}
-                      placeholder="e.g. Temperature Controlled Cold Storage or High-Street Anchor Store"
+                    <textarea
+                      rows={2}
+                      value={currentProperty.short_description || ''}
+                      onChange={(e) => setCurrentProperty({ ...currentProperty, short_description: e.target.value })}
+                      placeholder="e.g. Fully furnished 1,150 sq.ft corporate office on 4th floor with 16 workstations, manager cabins, and 100% DG backup..."
                       className="glass-input w-full px-3 py-2 rounded-xl text-xs"
                     />
                   </div>
-                )}
-              </div>
 
-              {/* LISTING TYPE & STATUS */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold mb-1">Listing Commercial Model *</label>
-                  <select
-                    value={currentProperty.listing_type}
-                    onChange={(e) => setCurrentProperty({ ...currentProperty, listing_type: e.target.value as any })}
-                    className="glass-input w-full px-3 py-2 rounded-xl text-sm"
-                  >
-                    <option value="Rent">Rent (Monthly / Lease)</option>
-                    <option value="Lease">Long-term Leasehold</option>
-                    <option value="Sale">Direct Sale / Freehold Outright</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold mb-1">Live Inventory Status *</label>
-                  <select
-                    value={currentProperty.status}
-                    onChange={(e) => setCurrentProperty({ ...currentProperty, status: e.target.value as any })}
-                    className="glass-input w-full px-3 py-2 rounded-xl text-sm font-semibold"
-                  >
-                    <option value="Available">Available</option>
-                    <option value="Ready to Move">Ready to Move</option>
-                    <option value="Under Negotiation">Under Negotiation</option>
-                    <option value="Rented">Rented</option>
-                    <option value="Leased">Leased</option>
-                    <option value="Sold">Sold</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* LOCATION, BUILDING & ADDRESS */}
-              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-3">
-                <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                  <MapPin className="w-3.5 h-3.5 text-brand-500" />
-                  <span>Location, Sector & Building Association</span>
-                </span>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-semibold mb-1">Sector / Locality *</label>
-                    <select
-                      value={currentProperty.location_id}
-                      onChange={(e) => {
-                        const loc = locations.find(l => l.id === e.target.value);
-                        setCurrentProperty({ 
-                          ...currentProperty, 
-                          location_id: e.target.value,
-                          location_name: loc ? loc.name : currentProperty.location_name
-                        });
-                      }}
-                      className="glass-input w-full px-3 py-2 rounded-xl text-sm"
-                    >
-                      {locations.map(l => (
-                        <option key={l.id} value={l.id}>{l.name}</option>
-                      ))}
-                    </select>
+                  {/* Commercial Overview */}
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2">
+                    <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                      Property Overview & Commercial Description *
+                    </label>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Detailed overview of this property unit. Configured Hyperlink Words will automatically link inside this text.
+                    </p>
+                    <textarea
+                      rows={6}
+                      value={currentProperty.overview || currentProperty.description || ''}
+                      onChange={(e) => setCurrentProperty({ ...currentProperty, overview: e.target.value, description: e.target.value })}
+                      onPaste={(e) => handleOverviewPaste(e, (val) => setCurrentProperty({ ...currentProperty, overview: val, description: val }), currentProperty.overview || currentProperty.description || '')}
+                      placeholder="Comprehensive commercial details, layout features, ceiling heights, HVAC, and immediate business advantages..."
+                      className="glass-input overview-input w-full px-3 py-2.5 rounded-xl text-sm"
+                    />
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-semibold mb-1">Building Association</label>
-                    <select
-                      value={currentProperty.building_id || ''}
-                      onChange={(e) => {
-                        const bld = buildings.find(b => b.id === e.target.value);
-                        setCurrentProperty({ 
-                          ...currentProperty, 
-                          building_id: e.target.value || undefined,
-                          building_name: bld ? bld.name : undefined,
-                          tower: bld && bld.towers && bld.towers.length > 0 ? bld.towers[0] : currentProperty.tower
-                        });
-                      }}
-                      className="glass-input w-full px-3 py-2 rounded-xl text-sm"
-                    >
-                      <option value="">Independent / Standalone Plot / Premises</option>
-                      {buildings.map(b => (
-                        <option key={b.id} value={b.id}>{b.name} ({b.location_name})</option>
-                      ))}
-                    </select>
+                  {/* Location & Connectivity */}
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2">
+                    <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                      Location & Connectivity
+                    </label>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Proximity to metro stations, expressways, airports, and major commercial hubs.
+                    </p>
+                    <textarea
+                      rows={4}
+                      value={currentProperty.location_connectivity || ''}
+                      onChange={(e) => setCurrentProperty({ ...currentProperty, location_connectivity: e.target.value })}
+                      placeholder="e.g. Located right next to Sector 62 Metro Station with direct access to NH-24 and DND Flyway..."
+                      className="glass-input w-full px-3 py-2.5 rounded-xl text-sm"
+                    />
+                  </div>
+
+                  {/* Highlights */}
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2">
+                    <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                      Property Highlights & Key Points
+                    </label>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Key bullet points or standout commercial aspects.
+                    </p>
+                    <textarea
+                      rows={3}
+                      value={currentProperty.highlights || ''}
+                      onChange={(e) => setCurrentProperty({ ...currentProperty, highlights: e.target.value })}
+                      placeholder="e.g. • Corner unit with panoramic glass facade&#10;• Plug-and-play setup with high-speed fiber&#10;• Reserved basement car parking"
+                      className="glass-input w-full px-3 py-2 rounded-xl text-xs font-mono"
+                    />
                   </div>
                 </div>
+              )}
 
-                <div>
-                  <label className="block text-xs font-semibold mb-1">City</label>
-                  <input
-                    type="text"
-                    value={currentProperty.city || 'Noida'}
-                    onChange={(e) => setCurrentProperty({ ...currentProperty, city: e.target.value })}
-                    placeholder="Noida"
-                    className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+              {/* TAB 3: IMAGES & MEDIA */}
+              {propertyModalTab === 'images' && (
+                <div className="p-1">
+                  <AdminMediaManager
+                    primaryImage={currentProperty.primary_image || ''}
+                    onPrimaryImageChange={(url) => setCurrentProperty(prev => ({ ...prev, primary_image: url }))}
+                    primaryAlt={currentProperty.primary_image_alt || ''}
+                    onPrimaryAltChange={(alt) => setCurrentProperty(prev => ({ ...prev, primary_image_alt: alt }))}
+                    primaryTitle={currentProperty.primary_image_title || ''}
+                    onPrimaryTitleChange={(title) => setCurrentProperty(prev => ({ ...prev, primary_image_title: title }))}
+                    primaryCaption={currentProperty.primary_image_caption || ''}
+                    onPrimaryCaptionChange={(cap) => setCurrentProperty(prev => ({ ...prev, primary_image_caption: cap }))}
+                    fallbackAltText={getPropertyImageAlt(currentProperty)}
+                    gallery={currentProperty.gallery || []}
+                    onGalleryChange={(gal) => setCurrentProperty(prev => ({ ...prev, gallery: gal }))}
+                    imageDetails={currentProperty.image_details || []}
+                    onImageDetailsChange={(details) => setCurrentProperty(prev => ({ ...prev, image_details: details }))}
+                    entityType="property"
+                    entityName={currentProperty.title || 'Property'}
                   />
                 </div>
-              </div>
+              )}
 
-              {/* AREA MEASUREMENTS & LAND SPECIFICATIONS */}
-              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                    <Layers className="w-3.5 h-3.5 text-brand-500" />
-                    <span>Area & Dimensions</span>
-                  </span>
-                  {(currentProperty.category === 'land' || currentProperty.category === 'warehouses' || currentProperty.category === 'factory-industrial') && (
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                      Plot Area Supported
-                    </span>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-                  <div>
-                    <label className="block text-xs font-semibold mb-1">Built-Up Area *</label>
+              {/* TAB 4: SEO & URLS */}
+              {propertyModalTab === 'seo' && (
+                <div className="space-y-4">
+                  {/* SEO Title */}
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                        SEO Title (Page Title)
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const auto = `${currentProperty.built_up_area || ''} ${currentProperty.area_unit || 'Sq Ft'} ${currentProperty.property_type || 'Office Space'} for ${currentProperty.listing_type || 'Rent'} in ${currentProperty.location_name || 'Noida'}`.trim();
+                          setCurrentProperty({ ...currentProperty, seo_title: auto });
+                        }}
+                        className="text-[11px] font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1 cursor-pointer"
+                      >
+                        <Sparkles className="w-3 h-3" />
+                        <span>Auto-Suggest SEO Title</span>
+                      </button>
+                    </div>
                     <input
-                      type="number"
-                      required
-                      value={currentProperty.built_up_area || ''}
-                      onChange={(e) => setCurrentProperty({ ...currentProperty, built_up_area: Number(e.target.value) })}
-                      placeholder="e.g. 4500"
-                      className="glass-input w-full px-3 py-2 rounded-xl text-sm font-semibold"
+                      type="text"
+                      value={currentProperty.seo_title || ''}
+                      onChange={(e) => setCurrentProperty({ ...currentProperty, seo_title: e.target.value })}
+                      placeholder={`e.g. ${currentProperty.built_up_area || 1200} Sq Ft Office Space for Rent in Sector 62 Noida`}
+                      className="glass-input w-full px-3 py-2 rounded-xl text-xs font-semibold"
                     />
+                    <div className="flex items-center justify-between text-[11px] text-slate-400">
+                      <span>Recommended: 50–60 characters.</span>
+                      <span className={(currentProperty.seo_title?.length || 0) > 60 ? 'text-amber-500 font-bold' : ''}>
+                        {currentProperty.seo_title?.length || 0}/60
+                      </span>
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-semibold mb-1">Carpet Area</label>
-                    <input
-                      type="number"
-                      value={currentProperty.carpet_area || ''}
-                      onChange={(e) => setCurrentProperty({ ...currentProperty, carpet_area: Number(e.target.value) || undefined })}
-                      placeholder="e.g. 3600"
-                      className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                  {/* SEO Description */}
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                        SEO Meta Description
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const auto = `Explore a ${currentProperty.built_up_area || ''} ${currentProperty.area_unit || 'sq ft'} commercial ${currentProperty.property_type?.toLowerCase() || 'office space'} for ${currentProperty.listing_type?.toLowerCase() || 'rent'} in ${currentProperty.location_name || 'Noida'}. View property details, furnishing, rent and availability.`.trim();
+                          setCurrentProperty({ ...currentProperty, seo_description: auto });
+                        }}
+                        className="text-[11px] font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1 cursor-pointer"
+                      >
+                        <Sparkles className="w-3 h-3" />
+                        <span>Auto-Suggest Meta Description</span>
+                      </button>
+                    </div>
+                    <textarea
+                      rows={3}
+                      value={currentProperty.seo_description || ''}
+                      onChange={(e) => setCurrentProperty({ ...currentProperty, seo_description: e.target.value })}
+                      placeholder="Explore commercial space available for rent/lease in Sector 62 Noida. View verified property specifications and rental tariffs."
+                      className="glass-input w-full px-3 py-2 rounded-xl text-xs"
                     />
+                    <div className="flex items-center justify-between text-[11px] text-slate-400">
+                      <span>Recommended: 120–160 characters.</span>
+                      <span className={(currentProperty.seo_description?.length || 0) > 160 ? 'text-amber-500 font-bold' : ''}>
+                        {currentProperty.seo_description?.length || 0}/160
+                      </span>
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-semibold mb-1">
-                      Plot / Land Area {currentProperty.category === 'land' ? '*' : ''}
+                  {/* SEO Keywords */}
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2">
+                    <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                      SEO Keywords (Optional)
                     </label>
                     <input
-                      type="number"
-                      value={currentProperty.land_area || ''}
-                      onChange={(e) => setCurrentProperty({ ...currentProperty, land_area: Number(e.target.value) || undefined })}
-                      placeholder="e.g. 1000"
-                      className="glass-input w-full px-3 py-2 rounded-xl text-sm font-semibold border-brand-300 dark:border-brand-700"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold mb-1">Area Unit</label>
-                    <select
-                      value={currentProperty.area_unit || 'sq.ft'}
-                      onChange={(e) => setCurrentProperty({ ...currentProperty, area_unit: e.target.value as any })}
-                      className="glass-input w-full px-3 py-2 rounded-xl text-sm"
-                    >
-                      <option value="sq.ft">sq.ft</option>
-                      <option value="sq.meter">sq.meter</option>
-                      <option value="acres">acres</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              {/* INFRASTRUCTURE, POWER, ROAD & FLOORS */}
-              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-3">
-                <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                  <Zap className="w-3.5 h-3.5 text-amber-500" />
-                  <span>Technical & Industrial Infrastructure Details</span>
-                </span>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-semibold mb-1">Power Load / DG Backup</label>
-                    <input
                       type="text"
-                      value={currentProperty.power_load || ''}
-                      onChange={(e) => setCurrentProperty({ ...currentProperty, power_load: e.target.value })}
-                      placeholder="e.g. 150 KVA Sanctioned Industrial Load or 100% DG Backup"
-                      className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                      value={currentProperty.seo_keywords || ''}
+                      onChange={(e) => setCurrentProperty({ ...currentProperty, seo_keywords: e.target.value })}
+                      placeholder="e.g. office for rent sector 62, commercial space noida, furnished office ithum"
+                      className="glass-input w-full px-3 py-2 rounded-xl text-xs"
                     />
+                    <p className="text-[11px] text-slate-400">
+                      Separate keywords with commas. Do not keyword-stuff.
+                    </p>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-semibold mb-1">Approach Road Width / Frontage</label>
-                    <input
-                      type="text"
-                      value={currentProperty.road_width || ''}
-                      onChange={(e) => setCurrentProperty({ ...currentProperty, road_width: e.target.value })}
-                      placeholder="e.g. 60 Feet Wide Arterial Road (40ft Trailer access)"
-                      className="glass-input w-full px-3 py-2 rounded-xl text-sm"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-semibold mb-1">Furnishing / Shell</label>
-                    <select
-                      value={currentProperty.furnishing}
-                      onChange={(e) => setCurrentProperty({ ...currentProperty, furnishing: e.target.value as any })}
-                      className="glass-input w-full px-3 py-2 rounded-xl text-sm"
-                    >
-                      <option value="Furnished">Furnished</option>
-                      <option value="Plug-and-Play">Plug-and-Play</option>
-                      <option value="Semi-Furnished">Semi-Furnished</option>
-                      <option value="Bare Shell">Bare Shell</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold mb-1">Possession Timeline</label>
-                    <input
-                      type="text"
-                      value={currentProperty.possession || ''}
-                      onChange={(e) => setCurrentProperty({ ...currentProperty, possession: e.target.value })}
-                      placeholder="e.g. Immediate or Ready to Move"
-                      className="glass-input w-full px-3 py-2 rounded-xl text-sm"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold mb-1">Parking, Truck Loading Bays & Open Yard</label>
-                  <input
-                    type="text"
-                    value={currentProperty.parking || ''}
-                    onChange={(e) => setCurrentProperty({ ...currentProperty, parking: e.target.value })}
-                    placeholder="e.g. Internal trailer maneuvering & 4 loading bays, or 2 Covered Bays"
-                    className="glass-input w-full px-3 py-2 rounded-xl text-sm"
-                  />
-                </div>
-              </div>
-
-              {/* FEATURES & KEY HIGHLIGHTS (CUSTOM TAGS & CATEGORY SUGGESTIONS) */}
-              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                    <Tag className="w-3.5 h-3.5 text-brand-500" />
-                    <span>Key Features & Specifications ({currentProperty.features?.length || 0})</span>
-                  </span>
-                  <span className="text-[11px] text-slate-400">
-                    Click suggested pills to add
-                  </span>
-                </div>
-
-                {/* Suggested quick chips */}
-                {CATEGORY_CONFIG[(currentProperty.category || 'office-space') as PropertyCategory]?.suggestedFeatures && (
-                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                    {CATEGORY_CONFIG[(currentProperty.category || 'office-space') as PropertyCategory].suggestedFeatures.map((sug) => {
-                      const isAdded = (currentProperty.features || []).includes(sug);
-                      return (
-                        <button
-                          key={sug}
-                          type="button"
-                          disabled={isAdded}
-                          onClick={() => handleAddFeatureTag(sug)}
-                          className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all flex items-center gap-1 ${
-                            isAdded
-                              ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 opacity-60 cursor-not-allowed'
-                              : 'bg-white dark:bg-slate-800 hover:bg-brand-50 dark:hover:bg-brand-950/60 text-slate-700 dark:text-slate-200 hover:text-brand-600 border border-slate-200 dark:border-slate-700 active:scale-95 cursor-pointer'
-                          }`}
-                        >
-                          <Plus className="w-3 h-3 text-brand-500" />
-                          <span>{sug}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {/* Current Active Tags */}
-                {currentProperty.features && currentProperty.features.length > 0 && (
-                  <div className="flex flex-wrap items-center gap-1.5 pt-1.5">
-                    {currentProperty.features.map((feat, idx) => (
-                      <span
-                        key={idx}
-                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-semibold bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800/80"
-                      >
-                        <span>{feat}</span>
+                  {/* URL Slug & Canonical URL */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                          URL Slug *
+                        </label>
                         <button
                           type="button"
-                          onClick={() => handleRemoveFeatureTag(idx)}
-                          className="hover:text-red-500 rounded-full p-0.5 cursor-pointer"
-                          title="Remove feature"
+                          onClick={() => {
+                            const slug = (currentProperty.title || `prop-${Date.now()}`)
+                              .toLowerCase()
+                              .replace(/[^a-z0-9]+/g, '-')
+                              .replace(/(^-|-$)/g, '');
+                            setCurrentProperty({ ...currentProperty, slug });
+                          }}
+                          className="text-[11px] font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1 cursor-pointer"
                         >
-                          <X className="w-3 h-3" />
+                          <RefreshCw className="w-2.5 h-2.5" />
+                          <span>Generate from Title</span>
                         </button>
+                      </div>
+                      <input
+                        type="text"
+                        required
+                        value={currentProperty.slug || ''}
+                        onChange={(e) => setCurrentProperty({ ...currentProperty, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') })}
+                        placeholder="e.g. 1200-sq-ft-office-space-sector-62-noida"
+                        className="glass-input w-full px-3 py-2 rounded-xl text-xs font-mono"
+                      />
+                      <span className="text-[10px] text-slate-400 font-mono block truncate">
+                        Live Route: /property/{currentProperty.slug || 'url-slug'}
                       </span>
-                    ))}
-                  </div>
-                )}
+                    </div>
 
-                {/* Add Custom Feature Input */}
-                <div className="flex items-center gap-2 pt-1">
-                  <input
-                    type="text"
-                    value={newFeatureTag}
-                    onChange={(e) => setNewFeatureTag(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleAddFeatureTag();
-                      }
-                    }}
-                    placeholder="Type custom feature and click Add (e.g. 5-Ton Overhead Crane, Direct Metro Access)..."
-                    className="glass-input flex-1 px-3 py-1.5 rounded-xl text-xs"
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                          Canonical URL
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCurrentProperty({ ...currentProperty, canonical_url: getPropertyCanonicalUrl(currentProperty) });
+                          }}
+                          className="text-[11px] font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1 cursor-pointer"
+                        >
+                          <Check className="w-2.5 h-2.5" />
+                          <span>Set Default</span>
+                        </button>
+                      </div>
+                      <input
+                        type="text"
+                        value={currentProperty.canonical_url || ''}
+                        onChange={(e) => setCurrentProperty({ ...currentProperty, canonical_url: e.target.value })}
+                        placeholder={getPropertyCanonicalUrl(currentProperty)}
+                        className="glass-input w-full px-3 py-2 rounded-xl text-xs font-mono"
+                      />
+                      <span className="text-[10px] text-slate-400 block">
+                        Leave blank to auto-use standard property canonical URL.
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Open Graph / Social Sharing */}
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-3">
+                    <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                      <Share2 className="w-3.5 h-3.5 text-brand-500" />
+                      <span>Social / Open Graph SEO (WhatsApp, LinkedIn, X, Facebook)</span>
+                    </span>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold mb-1">OG Title</label>
+                        <input
+                          type="text"
+                          value={currentProperty.og_title || ''}
+                          onChange={(e) => setCurrentProperty({ ...currentProperty, og_title: e.target.value })}
+                          placeholder={currentProperty.seo_title || currentProperty.title || 'Social sharing title'}
+                          className="glass-input w-full px-3 py-2 rounded-xl text-xs font-semibold"
+                        />
+                      </div>
+
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="text-xs font-semibold">OG Image URL</label>
+                          <button
+                            type="button"
+                            onClick={() => setCurrentProperty({ ...currentProperty, og_image: currentProperty.primary_image })}
+                            className="text-[10px] font-bold text-brand-600 dark:text-brand-400 hover:underline cursor-pointer"
+                          >
+                            Use Primary Image
+                          </button>
+                        </div>
+                        <input
+                          type="text"
+                          value={currentProperty.og_image || ''}
+                          onChange={(e) => setCurrentProperty({ ...currentProperty, og_image: e.target.value })}
+                          placeholder={currentProperty.primary_image || 'Image URL for WhatsApp preview'}
+                          className="glass-input w-full px-3 py-2 rounded-xl text-xs font-mono"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold mb-1">OG Description</label>
+                      <input
+                        type="text"
+                        value={currentProperty.og_description || ''}
+                        onChange={(e) => setCurrentProperty({ ...currentProperty, og_description: e.target.value })}
+                        placeholder={currentProperty.seo_description || currentProperty.short_description || 'Social sharing summary'}
+                        className="glass-input w-full px-3 py-2 rounded-xl text-xs"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 5: HYPERLINK WORDS */}
+              {propertyModalTab === 'hyperlinks' && (
+                <div className="p-1">
+                  <AdminHyperlinksManager
+                    hyperlinks={currentProperty.hyperlinks || []}
+                    onChange={(updated) => setCurrentProperty(prev => ({ ...prev, hyperlinks: updated }))}
+                    entityName={currentProperty.title || 'Property'}
                   />
+                </div>
+              )}
+
+              {/* TAB 6: SEO PREVIEW & COMPLETENESS */}
+              {propertyModalTab === 'preview' && (
+                <div className="p-1">
+                  <AdminSeoPreviewSection
+                    title={currentProperty.title || ''}
+                    seoTitle={currentProperty.seo_title}
+                    description={currentProperty.short_description || currentProperty.overview || currentProperty.description || ''}
+                    seoDescription={currentProperty.seo_description}
+                    slug={currentProperty.slug || ''}
+                    urlPrefix="https://shristiestate.in/property/"
+                    featuredImage={currentProperty.primary_image}
+                    ogImage={currentProperty.og_image}
+                    ogTitle={currentProperty.og_title}
+                    ogDescription={currentProperty.og_description}
+                    type="property"
+                    entity={currentProperty}
+                  />
+                </div>
+              )}
+
+              {/* FORM FOOTER & SUBMIT */}
+              <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-3 sm:pt-4 border-t border-slate-200 dark:border-slate-800 shrink-0">
+                <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    onClick={() => handleAddFeatureTag()}
-                    className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-200 dark:bg-slate-800 hover:bg-brand-600 hover:text-white text-slate-700 dark:text-slate-200 flex items-center gap-1 transition-all cursor-pointer"
+                    onClick={() => setShowPropertyModal(false)}
+                    className="px-4 py-2.5 sm:py-2 rounded-xl text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 text-center"
                   >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Add Tag</span>
+                    Cancel
+                  </button>
+                  <span className="text-xs text-slate-400 hidden sm:inline">
+                    Tab: <span className="font-bold text-slate-700 dark:text-slate-300 capitalize">{propertyModalTab}</span>
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="submit"
+                    disabled={isSaving}
+                    className="w-full sm:w-auto px-6 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-brand-600 via-brand-500 to-cyan-600 hover:from-brand-500 hover:to-cyan-400 shadow-lg shadow-brand-500/25 active:scale-95 flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed group cursor-pointer"
+                  >
+                    {isSaving ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin text-white" />
+                        <span>Syncing to Supabase...</span>
+                      </>
+                    ) : isEditingProperty ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
+                        <span>Update Property & SEO</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>Save & Publish Listing</span>
+                      </>
+                    )}
                   </button>
                 </div>
-              </div>
-
-              {/* Description */}
-              <div>
-                <label className="block text-xs font-semibold mb-1">Description & Commercial Overview</label>
-                <textarea
-                  rows={5}
-                  value={currentProperty.description || ''}
-                  onChange={(e) => setCurrentProperty({ ...currentProperty, description: e.target.value })}
-                  onPaste={(e) => handleOverviewPaste(e, (val) => setCurrentProperty({ ...currentProperty, description: val }), currentProperty.description)}
-                  placeholder="Describe location advantages, industrial NOCs, ceiling clearances, immediate availability, or retail footfall..."
-                  className="glass-input overview-input w-full px-3 py-2.5 rounded-xl text-sm"
-                />
-              </div>
-
-              <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-3 pt-3 sm:pt-4 border-t border-slate-200 dark:border-slate-800 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setShowPropertyModal(false)}
-                  className="px-4 py-2.5 sm:py-2 rounded-xl text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 text-center"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSaving}
-                  className="px-6 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-brand-600 via-brand-500 to-cyan-600 hover:from-brand-500 hover:to-cyan-400 shadow-lg shadow-brand-500/25 active:scale-95 flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed group cursor-pointer"
-                >
-                  {isSaving ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 animate-spin text-white" />
-                      <span>Syncing to Supabase...</span>
-                    </>
-                  ) : isEditingProperty ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
-                      <span>Update Property & Live Data</span>
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle2 className="w-4 h-4" />
-                      <span>Save & Publish Listing</span>
-                    </>
-                  )}
-                </button>
               </div>
             </form>
           </div>
@@ -3877,7 +4729,7 @@ export const AdminPage: React.FC = () => {
       {/* BUILDING ADD / EDIT MODAL */}
       {showBuildingModal && (
         <div className="fixed inset-0 z-50 overflow-y-auto p-2 sm:p-4 md:p-6 flex min-h-full items-start sm:items-center justify-center bg-slate-950/80 backdrop-blur-md">
-          <div className="relative w-full max-w-2xl glass-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 bg-white dark:bg-[#0B132B] border border-slate-200 dark:border-slate-800 shadow-2xl my-auto max-h-[96vh] sm:max-h-[90vh] flex flex-col">
+          <div className="relative w-full max-w-4xl glass-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 bg-white dark:bg-[#0B132B] border border-slate-200 dark:border-slate-800 shadow-2xl my-auto max-h-[96vh] sm:max-h-[90vh] flex flex-col">
             <button 
               onClick={() => setShowBuildingModal(false)}
               className="absolute top-3.5 right-3.5 sm:top-5 sm:right-5 p-2 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 bg-slate-100/80 dark:bg-slate-800/80 sm:bg-transparent z-10 transition-colors"
@@ -3885,9 +4737,9 @@ export const AdminPage: React.FC = () => {
               <X className="w-5 h-5" />
             </button>
 
-            <div className="mb-3 sm:mb-4 shrink-0 pr-8">
+            <div className="mb-3 shrink-0 pr-8">
               <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
-                {isEditingBuilding ? 'Edit Commercial Building' : 'New Commercial Building'}
+                {isEditingBuilding ? 'Edit Commercial Tower & Building SEO' : 'New Commercial Building / Tower'}
               </span>
               <h2 className="text-xl sm:text-2xl font-bold font-['Outfit']">
                 {isEditingBuilding ? `Edit: ${currentBuilding.name}` : 'Add Commercial Building'}
@@ -3915,751 +4767,1067 @@ export const AdminPage: React.FC = () => {
               </div>
             )}
 
+            {/* TAB SELECTOR */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-2 mb-3 border-b border-slate-200 dark:border-slate-800 no-scrollbar shrink-0 text-xs">
+              <button
+                type="button"
+                onClick={() => setBuildingModalTab('specs')}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+                  buildingModalTab === 'specs'
+                    ? 'bg-brand-600 text-white shadow-sm'
+                    : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'
+                }`}
+              >
+                <Layers className="w-3.5 h-3.5" />
+                <span>1. Basic & Specs</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setBuildingModalTab('content')}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+                  buildingModalTab === 'content'
+                    ? 'bg-brand-600 text-white shadow-sm'
+                    : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'
+                }`}
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span>2. Content & Overview</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setBuildingModalTab('images')}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+                  buildingModalTab === 'images'
+                    ? 'bg-brand-600 text-white shadow-sm'
+                    : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'
+                }`}
+              >
+                <ImageIcon className="w-3.5 h-3.5" />
+                <span>3. Images & Alt Text ({(currentBuilding.gallery?.length || 0) + (currentBuilding.hero_image ? 1 : 0)})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setBuildingModalTab('seo')}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+                  buildingModalTab === 'seo'
+                    ? 'bg-brand-600 text-white shadow-sm'
+                    : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'
+                }`}
+              >
+                <Globe className="w-3.5 h-3.5" />
+                <span>4. SEO & URLs</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setBuildingModalTab('hyperlinks')}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+                  buildingModalTab === 'hyperlinks'
+                    ? 'bg-brand-600 text-white shadow-sm'
+                    : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'
+                }`}
+              >
+                <Link2 className="w-3.5 h-3.5" />
+                <span>5. Hyperlink Words ({currentBuilding.hyperlinks?.length || 0})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setBuildingModalTab('preview')}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+                  buildingModalTab === 'preview'
+                    ? 'bg-brand-600 text-white shadow-sm'
+                    : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'
+                }`}
+              >
+                <Eye className="w-3.5 h-3.5" />
+                <span>6. SEO Preview</span>
+              </button>
+            </div>
+
             <form onSubmit={handleSaveBuilding} className="space-y-4 overflow-y-auto pr-1 flex-1 -mr-1">
-              {/* Building Name & Location */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold mb-1">Building Name *</label>
-                  <input
-                    type="text"
-                    required
-                    value={currentBuilding.name}
-                    onChange={(e) => setCurrentBuilding({ ...currentBuilding, name: e.target.value })}
-                    placeholder="e.g. I-Thum Tower, Noida One"
-                    className="glass-input w-full px-3 py-2 rounded-xl text-sm font-semibold"
-                  />
-                </div>
-
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="block text-xs font-semibold">Primary Location / Sector *</label>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setQuickLocationName('');
-                        setQuickLocationCity('Noida');
-                        setShowQuickLocationModal(true);
-                      }}
-                      className="text-[11px] font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1 cursor-pointer"
-                    >
-                      <Plus className="w-3 h-3" />
-                      <span>+ Add Location</span>
-                    </button>
-                  </div>
-                  <select
-                    value={currentBuilding.location_id}
-                    onChange={(e) => {
-                      const loc = locations.find(l => l.id === e.target.value);
-                      const currentLocs = currentBuilding.locations || [];
-                      const updatedLocs = currentLocs.includes(e.target.value) ? currentLocs : [e.target.value, ...currentLocs];
-                      const currentNames = currentBuilding.location_names || [];
-                      const updatedNames = loc && !currentNames.includes(loc.name) ? [loc.name, ...currentNames] : currentNames;
-                      setCurrentBuilding({ 
-                        ...currentBuilding, 
-                        location_id: e.target.value,
-                        location_name: loc ? loc.name : currentBuilding.location_name,
-                        locations: updatedLocs,
-                        location_names: updatedNames
-                      });
-                    }}
-                    className="glass-input w-full px-3 py-2 rounded-xl text-sm"
-                  >
-                    {locations.map(l => (
-                      <option key={l.id} value={l.id}>{l.name} ({l.city})</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Multi-Location / Linked Serving Sectors */}
-              <div className="p-3 rounded-2xl bg-slate-50/90 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5 text-brand-500" />
-                    <span>Associate Locations / Sectors (Multi-Location Option)</span>
-                  </label>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400">
-                    {(currentBuilding.locations?.length || 1)} selected
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  Select all sectors or micromarkets this building serves or spans.
-                </p>
-                <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pr-1">
-                  {locations.map(loc => {
-                    const isSelected = (currentBuilding.locations || [currentBuilding.location_id]).includes(loc.id);
-                    const isPrimary = currentBuilding.location_id === loc.id;
-                    return (
-                      <button
-                        type="button"
-                        key={loc.id}
-                        onClick={() => {
-                          const existing = currentBuilding.locations || [currentBuilding.location_id || ''];
-                          let updated: string[];
-                          if (isSelected) {
-                            if (isPrimary && existing.length > 1) {
-                              const nextPrimary = existing.find(id => id !== loc.id)!;
-                              const nextLoc = locations.find(l => l.id === nextPrimary);
-                              updated = existing.filter(id => id !== loc.id);
-                              setCurrentBuilding({
-                                ...currentBuilding,
-                                locations: updated,
-                                location_id: nextPrimary,
-                                location_name: nextLoc ? nextLoc.name : currentBuilding.location_name
-                              });
-                              return;
-                            } else if (existing.length <= 1) {
-                              return; // Keep at least one
-                            } else {
-                              updated = existing.filter(id => id !== loc.id);
-                            }
-                          } else {
-                            updated = [...existing, loc.id];
-                          }
-                          const updatedNames = updated.map(id => locations.find(l => l.id === id)?.name).filter(Boolean) as string[];
+              {/* TAB 1: BASIC INFORMATION & SPECS */}
+              {buildingModalTab === 'specs' && (
+                <div className="space-y-4">
+                  {/* Building Name & Location */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold mb-1">Tower / Building Name *</label>
+                      <input
+                        type="text"
+                        required
+                        value={currentBuilding.name}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          const autoSlug = val.toLowerCase().replace(/[^a-z0-9]+/g, '-');
                           setCurrentBuilding({ 
                             ...currentBuilding, 
-                            locations: updated,
+                            name: val,
+                            tower_name: val,
+                            slug: currentBuilding.slug || autoSlug 
+                          });
+                        }}
+                        placeholder="e.g. I-Thum Tower D, Candor TechSpace Tower 5"
+                        className="glass-input w-full px-3 py-2 rounded-xl text-sm font-semibold"
+                      />
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-xs font-semibold">Primary Location / Sector *</label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setQuickLocationName('');
+                            setQuickLocationCity('Noida');
+                            setShowQuickLocationModal(true);
+                          }}
+                          className="text-[11px] font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1 cursor-pointer"
+                        >
+                          <Plus className="w-3 h-3" />
+                          <span>+ Add Location</span>
+                        </button>
+                      </div>
+                      <select
+                        value={currentBuilding.location_id}
+                        onChange={(e) => {
+                          const loc = locations.find(l => l.id === e.target.value);
+                          const currentLocs = currentBuilding.locations || [];
+                          const updatedLocs = currentLocs.includes(e.target.value) ? currentLocs : [e.target.value, ...currentLocs];
+                          const currentNames = currentBuilding.location_names || [];
+                          const updatedNames = loc && !currentNames.includes(loc.name) ? [loc.name, ...currentNames] : currentNames;
+                          setCurrentBuilding({ 
+                            ...currentBuilding, 
+                            location_id: e.target.value,
+                            location_name: loc ? loc.name : currentBuilding.location_name,
+                            sector: loc ? loc.name : currentBuilding.sector,
+                            locations: updatedLocs,
                             location_names: updatedNames
                           });
                         }}
-                        className={`px-2.5 py-1 rounded-lg text-xs border transition-all flex items-center gap-1.5 cursor-pointer ${
-                          isSelected
-                            ? isPrimary
-                              ? 'bg-brand-600 text-white border-brand-600 shadow-sm font-semibold'
-                              : 'bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300 border-brand-300 dark:border-brand-700 font-medium'
-                            : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-brand-400'
-                        }`}
+                        className="glass-input w-full px-3 py-2 rounded-xl text-sm"
                       >
-                        <span>{loc.name}</span>
-                        {isPrimary && (
-                          <span className="text-[9px] uppercase px-1 py-0.2 bg-white/20 rounded font-bold">
-                            Primary
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* BUILDING HERO IMAGE & UPLOAD */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="block text-xs font-semibold">Building Hero Image URL *</label>
-                  <label className="text-[11px] font-bold text-brand-600 dark:text-brand-400 hover:underline cursor-pointer flex items-center gap-1">
-                    <UploadCloud className="w-3.5 h-3.5" />
-                    <span>Upload from Device</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleBuildingImageUpload}
-                      className="hidden"
-                    />
-                  </label>
-                </div>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="text"
-                    required
-                    value={currentBuilding.hero_image}
-                    onChange={(e) => setCurrentBuilding({ ...currentBuilding, hero_image: e.target.value })}
-                    placeholder="Paste image URL or click 'Upload from Device' above"
-                    className="glass-input flex-1 px-3 py-2 rounded-xl text-sm"
-                  />
-                  {currentBuilding.hero_image && (
-                    <div className="w-12 h-9 rounded-lg overflow-hidden border border-slate-300 dark:border-slate-700 shrink-0">
-                      <img src={currentBuilding.hero_image} alt="Preview" className="w-full h-full object-cover" />
+                        {locations.map(l => (
+                          <option key={l.id} value={l.id}>{l.name} ({l.city})</option>
+                        ))}
+                      </select>
                     </div>
-                  )}
-                </div>
-              </div>
-
-              {/* BUILDING GALLERY (REST OF IMAGES - EDITABLE) */}
-              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-3">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
-                      Building Photo Gallery (Rest of Images - {currentBuilding.gallery?.length || 0})
-                    </label>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                      Edit, upload, replace, or reorder all gallery thumbnails displayed on the building page.
-                    </p>
                   </div>
 
-                  {/* Multi-file upload button */}
-                  <label className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-brand-600 hover:bg-brand-700 text-white shadow-sm hover:shadow cursor-pointer flex items-center gap-1.5 transition-all">
-                    <UploadCloud className="w-4 h-4" />
-                    <span>Upload Photos from Device</span>
-                    <input
-                      type="file"
-                      multiple
-                      accept="image/*"
-                      onChange={handleBuildingGalleryMultiUpload}
-                      className="hidden"
-                    />
-                  </label>
-                </div>
-
-                {/* Add via URL input bar */}
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={newBuildingGalleryUrl}
-                    onChange={(e) => setNewBuildingGalleryUrl(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddBuildingGalleryUrl(); } }}
-                    placeholder="Paste image URL here and click 'Add Photo'..."
-                    className="glass-input flex-1 px-3 py-1.5 rounded-xl text-xs"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleAddBuildingGalleryUrl}
-                    className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-200 dark:bg-slate-800 hover:bg-brand-50 hover:text-brand-600 dark:hover:text-brand-400 border border-slate-300 dark:border-slate-700 flex items-center gap-1 transition-all"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Add Photo</span>
-                  </button>
-                </div>
-
-                {/* Gallery List Cards */}
-                {(!currentBuilding.gallery || currentBuilding.gallery.length === 0) ? (
-                  <div className="p-4 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 text-center text-xs text-slate-500">
-                    No extra gallery photos yet. Click "Upload Photos from Device" or paste a URL above to add images.
+                  {/* Complex Name, Block Name & Tower Letter */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold mb-1">Complex / Building Name</label>
+                      <input
+                        type="text"
+                        value={currentBuilding.building_name || ''}
+                        onChange={(e) => setCurrentBuilding({ ...currentBuilding, building_name: e.target.value })}
+                        placeholder="e.g. IThums 62, Candor TechSpace"
+                        className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold mb-1">Block / Wing Name</label>
+                      <input
+                        type="text"
+                        value={currentBuilding.block_name || ''}
+                        onChange={(e) => setCurrentBuilding({ ...currentBuilding, block_name: e.target.value })}
+                        placeholder="e.g. Block A, Phase 2"
+                        className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold mb-1">Tower Number / Letter</label>
+                      <input
+                        type="text"
+                        value={currentBuilding.tower_number || ''}
+                        onChange={(e) => setCurrentBuilding({ ...currentBuilding, tower_number: e.target.value })}
+                        placeholder="e.g. Tower D, Wing 2"
+                        className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                      />
+                    </div>
                   </div>
-                ) : (
-                  <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
-                    {currentBuilding.gallery.map((imgUrl, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center gap-3 p-2.5 rounded-xl bg-white dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/70 shadow-sm"
+
+                  {/* Status & Google Maps Direction */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold mb-1">Development / Occupancy Status</label>
+                      <select
+                        value={currentBuilding.status || 'Active'}
+                        onChange={(e) => setCurrentBuilding({ ...currentBuilding, status: e.target.value })}
+                        className="glass-input w-full px-3 py-2 rounded-xl text-sm font-semibold"
                       >
-                        {/* Thumbnail */}
-                        <div className="relative w-16 h-12 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 shrink-0 bg-slate-100 dark:bg-slate-900">
-                          <img
-                            src={imgUrl}
-                            alt={`Gallery ${idx + 1}`}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=400&q=80';
-                            }}
-                          />
-                          <span className="absolute bottom-0.5 right-0.5 px-1 py-0.2 text-[9px] font-mono font-bold bg-black/70 text-white rounded">
-                            #{idx + 1}
-                          </span>
-                        </div>
+                        <option value="Active">Active / Operational</option>
+                        <option value="Ready to Move">Ready to Move</option>
+                        <option value="Under Construction">Under Construction</option>
+                        <option value="Fully Leased">Fully Leased</option>
+                      </select>
+                    </div>
 
-                        {/* Editable URL input */}
-                        <div className="flex-1 min-w-0">
-                          <input
-                            type="text"
-                            value={imgUrl}
-                            onChange={(e) => handleUpdateBuildingGalleryUrl(idx, e.target.value)}
-                            placeholder="Image URL"
-                            className="glass-input w-full px-2.5 py-1.5 rounded-lg text-xs font-mono"
-                          />
-                        </div>
-
-                        {/* Action buttons */}
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          {/* Replace button with file input */}
-                          <label
-                            title="Replace image from device"
-                            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-brand-600 cursor-pointer border border-slate-200 dark:border-slate-700 transition-colors"
-                          >
-                            <UploadCloud className="w-3.5 h-3.5" />
-                            <input
-                              type="file"
-                              accept="image/*"
-                              onChange={(e) => handleBuildingGalleryReplace(idx, e)}
-                              className="hidden"
-                            />
-                          </label>
-
-                          {/* Swap with Hero Cover Image */}
-                          <button
-                            type="button"
-                            title="Update Hero Photo (swaps with current building hero)"
-                            onClick={() => handleSetBuildingHero(idx)}
-                            className="px-2.5 py-1 rounded-lg bg-brand-50 hover:bg-brand-600 dark:bg-brand-950/60 dark:hover:bg-brand-600 text-brand-700 dark:text-brand-300 hover:text-white border border-brand-200/90 dark:border-brand-800/80 transition-all flex items-center gap-1 text-[11px] font-semibold active:scale-95 group/cover cursor-pointer"
-                          >
-                            <ArrowLeftRight className="w-3.5 h-3.5 transition-transform group-hover/cover:rotate-180 duration-300" />
-                            <span>Update Hero</span>
-                          </button>
-
-                          {/* Delete from gallery */}
-                          <button
-                            type="button"
-                            title="Remove this photo"
-                            onClick={() => handleDeleteBuildingGalleryItem(idx)}
-                            className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/40 text-slate-400 hover:text-red-600 border border-slate-200 dark:border-slate-700 transition-colors"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* TARIFF / RENT RANGE & SALE RANGE (USER REQUEST) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-2xl bg-brand-50/50 dark:bg-brand-950/20 border border-brand-200 dark:border-brand-800/50">
-                <div>
-                  <label className="block text-xs font-bold text-brand-700 dark:text-brand-300 mb-1">
-                    Building Tariff / Rent Range *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={currentBuilding.rent_range}
-                    onChange={(e) => setCurrentBuilding({ ...currentBuilding, rent_range: e.target.value })}
-                    placeholder="e.g. ₹55 – ₹70/sq.ft"
-                    className="glass-input w-full px-3 py-2 rounded-xl text-sm font-bold"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold mb-1">Sale Price Range (Optional)</label>
-                  <input
-                    type="text"
-                    value={currentBuilding.sale_range || ''}
-                    onChange={(e) => setCurrentBuilding({ ...currentBuilding, sale_range: e.target.value })}
-                    placeholder="e.g. ₹8,000 – ₹11,000/sq.ft"
-                    className="glass-input w-full px-3 py-2 rounded-xl text-sm"
-                  />
-                </div>
-              </div>
-
-              {/* 1. TOTAL FLOORS (STRUCTURE) - MULTI BASEMENT & GROUND OPTION */}
-              <div className="p-4 rounded-2xl bg-slate-50/90 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 space-y-3.5">
-                <div className="flex flex-wrap items-center justify-between gap-1">
-                  <div>
-                    <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                      <Layers className="w-4 h-4 text-brand-500" />
-                      <span>Total Floors & Building Structure</span>
-                    </label>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                      Configure multi-basement levels, ground level type, and superstructure floors.
-                    </p>
-                  </div>
-                  <div className="px-3 py-1 rounded-xl bg-brand-50 dark:bg-brand-950/70 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800 text-xs font-bold">
-                    Structure: {currentBuilding.structure_display || getComputedStructureDisplay(currentBuilding.basement_floors, currentBuilding.ground_option, currentBuilding.total_floors || 14)}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-                  {/* Multi Basement Selector */}
-                  <div>
-                    <label className="block text-xs font-semibold mb-1 text-slate-700 dark:text-slate-300">
-                      Multi Basement Level
-                    </label>
-                    <select
-                      value={currentBuilding.basement_floors || '2 Basements (2B)'}
-                      onChange={(e) => {
-                        const newBasement = e.target.value;
-                        const newDisplay = getComputedStructureDisplay(newBasement, currentBuilding.ground_option, currentBuilding.total_floors || 14);
-                        setCurrentBuilding({
-                          ...currentBuilding,
-                          basement_floors: newBasement,
-                          structure_display: newDisplay
-                        });
-                      }}
-                      className="glass-input w-full px-3 py-2 rounded-xl text-xs font-medium"
-                    >
-                      <option value="No Basement">No Basement (Ground direct)</option>
-                      <option value="1 Basement (B1)">1 Basement (B1 - Single Basement)</option>
-                      <option value="2 Basements (2B)">2 Basements (2B - B1 + B2)</option>
-                      <option value="3 Basements (3B)">3 Basements (3B - B1 + B2 + B3)</option>
-                      <option value="4 Basements (4B)">4 Basements (4B - B1 to B4)</option>
-                      <option value="5 Basements (5B)">5 Basements (5B - Mega Parking)</option>
-                      <option value="Multi-Level Basement">Custom Multi-Level Basement</option>
-                    </select>
+                    <div>
+                      <label className="block text-xs font-semibold mb-1">Google Maps Direction URL</label>
+                      <input
+                        type="text"
+                        value={currentBuilding.gmaps_direction || ''}
+                        onChange={(e) => setCurrentBuilding({ ...currentBuilding, gmaps_direction: e.target.value })}
+                        placeholder="e.g. https://maps.google.com/?q=..."
+                        className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                      />
+                    </div>
                   </div>
 
-                  {/* Ground Level Option */}
-                  <div>
-                    <label className="block text-xs font-semibold mb-1 text-slate-700 dark:text-slate-300">
-                      Ground Level Option
-                    </label>
-                    <select
-                      value={currentBuilding.ground_option || 'Ground (G)'}
-                      onChange={(e) => {
-                        const newGround = e.target.value;
-                        const newDisplay = getComputedStructureDisplay(currentBuilding.basement_floors, newGround, currentBuilding.total_floors || 14);
-                        setCurrentBuilding({
-                          ...currentBuilding,
-                          ground_option: newGround,
-                          structure_display: newDisplay
-                        });
-                      }}
-                      className="glass-input w-full px-3 py-2 rounded-xl text-xs font-medium"
-                    >
-                      <option value="Ground (G)">Standard Ground (G)</option>
-                      <option value="Ground + Mezzanine (G + M)">Ground + Mezzanine (G + M)</option>
-                      <option value="Lower Ground + Upper Ground (LG + UG)">Lower Ground + Upper Ground (LG + UG)</option>
-                      <option value="Stilt + Ground (S + G)">Stilt + Ground (S + G)</option>
-                      <option value="Stilt Only (S)">Stilt Parking Only (S)</option>
-                      <option value="Ground Only">Ground Floor Only (Single Level)</option>
-                    </select>
-                  </div>
-
-                  {/* Superstructure Floors */}
-                  <div>
-                    <label className="block text-xs font-semibold mb-1 text-slate-700 dark:text-slate-300">
-                      Superstructure Floors *
-                    </label>
-                    <input
-                      type="number"
-                      min={1}
-                      max={120}
-                      value={currentBuilding.total_floors || 14}
-                      onChange={(e) => {
-                        const num = Number(e.target.value);
-                        const newDisplay = getComputedStructureDisplay(currentBuilding.basement_floors, currentBuilding.ground_option, num);
-                        setCurrentBuilding({
-                          ...currentBuilding,
-                          total_floors: num,
-                          structure_display: newDisplay
-                        });
-                      }}
-                      placeholder="e.g. 14"
-                      className="glass-input w-full px-3 py-2 rounded-xl text-xs font-semibold"
-                    />
-                  </div>
-                </div>
-
-                {/* Editable Final Structure Display String */}
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                      Display Structure Spec (Customizable / Auto-generated)
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const regenerated = getComputedStructureDisplay(currentBuilding.basement_floors, currentBuilding.ground_option, currentBuilding.total_floors || 14);
-                        setCurrentBuilding({ ...currentBuilding, structure_display: regenerated });
-                      }}
-                      className="text-[10px] text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1 font-semibold cursor-pointer"
-                    >
-                      <RefreshCw className="w-2.5 h-2.5" />
-                      <span>Reset to Auto-format</span>
-                    </button>
-                  </div>
-                  <input
-                    type="text"
-                    value={currentBuilding.structure_display || ''}
-                    onChange={(e) => setCurrentBuilding({ ...currentBuilding, structure_display: e.target.value })}
-                    placeholder="e.g. 2B + G + 14 Floors"
-                    className="glass-input w-full px-3 py-1.5 rounded-xl text-xs font-mono font-medium"
-                  />
-                </div>
-              </div>
-
-              {/* 2. MULTI TOWERS & BLOCKS */}
-              <div className="p-4 rounded-2xl bg-slate-50/90 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 space-y-3">
-                <div className="flex flex-wrap items-center justify-between gap-1">
-                  <div>
-                    <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                      <Building2 className="w-4 h-4 text-brand-500" />
-                      <span>Towers & Blocks (Multi-Tower Option)</span>
-                    </label>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                      Specify standalone tower or multiple towers/blocks (e.g. Twin Towers, Tower A/B/C, IT Blocks).
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    {/* Tower presets */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setCurrentBuilding({
-                          ...currentBuilding,
-                          towers: ['Tower 1'],
-                          total_towers: 1,
-                          tower_details: 'Single Tower'
-                        });
-                      }}
-                      className="px-2 py-0.5 rounded-lg text-[10px] font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-brand-500 text-slate-600 dark:text-slate-300"
-                    >
-                      Single
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setCurrentBuilding({
-                          ...currentBuilding,
-                          towers: ['Tower A', 'Tower B'],
-                          total_towers: 2,
-                          tower_details: 'Twin Towers (Tower A & Tower B)'
-                        });
-                      }}
-                      className="px-2 py-0.5 rounded-lg text-[10px] font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-brand-500 text-slate-600 dark:text-slate-300"
-                    >
-                      Twin Towers (2)
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setCurrentBuilding({
-                          ...currentBuilding,
-                          towers: ['Tower A', 'Tower B', 'Tower C'],
-                          total_towers: 3,
-                          tower_details: '3 Towers (Tower A, B & C)'
-                        });
-                      }}
-                      className="px-2 py-0.5 rounded-lg text-[10px] font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-brand-500 text-slate-600 dark:text-slate-300"
-                    >
-                      3 Towers
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setCurrentBuilding({
-                          ...currentBuilding,
-                          towers: ['Block 1', 'Block 2'],
-                          total_towers: 2,
-                          tower_details: 'Campus Blocks (Block 1 & 2)'
-                        });
-                      }}
-                      className="px-2 py-0.5 rounded-lg text-[10px] font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-brand-500 text-slate-600 dark:text-slate-300"
-                    >
-                      Blocks 1 & 2
-                    </button>
-                  </div>
-                </div>
-
-                {/* Active Tower Tags */}
-                <div className="flex flex-wrap items-center gap-1.5 min-h-[32px] p-2 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80">
-                  {(!currentBuilding.towers || currentBuilding.towers.length === 0) ? (
-                    <span className="text-xs text-slate-400 italic">No specific towers defined (Single Standalone Building).</span>
-                  ) : (
-                    currentBuilding.towers.map((tower, idx) => (
-                      <span
-                        key={idx}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-brand-50 text-brand-700 dark:bg-brand-950/80 dark:text-brand-300 border border-brand-200 dark:border-brand-800"
-                      >
-                        <Building2 className="w-3 h-3 text-brand-500" />
-                        <span>{tower}</span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const updated = (currentBuilding.towers || []).filter((_, i) => i !== idx);
-                            const count = updated.length;
-                            const details = count > 1 ? `${count} Towers (${updated.join(', ')})` : (updated[0] || 'Single Tower');
-                            setCurrentBuilding({
-                              ...currentBuilding,
-                              towers: updated,
-                              total_towers: count,
-                              tower_details: details
-                            });
-                          }}
-                          className="hover:text-red-500 ml-0.5 transition-colors cursor-pointer"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
+                  {/* Multi-Location / Linked Serving Sectors */}
+                  <div className="p-3 rounded-2xl bg-slate-50/90 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                        <MapPin className="w-3.5 h-3.5 text-brand-500" />
+                        <span>Associate Locations / Sectors (Multi-Location Option)</span>
+                      </label>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400">
+                        {(currentBuilding.locations?.length || 1)} selected
                       </span>
-                    ))
-                  )}
-                </div>
-
-                {/* Add Custom Tower Input Bar */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      value={newTowerInput}
-                      onChange={(e) => setNewTowerInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          const trimmed = newTowerInput.trim();
-                          if (trimmed && !(currentBuilding.towers || []).includes(trimmed)) {
-                            const updated = [...(currentBuilding.towers || []), trimmed];
-                            const count = updated.length;
-                            const details = count > 1 ? `${count} Towers (${updated.join(', ')})` : (updated[0] || 'Single Tower');
-                            setCurrentBuilding({
-                              ...currentBuilding,
-                              towers: updated,
-                              total_towers: count,
-                              tower_details: details
-                            });
-                            setNewTowerInput('');
-                          }
-                        }
-                      }}
-                      placeholder="Type tower name (e.g. Tower C, Block 3)..."
-                      className="glass-input flex-1 px-3 py-1.5 rounded-xl text-xs"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const trimmed = newTowerInput.trim();
-                        if (trimmed && !(currentBuilding.towers || []).includes(trimmed)) {
-                          const updated = [...(currentBuilding.towers || []), trimmed];
-                          const count = updated.length;
-                          const details = count > 1 ? `${count} Towers (${updated.join(', ')})` : (updated[0] || 'Single Tower');
-                          setCurrentBuilding({
-                            ...currentBuilding,
-                            towers: updated,
-                            total_towers: count,
-                            tower_details: details
-                          });
-                          setNewTowerInput('');
-                        }
-                      }}
-                      className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-brand-600 hover:bg-brand-500 text-white flex items-center gap-1 transition-all cursor-pointer shrink-0 shadow-sm"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                      <span>Add Tower</span>
-                    </button>
-                  </div>
-
-                  <div>
-                    <input
-                      type="text"
-                      value={currentBuilding.tower_details || ''}
-                      onChange={(e) => setCurrentBuilding({ ...currentBuilding, tower_details: e.target.value })}
-                      placeholder="Summary: e.g. Twin Towers (Tower A & Tower B)"
-                      className="glass-input w-full px-3 py-1.5 rounded-xl text-xs"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* 3. MULTI PRIMARY CATEGORY OPTION & AVAILABLE SIZES */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                {/* Available Sizes Range (1 Col) */}
-                <div>
-                  <label className="block text-xs font-semibold mb-1">Available Sizes Range</label>
-                  <input
-                    type="text"
-                    value={currentBuilding.size_range}
-                    onChange={(e) => setCurrentBuilding({ ...currentBuilding, size_range: e.target.value })}
-                    placeholder="e.g. 750 sq.ft – 25,000 sq.ft"
-                    className="glass-input w-full px-3 py-2 rounded-xl text-sm"
-                  />
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                    Min & max floor plates available.
-                  </p>
-                </div>
-
-                {/* Multi Primary Category Option (2 Cols) */}
-                <div className="md:col-span-2 p-3.5 rounded-2xl bg-brand-50/40 dark:bg-brand-950/20 border border-brand-200 dark:border-brand-800/60 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-brand-800 dark:text-brand-300 flex items-center gap-1.5">
-                      <Tag className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
-                      <span>Commercial Categories (Multi-Category Option) *</span>
-                    </label>
-                    <span className="text-[10px] font-semibold text-brand-600 dark:text-brand-400">
-                      {(currentBuilding.categories?.length || 1)} selected
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                    Click to toggle all applicable categories for this commercial building. First is Primary.
-                  </p>
-
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-                    {[
-                      { id: 'office-space' as PropertyCategory, label: 'Office Space', icon: Building2 },
-                      { id: 'it-business-parks' as PropertyCategory, label: 'IT & Business Parks', icon: Cpu },
-                      { id: 'warehouses' as PropertyCategory, label: 'Warehouses & Logistics', icon: Warehouse },
-                      { id: 'factory-industrial' as PropertyCategory, label: 'Factories & Industrial', icon: Factory },
-                      { id: 'land' as PropertyCategory, label: 'Land & Plots', icon: Trees },
-                      { id: 'shops-retail' as PropertyCategory, label: 'Shops, Malls & Retail', icon: Store },
-                    ].map((catItem) => {
-                      const isSelected = (currentBuilding.categories || [currentBuilding.category || 'office-space']).includes(catItem.id);
-                      const isPrimary = (currentBuilding.categories && currentBuilding.categories[0] === catItem.id) || currentBuilding.category === catItem.id;
-                      const Icon = catItem.icon;
-
-                      return (
-                        <button
-                          type="button"
-                          key={catItem.id}
-                          onClick={() => {
-                            const existing = currentBuilding.categories || [currentBuilding.category || 'office-space'];
-                            let updated: PropertyCategory[];
-                            if (isSelected) {
-                              if (isPrimary && existing.length > 1) {
-                                updated = existing.filter(c => c !== catItem.id);
-                              } else if (existing.length <= 1) {
-                                return; // Keep at least 1 category
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Select all sectors or micromarkets this building serves or spans.
+                    </p>
+                    <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pr-1">
+                      {locations.map(loc => {
+                        const isSelected = (currentBuilding.locations || [currentBuilding.location_id]).includes(loc.id);
+                        const isPrimary = currentBuilding.location_id === loc.id;
+                        return (
+                          <button
+                            type="button"
+                            key={loc.id}
+                            onClick={() => {
+                              const existing = currentBuilding.locations || [currentBuilding.location_id || ''];
+                              let updated: string[];
+                              if (isSelected) {
+                                if (isPrimary && existing.length > 1) {
+                                  const nextPrimary = existing.find(id => id !== loc.id)!;
+                                  const nextLoc = locations.find(l => l.id === nextPrimary);
+                                  updated = existing.filter(id => id !== loc.id);
+                                  setCurrentBuilding({
+                                    ...currentBuilding,
+                                    locations: updated,
+                                    location_id: nextPrimary,
+                                    location_name: nextLoc ? nextLoc.name : currentBuilding.location_name
+                                  });
+                                  return;
+                                } else if (existing.length <= 1) {
+                                  return;
+                                } else {
+                                  updated = existing.filter(id => id !== loc.id);
+                                }
                               } else {
-                                updated = existing.filter(c => c !== catItem.id);
+                                updated = [...existing, loc.id];
                               }
-                            } else {
-                              updated = [...existing, catItem.id];
-                            }
-                            setCurrentBuilding({
-                              ...currentBuilding,
-                              categories: updated,
-                              category: updated[0] || 'office-space'
-                            });
-                          }}
-                          className={`p-2 rounded-xl text-left border transition-all flex flex-col justify-between cursor-pointer ${
-                            isSelected
-                              ? isPrimary
-                                ? 'bg-brand-600 text-white border-brand-600 shadow-md ring-2 ring-brand-400/40'
-                                : 'bg-brand-50/90 text-brand-800 dark:bg-brand-950/80 dark:text-brand-200 border-brand-300 dark:border-brand-700 font-semibold'
-                              : 'bg-white dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-brand-400'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between w-full mb-1">
-                            <Icon className={`w-3.5 h-3.5 ${isSelected ? (isPrimary ? 'text-white' : 'text-brand-600 dark:text-brand-400') : 'text-slate-400'}`} />
+                              const updatedNames = updated.map(id => locations.find(l => l.id === id)?.name).filter(Boolean) as string[];
+                              setCurrentBuilding({ 
+                                ...currentBuilding, 
+                                locations: updated,
+                                location_names: updatedNames
+                              });
+                            }}
+                            className={`px-2.5 py-1 rounded-lg text-xs border transition-all flex items-center gap-1.5 cursor-pointer ${
+                              isSelected
+                                ? isPrimary
+                                  ? 'bg-brand-600 text-white border-brand-600 shadow-sm font-semibold'
+                                  : 'bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300 border-brand-300 dark:border-brand-700 font-medium'
+                                : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-brand-400'
+                            }`}
+                          >
+                            <span>{loc.name}</span>
                             {isPrimary && (
-                              <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded bg-white text-brand-700 dark:bg-white dark:text-brand-800">
+                              <span className="text-[9px] uppercase px-1 py-0.2 bg-white/20 rounded font-bold">
                                 Primary
                               </span>
                             )}
-                          </div>
-                          <span className="text-[11px] font-semibold leading-tight line-clamp-1">
-                            {catItem.label}
-                          </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* TARIFF / RENT RANGE & SALE RANGE */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-2xl bg-brand-50/50 dark:bg-brand-950/20 border border-brand-200 dark:border-brand-800/50">
+                    <div>
+                      <label className="block text-xs font-bold text-brand-700 dark:text-brand-300 mb-1">
+                        Building Tariff / Rent Range *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={currentBuilding.rent_range}
+                        onChange={(e) => setCurrentBuilding({ ...currentBuilding, rent_range: e.target.value })}
+                        placeholder="e.g. ₹55 – ₹70/sq.ft"
+                        className="glass-input w-full px-3 py-2 rounded-xl text-sm font-bold"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold mb-1">Sale Price Range (Optional)</label>
+                      <input
+                        type="text"
+                        value={currentBuilding.sale_range || ''}
+                        onChange={(e) => setCurrentBuilding({ ...currentBuilding, sale_range: e.target.value })}
+                        placeholder="e.g. ₹8,000 – ₹11,000/sq.ft"
+                        className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  {/* TOTAL FLOORS (STRUCTURE) - MULTI BASEMENT & GROUND OPTION */}
+                  <div className="p-4 rounded-2xl bg-slate-50/90 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 space-y-3.5">
+                    <div className="flex flex-wrap items-center justify-between gap-1">
+                      <div>
+                        <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                          <Layers className="w-4 h-4 text-brand-500" />
+                          <span>Total Floors & Building Structure</span>
+                        </label>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                          Configure multi-basement levels, ground level type, and superstructure floors.
+                        </p>
+                      </div>
+                      <div className="px-3 py-1 rounded-xl bg-brand-50 dark:bg-brand-950/70 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800 text-xs font-bold">
+                        Structure: {currentBuilding.structure_display || getBuildingStructureDisplay(currentBuilding)}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                      <div>
+                        <label className="block text-xs font-semibold mb-1 text-slate-700 dark:text-slate-300">
+                          Multi Basement Level
+                        </label>
+                        <select
+                          value={currentBuilding.basement_floors || '2 Basements (2B)'}
+                          onChange={(e) => {
+                            const newBasement = e.target.value;
+                            const newDisplay = computeStructureDisplay(newBasement, currentBuilding.ground_option, currentBuilding.total_floors || 14);
+                            setCurrentBuilding({
+                              ...currentBuilding,
+                              basement_floors: newBasement,
+                              structure_display: newDisplay
+                            });
+                          }}
+                          className="glass-input w-full px-3 py-2 rounded-xl text-xs font-medium"
+                        >
+                          <option value="No Basement">No Basement (Ground direct)</option>
+                          <option value="1 Basement (B1)">1 Basement (B1 - Single Basement)</option>
+                          <option value="2 Basements (2B)">2 Basements (2B - B1 + B2)</option>
+                          <option value="3 Basements (3B)">3 Basements (3B - B1 + B2 + B3)</option>
+                          <option value="4 Basements (4B)">4 Basements (4B - B1 to B4)</option>
+                          <option value="5 Basements (5B)">5 Basements (5B - Mega Parking)</option>
+                          <option value="Multi-Level Basement">Custom Multi-Level Basement</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold mb-1 text-slate-700 dark:text-slate-300">
+                          Ground Level Option
+                        </label>
+                        <select
+                          value={currentBuilding.ground_option || 'Ground (G)'}
+                          onChange={(e) => {
+                            const newGround = e.target.value;
+                            const newDisplay = computeStructureDisplay(currentBuilding.basement_floors, newGround, currentBuilding.total_floors || 14);
+                            setCurrentBuilding({
+                              ...currentBuilding,
+                              ground_option: newGround,
+                              structure_display: newDisplay
+                            });
+                          }}
+                          className="glass-input w-full px-3 py-2 rounded-xl text-xs font-medium"
+                        >
+                          <option value="Ground (G)">Standard Ground (G)</option>
+                          <option value="Ground + Mezzanine (G + M)">Ground + Mezzanine (G + M)</option>
+                          <option value="Lower Ground + Upper Ground (LG + UG)">Lower Ground + Upper Ground (LG + UG)</option>
+                          <option value="Stilt + Ground (S + G)">Stilt + Ground (S + G)</option>
+                          <option value="Stilt Only (S)">Stilt Parking Only (S)</option>
+                          <option value="Ground Only">Ground Floor Only (Single Level)</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold mb-1 text-slate-700 dark:text-slate-300">
+                          Superstructure Floors *
+                        </label>
+                        <input
+                          type="number"
+                          min={1}
+                          max={120}
+                          value={currentBuilding.total_floors || 14}
+                          onChange={(e) => {
+                            const num = Number(e.target.value);
+                            const newDisplay = computeStructureDisplay(currentBuilding.basement_floors, currentBuilding.ground_option, num);
+                            setCurrentBuilding({
+                              ...currentBuilding,
+                              total_floors: num,
+                              structure_display: newDisplay
+                            });
+                          }}
+                          placeholder="e.g. 14"
+                          className="glass-input w-full px-3 py-2 rounded-xl text-xs font-semibold"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                          Display Structure Spec (Customizable / Auto-generated)
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const regenerated = computeStructureDisplay(currentBuilding.basement_floors, currentBuilding.ground_option, currentBuilding.total_floors || 14);
+                            setCurrentBuilding({ ...currentBuilding, structure_display: regenerated });
+                          }}
+                          className="text-[10px] text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1 font-semibold cursor-pointer"
+                        >
+                          <RefreshCw className="w-2.5 h-2.5" />
+                          <span>Reset to Auto-format</span>
                         </button>
-                      );
-                    })}
+                      </div>
+                      <input
+                        type="text"
+                        value={currentBuilding.structure_display || ''}
+                        onChange={(e) => setCurrentBuilding({ ...currentBuilding, structure_display: e.target.value })}
+                        placeholder="e.g. 2B + G + 14 Floors"
+                        className="glass-input w-full px-3 py-1.5 rounded-xl text-xs font-mono font-medium"
+                      />
+                    </div>
+                  </div>
+
+                  {/* MULTI TOWERS & BLOCKS */}
+                  <div className="p-4 rounded-2xl bg-slate-50/90 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-1">
+                      <div>
+                        <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                          <Building2 className="w-4 h-4 text-brand-500" />
+                          <span>Towers & Blocks in Complex (Multi-Tower Option)</span>
+                        </label>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                          Specify standalone tower or multiple towers/blocks (e.g. Twin Towers, Tower A/B/C, IT Blocks).
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCurrentBuilding({
+                              ...currentBuilding,
+                              towers: ['Tower 1'],
+                              total_towers: 1,
+                              tower_details: 'Single Tower'
+                            });
+                          }}
+                          className="px-2 py-0.5 rounded-lg text-[10px] font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-brand-500 text-slate-600 dark:text-slate-300"
+                        >
+                          Single
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCurrentBuilding({
+                              ...currentBuilding,
+                              towers: ['Tower A', 'Tower B'],
+                              total_towers: 2,
+                              tower_details: 'Twin Towers (Tower A & Tower B)'
+                            });
+                          }}
+                          className="px-2 py-0.5 rounded-lg text-[10px] font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-brand-500 text-slate-600 dark:text-slate-300"
+                        >
+                          Twin Towers (2)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCurrentBuilding({
+                              ...currentBuilding,
+                              towers: ['Tower A', 'Tower B', 'Tower C'],
+                              total_towers: 3,
+                              tower_details: '3 Towers (Tower A, B & C)'
+                            });
+                          }}
+                          className="px-2 py-0.5 rounded-lg text-[10px] font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-brand-500 text-slate-600 dark:text-slate-300"
+                        >
+                          3 Towers
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCurrentBuilding({
+                              ...currentBuilding,
+                              towers: ['Block 1', 'Block 2'],
+                              total_towers: 2,
+                              tower_details: 'Campus Blocks (Block 1 & 2)'
+                            });
+                          }}
+                          className="px-2 py-0.5 rounded-lg text-[10px] font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-brand-500 text-slate-600 dark:text-slate-300"
+                        >
+                          Blocks 1 & 2
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-1.5 min-h-[32px] p-2 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80">
+                      {(!currentBuilding.towers || currentBuilding.towers.length === 0) ? (
+                        <span className="text-xs text-slate-400 italic">No specific towers defined (Single Standalone Building).</span>
+                      ) : (
+                        currentBuilding.towers.map((tower, idx) => (
+                          <span
+                            key={idx}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-brand-50 text-brand-700 dark:bg-brand-950/80 dark:text-brand-300 border border-brand-200 dark:border-brand-800"
+                          >
+                            <Building2 className="w-3 h-3 text-brand-500" />
+                            <span>{tower}</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const updated = (currentBuilding.towers || []).filter((_, i) => i !== idx);
+                                const count = updated.length;
+                                const details = count > 1 ? `${count} Towers (${updated.join(', ')})` : (updated[0] || 'Single Tower');
+                                setCurrentBuilding({
+                                  ...currentBuilding,
+                                  towers: updated,
+                                  total_towers: count,
+                                  tower_details: details
+                                });
+                              }}
+                              className="hover:text-red-500 ml-0.5 transition-colors cursor-pointer"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </span>
+                        ))
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={newTowerInput}
+                          onChange={(e) => setNewTowerInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              const trimmed = newTowerInput.trim();
+                              if (trimmed && !(currentBuilding.towers || []).includes(trimmed)) {
+                                const updated = [...(currentBuilding.towers || []), trimmed];
+                                const count = updated.length;
+                                const details = count > 1 ? `${count} Towers (${updated.join(', ')})` : (updated[0] || 'Single Tower');
+                                setCurrentBuilding({
+                                  ...currentBuilding,
+                                  towers: updated,
+                                  total_towers: count,
+                                  tower_details: details
+                                });
+                                setNewTowerInput('');
+                              }
+                            }
+                          }}
+                          placeholder="Type tower name (e.g. Tower C, Block 3)..."
+                          className="glass-input flex-1 px-3 py-1.5 rounded-xl text-xs"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const trimmed = newTowerInput.trim();
+                            if (trimmed && !(currentBuilding.towers || []).includes(trimmed)) {
+                              const updated = [...(currentBuilding.towers || []), trimmed];
+                              const count = updated.length;
+                              const details = count > 1 ? `${count} Towers (${updated.join(', ')})` : (updated[0] || 'Single Tower');
+                              setCurrentBuilding({
+                                ...currentBuilding,
+                                towers: updated,
+                                total_towers: count,
+                                tower_details: details
+                              });
+                              setNewTowerInput('');
+                            }
+                          }}
+                          className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-brand-600 hover:bg-brand-500 text-white flex items-center gap-1 transition-all cursor-pointer shrink-0 shadow-sm"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>Add Tower</span>
+                        </button>
+                      </div>
+
+                      <div>
+                        <input
+                          type="text"
+                          value={currentBuilding.tower_details || ''}
+                          onChange={(e) => setCurrentBuilding({ ...currentBuilding, tower_details: e.target.value })}
+                          placeholder="Summary: e.g. Twin Towers (Tower A & Tower B)"
+                          className="glass-input w-full px-3 py-1.5 rounded-xl text-xs"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* MULTI CATEGORY OPTION & AVAILABLE SIZES */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold mb-1">Available Sizes Range</label>
+                      <input
+                        type="text"
+                        value={currentBuilding.size_range}
+                        onChange={(e) => setCurrentBuilding({ ...currentBuilding, size_range: e.target.value })}
+                        placeholder="e.g. 750 sq.ft – 25,000 sq.ft"
+                        className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                      />
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                        Min & max floor plates available.
+                      </p>
+                    </div>
+
+                    <div className="md:col-span-2 p-3.5 rounded-2xl bg-brand-50/40 dark:bg-brand-950/20 border border-brand-200 dark:border-brand-800/60 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-brand-800 dark:text-brand-300 flex items-center gap-1.5">
+                          <Tag className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
+                          <span>Commercial Categories (Multi-Category Option) *</span>
+                        </label>
+                        <span className="text-[10px] font-semibold text-brand-600 dark:text-brand-400">
+                          {(currentBuilding.categories?.length || 1)} selected
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        Click to toggle all applicable categories for this commercial building. First is Primary.
+                      </p>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                        {[
+                          { id: 'office-space' as PropertyCategory, label: 'Office Space', icon: Building2 },
+                          { id: 'it-business-parks' as PropertyCategory, label: 'IT & Business Parks', icon: Cpu },
+                          { id: 'warehouses' as PropertyCategory, label: 'Warehouses & Logistics', icon: Warehouse },
+                          { id: 'factory-industrial' as PropertyCategory, label: 'Factories & Industrial', icon: Factory },
+                          { id: 'land' as PropertyCategory, label: 'Land & Plots', icon: Trees },
+                          { id: 'shops-retail' as PropertyCategory, label: 'Shops, Malls & Retail', icon: Store },
+                        ].map((catItem) => {
+                          const isSelected = (currentBuilding.categories || [currentBuilding.category || 'office-space']).includes(catItem.id);
+                          const isPrimary = (currentBuilding.categories && currentBuilding.categories[0] === catItem.id) || currentBuilding.category === catItem.id;
+                          const Icon = catItem.icon;
+
+                          return (
+                            <button
+                              type="button"
+                              key={catItem.id}
+                              onClick={() => {
+                                const existing = currentBuilding.categories || [currentBuilding.category || 'office-space'];
+                                let updated: PropertyCategory[];
+                                if (isSelected) {
+                                  if (isPrimary && existing.length > 1) {
+                                    updated = existing.filter(c => c !== catItem.id);
+                                  } else if (existing.length <= 1) {
+                                    return;
+                                  } else {
+                                    updated = existing.filter(c => c !== catItem.id);
+                                  }
+                                } else {
+                                  updated = [...existing, catItem.id];
+                                }
+                                setCurrentBuilding({
+                                  ...currentBuilding,
+                                  categories: updated,
+                                  category: updated[0] || 'office-space'
+                                });
+                              }}
+                              className={`p-2 rounded-xl text-left border transition-all flex flex-col justify-between cursor-pointer ${
+                                isSelected
+                                  ? isPrimary
+                                    ? 'bg-brand-600 text-white border-brand-600 shadow-md ring-2 ring-brand-400/40'
+                                    : 'bg-brand-50/90 text-brand-800 dark:bg-brand-950/80 dark:text-brand-200 border-brand-300 dark:border-brand-700 font-semibold'
+                                  : 'bg-white dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-brand-400'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between w-full mb-1">
+                                <Icon className={`w-3.5 h-3.5 ${isSelected ? (isPrimary ? 'text-white' : 'text-brand-600 dark:text-brand-400') : 'text-slate-400'}`} />
+                                {isPrimary && (
+                                  <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded bg-white text-brand-700 dark:bg-white dark:text-brand-800">
+                                    Primary
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-[11px] font-semibold leading-tight line-clamp-1">
+                                {catItem.label}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Power Backup & Lifts */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold mb-1">Power Backup Infrastructure</label>
+                      <input
+                        type="text"
+                        value={currentBuilding.power_backup || ''}
+                        onChange={(e) => setCurrentBuilding({ ...currentBuilding, power_backup: e.target.value })}
+                        placeholder="e.g. 100% DG backup"
+                        className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold mb-1">Lifts / Elevators</label>
+                      <input
+                        type="text"
+                        value={currentBuilding.lifts || ''}
+                        onChange={(e) => setCurrentBuilding({ ...currentBuilding, lifts: e.target.value })}
+                        placeholder="e.g. 12 high-speed passenger lifts"
+                        className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Parking & Air Conditioning */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold mb-1">Parking Amenities</label>
+                      <input
+                        type="text"
+                        value={currentBuilding.parking || ''}
+                        onChange={(e) => setCurrentBuilding({ ...currentBuilding, parking: e.target.value })}
+                        placeholder="e.g. Multi-level covered parking, reserved bays"
+                        className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold mb-1">Air Conditioning (HVAC)</label>
+                      <input
+                        type="text"
+                        value={currentBuilding.air_conditioning || ''}
+                        onChange={(e) => setCurrentBuilding({ ...currentBuilding, air_conditioning: e.target.value })}
+                        placeholder="e.g. Central Chilled Water HVAC system with AHU on every floor"
+                        className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Security & Address */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold mb-1">Security & Access Control</label>
+                      <input
+                        type="text"
+                        value={currentBuilding.security || ''}
+                        onChange={(e) => setCurrentBuilding({ ...currentBuilding, security: e.target.value })}
+                        placeholder="e.g. 24/7 CCTV surveillance, RFID boom barriers, turnstile access"
+                        className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold mb-1">Complete Address / Plot *</label>
+                      <input
+                        type="text"
+                        value={currentBuilding.address || ''}
+                        onChange={(e) => setCurrentBuilding({ ...currentBuilding, address: e.target.value })}
+                        placeholder="e.g. Plot A-40, Sector 62, Noida"
+                        className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
-              {/* Power Backup & Lifts */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold mb-1">Power Backup Infrastructure</label>
-                  <input
-                    type="text"
-                    value={currentBuilding.power_backup}
-                    onChange={(e) => setCurrentBuilding({ ...currentBuilding, power_backup: e.target.value })}
-                    placeholder="e.g. 100% DG backup"
-                    className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+              {/* TAB 2: CONTENT & OVERVIEW */}
+              {buildingModalTab === 'content' && (
+                <div className="space-y-4">
+                  {/* Short Description */}
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2">
+                    <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                      Tower Short Description
+                    </label>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Used for cards, previews, and snippet summaries across the public website.
+                    </p>
+                    <textarea
+                      rows={2}
+                      value={currentBuilding.short_description || ''}
+                      onChange={(e) => setCurrentBuilding({ ...currentBuilding, short_description: e.target.value })}
+                      placeholder="e.g. Grade-A commercial IT park offering customizable office spaces, 100% DG backup, and seamless metro connectivity in Sector 62 Noida..."
+                      className="glass-input w-full px-3 py-2 rounded-xl text-xs"
+                    />
+                  </div>
+
+                  {/* Tower Overview */}
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2">
+                    <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                      Tower Overview & Commercial Features *
+                    </label>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Complete overview of commercial amenities, tenant profile, and building specifications. Configured Hyperlink Words will automatically link inside this text.
+                    </p>
+                    <textarea
+                      rows={7}
+                      value={currentBuilding.overview || currentBuilding.description || ''}
+                      onChange={(e) => setCurrentBuilding({ ...currentBuilding, overview: e.target.value, description: e.target.value })}
+                      onPaste={(e) => handleOverviewPaste(e, (val) => setCurrentBuilding({ ...currentBuilding, overview: val, description: val }), currentBuilding.overview || currentBuilding.description || '')}
+                      placeholder="Comprehensive overview of commercial amenities, corporate tenant profile, architecture, and building advantages..."
+                      className="glass-input overview-input w-full px-3 py-2.5 rounded-xl text-sm"
+                    />
+                  </div>
+
+                  {/* Location & Connectivity */}
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2">
+                    <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                      Location & Connectivity
+                    </label>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Connectivity to metro stations, expressways, airports, and major commercial hubs.
+                    </p>
+                    <textarea
+                      rows={4}
+                      value={currentBuilding.location_connectivity || ''}
+                      onChange={(e) => setCurrentBuilding({ ...currentBuilding, location_connectivity: e.target.value })}
+                      onPaste={(e) => handleOverviewPaste(e, (val) => setCurrentBuilding({ ...currentBuilding, location_connectivity: val }), currentBuilding.location_connectivity || '')}
+                      placeholder="e.g. 500 meters from Sector 62 Electronic City Metro Station, direct access to NH-24 / Delhi-Meerut Expressway, 30 mins from Noida International Airport..."
+                      className="glass-input overview-input w-full px-3 py-2.5 rounded-xl text-sm"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 3: IMAGES & ALT TEXT */}
+              {buildingModalTab === 'images' && (
+                <div className="p-1">
+                  <AdminMediaManager
+                    primaryImage={currentBuilding.hero_image || ''}
+                    onPrimaryImageChange={(url) => setCurrentBuilding(prev => ({ ...prev, hero_image: url }))}
+                    primaryAlt={currentBuilding.hero_image_alt || ''}
+                    onPrimaryAltChange={(alt) => setCurrentBuilding(prev => ({ ...prev, hero_image_alt: alt }))}
+                    primaryTitle={currentBuilding.hero_image_title || ''}
+                    onPrimaryTitleChange={(title) => setCurrentBuilding(prev => ({ ...prev, hero_image_title: title }))}
+                    primaryCaption={currentBuilding.hero_image_caption || ''}
+                    onPrimaryCaptionChange={(cap) => setCurrentBuilding(prev => ({ ...prev, hero_image_caption: cap }))}
+                    fallbackAltText={getTowerImageAlt(currentBuilding)}
+                    gallery={currentBuilding.gallery || []}
+                    onGalleryChange={(gal) => setCurrentBuilding(prev => ({ ...prev, gallery: gal }))}
+                    imageDetails={currentBuilding.image_details || []}
+                    onImageDetailsChange={(details) => setCurrentBuilding(prev => ({ ...prev, image_details: details }))}
+                    entityType="tower"
+                    entityName={currentBuilding.name || 'Commercial Tower'}
                   />
                 </div>
+              )}
 
-                <div>
-                  <label className="block text-xs font-semibold mb-1">Lifts / Elevators</label>
-                  <input
-                    type="text"
-                    value={currentBuilding.lifts}
-                    onChange={(e) => setCurrentBuilding({ ...currentBuilding, lifts: e.target.value })}
-                    placeholder="e.g. 12 high-speed passenger lifts"
-                    className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+              {/* TAB 4: SEO & URLS */}
+              {buildingModalTab === 'seo' && (
+                <div className="space-y-4">
+                  {/* SEO Title */}
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                        Tower SEO Meta Title
+                      </label>
+                      <span className={`text-[11px] font-mono ${
+                        (currentBuilding.seo_title?.length || 0) > 60 ? 'text-amber-500' : 'text-slate-400'
+                      }`}>
+                        {currentBuilding.seo_title?.length || 0} / 60 chars
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Appears in Google search results and browser tabs. If left blank, a high-converting title is automatically generated from tower name and sector.
+                    </p>
+                    <input
+                      type="text"
+                      value={currentBuilding.seo_title || ''}
+                      onChange={(e) => setCurrentBuilding({ ...currentBuilding, seo_title: e.target.value })}
+                      placeholder={`e.g. ${currentBuilding.name || 'Commercial Tower'} Office Space in ${currentBuilding.location_name || 'Sector 62 Noida'}`}
+                      className="glass-input w-full px-3 py-2 rounded-xl text-sm"
+                    />
+                  </div>
+
+                  {/* SEO Description */}
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                        Tower SEO Meta Description
+                      </label>
+                      <span className={`text-[11px] font-mono ${
+                        (currentBuilding.seo_description?.length || 0) > 160 ? 'text-amber-500' : 'text-slate-400'
+                      }`}>
+                        {currentBuilding.seo_description?.length || 0} / 160 chars
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Engaging search summary to increase Google CTR.
+                    </p>
+                    <textarea
+                      rows={3}
+                      value={currentBuilding.seo_description || ''}
+                      onChange={(e) => setCurrentBuilding({ ...currentBuilding, seo_description: e.target.value })}
+                      placeholder={`e.g. Explore office space and commercial properties available in ${currentBuilding.name || 'Commercial Tower'}, ${currentBuilding.location_name || 'Sector 62, Noida'}. View available sizes, rental options and property details.`}
+                      className="glass-input w-full px-3 py-2 rounded-xl text-xs"
+                    />
+                  </div>
+
+                  {/* SEO Keywords & URL Slug */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2">
+                      <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                        SEO Keywords (Optional)
+                      </label>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        Comma-separated target phrases (no keyword stuffing).
+                      </p>
+                      <input
+                        type="text"
+                        value={currentBuilding.seo_keywords || ''}
+                        onChange={(e) => setCurrentBuilding({ ...currentBuilding, seo_keywords: e.target.value })}
+                        placeholder="e.g. office space for rent, commercial building, sector 62 noida"
+                        className="glass-input w-full px-3 py-2 rounded-xl text-xs"
+                      />
+                    </div>
+
+                    <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                          URL Slug *
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const generated = (currentBuilding.name || 'tower')
+                              .toLowerCase()
+                              .replace(/[^a-z0-9]+/g, '-')
+                              .replace(/(^-|-$)/g, '');
+                            setCurrentBuilding({ ...currentBuilding, slug: generated });
+                          }}
+                          className="text-[11px] text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1 cursor-pointer font-semibold"
+                        >
+                          <RefreshCw className="w-3 h-3" />
+                          <span>Generate from Name</span>
+                        </button>
+                      </div>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        Clean URL: /buildings/{currentBuilding.slug || 'slug'} (also aliases /tower/{currentBuilding.slug || 'slug'})
+                      </p>
+                      <input
+                        type="text"
+                        required
+                        value={currentBuilding.slug || ''}
+                        onChange={(e) => setCurrentBuilding({ 
+                          ...currentBuilding, 
+                          slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') 
+                        })}
+                        placeholder="e.g. ithums-62-tower-d-sector-62-noida"
+                        className="glass-input w-full px-3 py-2 rounded-xl text-xs font-mono font-bold"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Canonical URL */}
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                        Canonical URL
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const canonical = getTowerCanonicalUrl(currentBuilding);
+                          setCurrentBuilding({ ...currentBuilding, canonical_url: canonical });
+                        }}
+                        className="text-[11px] text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1 cursor-pointer font-semibold"
+                      >
+                        <Sparkles className="w-3 h-3" />
+                        <span>Auto-Fill Default</span>
+                      </button>
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Prevents duplicate content issues. Default: {getTowerCanonicalUrl(currentBuilding)}
+                    </p>
+                    <input
+                      type="text"
+                      value={currentBuilding.canonical_url || ''}
+                      onChange={(e) => setCurrentBuilding({ ...currentBuilding, canonical_url: e.target.value })}
+                      placeholder={getTowerCanonicalUrl(currentBuilding)}
+                      className="glass-input w-full px-3 py-2 rounded-xl text-xs font-mono"
+                    />
+                  </div>
+
+                  {/* Open Graph / Social Sharing */}
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-3">
+                    <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                      <Share2 className="w-3.5 h-3.5 text-brand-500" />
+                      <span>Social Media & Open Graph Settings (WhatsApp, Facebook, LinkedIn, X)</span>
+                    </span>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold mb-1">OG Title</label>
+                        <input
+                          type="text"
+                          value={currentBuilding.og_title || ''}
+                          onChange={(e) => setCurrentBuilding({ ...currentBuilding, og_title: e.target.value })}
+                          placeholder={currentBuilding.seo_title || currentBuilding.name}
+                          className="glass-input w-full px-3 py-2 rounded-xl text-xs"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold mb-1">OG Image URL (defaults to Featured Image)</label>
+                        <input
+                          type="text"
+                          value={currentBuilding.og_image || ''}
+                          onChange={(e) => setCurrentBuilding({ ...currentBuilding, og_image: e.target.value })}
+                          placeholder={currentBuilding.hero_image || 'Featured Image URL'}
+                          className="glass-input w-full px-3 py-2 rounded-xl text-xs font-mono"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold mb-1">OG Description</label>
+                      <textarea
+                        rows={2}
+                        value={currentBuilding.og_description || ''}
+                        onChange={(e) => setCurrentBuilding({ ...currentBuilding, og_description: e.target.value })}
+                        placeholder={currentBuilding.seo_description || 'Social preview excerpt...'}
+                        className="glass-input w-full px-3 py-2 rounded-xl text-xs"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 5: HYPERLINK WORDS */}
+              {buildingModalTab === 'hyperlinks' && (
+                <div className="p-1">
+                  <AdminHyperlinksManager
+                    hyperlinks={currentBuilding.hyperlinks || []}
+                    onChange={(newLinks) => setCurrentBuilding(prev => ({ ...prev, hyperlinks: newLinks }))}
+                    entityName={currentBuilding.name || 'Commercial Tower'}
                   />
                 </div>
-              </div>
+              )}
 
-              {/* Description */}
-              <div>
-                <label className="block text-xs font-semibold mb-1">Building Overview & Features</label>
-                <textarea
-                  rows={5}
-                  value={currentBuilding.description}
-                  onChange={(e) => setCurrentBuilding({ ...currentBuilding, description: e.target.value })}
-                  onPaste={(e) => handleOverviewPaste(e, (val) => setCurrentBuilding({ ...currentBuilding, description: val }), currentBuilding.description)}
-                  placeholder="Overview of commercial amenities, tenant profile, and accessibility..."
-                  className="glass-input overview-input w-full px-3 py-2.5 rounded-xl text-sm"
-                />
-              </div>
+              {/* TAB 6: SEO PREVIEW */}
+              {buildingModalTab === 'preview' && (
+                <div className="p-1">
+                  <AdminSeoPreviewSection
+                    title={currentBuilding.name || ''}
+                    seoTitle={currentBuilding.seo_title}
+                    description={currentBuilding.short_description || currentBuilding.overview || currentBuilding.description || ''}
+                    seoDescription={currentBuilding.seo_description}
+                    slug={currentBuilding.slug || ''}
+                    urlPrefix="https://shristiestate.in/buildings/"
+                    featuredImage={currentBuilding.hero_image}
+                    ogImage={currentBuilding.og_image}
+                    ogTitle={currentBuilding.og_title}
+                    ogDescription={currentBuilding.og_description}
+                    type="building"
+                    entity={currentBuilding}
+                  />
+                </div>
+              )}
 
+              {/* ACTION BUTTONS */}
               <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-3 pt-3 sm:pt-4 border-t border-slate-200 dark:border-slate-800 shrink-0">
                 <button
                   type="button"
@@ -4681,12 +5849,12 @@ export const AdminPage: React.FC = () => {
                   ) : isEditingBuilding ? (
                     <>
                       <RefreshCw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
-                      <span>Update Building Specs & Tariff</span>
+                      <span>Update Tower SEO & Specs</span>
                     </>
                   ) : (
                     <>
                       <CheckCircle2 className="w-4 h-4" />
-                      <span>Save Commercial Building</span>
+                      <span>Save Commercial Tower</span>
                     </>
                   )}
                 </button>
@@ -5065,7 +6233,7 @@ export const AdminPage: React.FC = () => {
       {/* MARKET GUIDE ADD / EDIT MODAL */}
       {showGuideModal && (
         <div className="fixed inset-0 z-50 overflow-y-auto p-2 sm:p-4 md:p-6 flex min-h-full items-start sm:items-center justify-center bg-slate-950/80 backdrop-blur-md">
-          <div className="relative w-full max-w-2xl glass-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 bg-white dark:bg-[#0B132B] border border-slate-200 dark:border-slate-800 shadow-2xl my-auto max-h-[96vh] sm:max-h-[90vh] flex flex-col">
+          <div className="relative w-full max-w-4xl glass-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 bg-white dark:bg-[#0B132B] border border-slate-200 dark:border-slate-800 shadow-2xl my-auto max-h-[96vh] sm:max-h-[90vh] flex flex-col">
             <button 
               type="button"
               onClick={() => setShowGuideModal(false)}
@@ -5074,209 +6242,812 @@ export const AdminPage: React.FC = () => {
               <X className="w-5 h-5" />
             </button>
 
-            <div className="mb-3 sm:mb-4 shrink-0 pr-8">
-              <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
-                {isEditingGuide ? 'Edit Market Guide & Insight' : 'New Market Guide & Insight'}
-              </span>
-              <h2 className="text-xl sm:text-2xl font-bold font-['Outfit']">
-                {isEditingGuide ? `Edit: ${currentGuide.title}` : 'Add Market Research & Advisory Guide'}
-              </h2>
+            {/* Modal Header & Mode Switcher */}
+            <div className="mb-4 shrink-0 pr-8 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
+                  {isEditingGuide ? 'Edit Market Guide & Insight' : 'New Market Guide & Insight'}
+                </span>
+                <h2 className="text-xl sm:text-2xl font-bold font-['Outfit']">
+                  {isEditingGuide ? `Edit: ${currentGuide.title || 'Untitled Article'}` : 'Add Market Research & Advisory Guide'}
+                </h2>
+              </div>
+
+              {/* View Switcher: Editor Form vs Live Preview */}
+              <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 self-start sm:self-auto">
+                <button
+                  type="button"
+                  onClick={() => setGuideModalTab('edit')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    guideModalTab === 'edit'
+                      ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm'
+                      : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                  }`}
+                >
+                  📝 Editor Form
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setGuideModalTab('preview')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                    guideModalTab === 'preview'
+                      ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm'
+                      : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                  }`}
+                >
+                  <Eye className="w-3.5 h-3.5 text-brand-500" />
+                  <span>Live Preview</span>
+                  {currentGuide.hyperlinks && currentGuide.hyperlinks.length > 0 && (
+                    <span className="px-1.5 py-0.2 rounded-full bg-brand-600 text-white text-[10px]">
+                      {currentGuide.hyperlinks.length}
+                    </span>
+                  )}
+                </button>
+              </div>
             </div>
 
-            <form onSubmit={handleSaveGuide} className="space-y-4 overflow-y-auto pr-1 flex-1 -mr-1">
-              {/* Title */}
-              <div>
-                <label className="block text-xs font-semibold mb-1">Guide / Article Title *</label>
-                <input
-                  type="text"
-                  required
-                  value={currentGuide.title || ''}
-                  onChange={(e) => {
-                    const title = e.target.value;
-                    const autoSlug = !isEditingGuide 
-                      ? title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
-                      : currentGuide.slug;
-                    setCurrentGuide(prev => ({ ...prev, title, slug: autoSlug }));
-                  }}
-                  placeholder="e.g. Commercial Office Space in Sector 62, Noida: Complete Corporate Guide"
-                  className="glass-input w-full px-3 py-2 rounded-xl text-sm"
-                />
-              </div>
-
-              {/* Slug & Category */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* TAB 1: FORM EDITOR */}
+            {guideModalTab === 'edit' && (
+              <form onSubmit={handleSaveGuide} className="space-y-5 overflow-y-auto pr-2 flex-1 -mr-1">
+                {/* Title */}
                 <div>
-                  <label className="block text-xs font-semibold mb-1">URL Slug</label>
-                  <input
-                    type="text"
-                    value={currentGuide.slug || ''}
-                    onChange={(e) => setCurrentGuide(prev => ({ ...prev, slug: e.target.value }))}
-                    placeholder="e.g. commercial-office-space-sector-62-noida"
-                    className="glass-input w-full px-3 py-2 rounded-xl text-xs"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold mb-1">Category *</label>
+                  <label className="block text-xs font-semibold mb-1">Guide / Article Title *</label>
                   <input
                     type="text"
                     required
-                    list="guide-category-suggestions"
-                    value={currentGuide.category || ''}
-                    onChange={(e) => setCurrentGuide(prev => ({ ...prev, category: e.target.value }))}
-                    placeholder="e.g. Office Market, Warehousing & 3PL, Market Trends..."
-                    className="glass-input w-full px-3 py-2 rounded-xl text-xs"
+                    value={currentGuide.title || ''}
+                    onChange={(e) => {
+                      const title = e.target.value;
+                      const autoSlug = !isEditingGuide ? generateBlogSlug(title) : currentGuide.slug;
+                      setCurrentGuide(prev => ({ ...prev, title, slug: autoSlug }));
+                    }}
+                    placeholder="e.g. Commercial Office Space in Sector 62, Noida: Complete Corporate Guide"
+                    className="glass-input w-full px-3 py-2 rounded-xl text-sm"
                   />
-                  <datalist id="guide-category-suggestions">
-                    <option value="Office Market" />
-                    <option value="Warehousing & 3PL" />
-                    <option value="Market Trends" />
-                    <option value="Lease Advisory" />
-                    <option value="Factory & Industrial" />
-                    <option value="Commercial Land" />
-                    <option value="Retail & Showrooms" />
-                  </datalist>
                 </div>
-              </div>
 
-              {/* Date, Read Time & Author */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold mb-1">Date *</label>
-                  <input
-                    type="text"
-                    required
-                    value={currentGuide.date || ''}
-                    onChange={(e) => setCurrentGuide(prev => ({ ...prev, date: e.target.value }))}
-                    placeholder="e.g. March 2026"
-                    className="glass-input w-full px-3 py-2 rounded-xl text-xs"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold mb-1">Read Time *</label>
-                  <input
-                    type="text"
-                    required
-                    value={currentGuide.readTime || ''}
-                    onChange={(e) => setCurrentGuide(prev => ({ ...prev, readTime: e.target.value }))}
-                    placeholder="e.g. 6 min read"
-                    className="glass-input w-full px-3 py-2 rounded-xl text-xs"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold mb-1">Author / Desk</label>
-                  <input
-                    type="text"
-                    value={currentGuide.author || ''}
-                    onChange={(e) => setCurrentGuide(prev => ({ ...prev, author: e.target.value }))}
-                    placeholder="e.g. Shristi Estate Advisory Desk"
-                    className="glass-input w-full px-3 py-2 rounded-xl text-xs"
-                  />
-                </div>
-              </div>
-
-              {/* Cover Image Upload & URL */}
-              <div>
-                <label className="block text-xs font-semibold mb-1">Cover Image</label>
-                <div className="flex flex-col sm:flex-row items-center gap-3">
-                  <div className="relative aspect-[16/9] w-36 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shrink-0">
-                    {currentGuide.image ? (
-                      <img src={currentGuide.image} alt="Preview" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-slate-400">
-                        <ImageIcon className="w-6 h-6" />
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex-1 w-full space-y-2">
-                    <label className="btn-glass-primary px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer w-full sm:w-auto">
-                      <UploadCloud className="w-4 h-4" />
-                      <span>Upload Local Photo</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleGuideImageUpload}
-                        className="hidden"
-                      />
-                    </label>
+                {/* Slug & Category */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold mb-1">URL Slug</label>
                     <input
                       type="text"
-                      value={currentGuide.image || ''}
-                      onChange={(e) => setCurrentGuide(prev => ({ ...prev, image: e.target.value }))}
-                      placeholder="Or enter direct image URL (https://...)"
-                      className="glass-input w-full px-3 py-1.5 rounded-xl text-xs"
+                      value={currentGuide.slug || ''}
+                      onChange={(e) => setCurrentGuide(prev => ({ ...prev, slug: e.target.value }))}
+                      placeholder="e.g. commercial-office-space-sector-62-noida"
+                      className="glass-input w-full px-3 py-2 rounded-xl text-xs"
+                    />
+                    <span className="text-[10px] text-slate-400 mt-0.5 block">
+                      URL path: /blog/{currentGuide.slug || 'slug-name'}
+                    </span>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold mb-1">Category *</label>
+                    <input
+                      type="text"
+                      required
+                      list="guide-category-suggestions"
+                      value={currentGuide.category || ''}
+                      onChange={(e) => setCurrentGuide(prev => ({ ...prev, category: e.target.value }))}
+                      placeholder="e.g. Office Market, Warehousing & 3PL, Market Trends..."
+                      className="glass-input w-full px-3 py-2 rounded-xl text-xs"
+                    />
+                    <datalist id="guide-category-suggestions">
+                      <option value="Office Market" />
+                      <option value="Warehousing & 3PL" />
+                      <option value="Market Trends" />
+                      <option value="Lease Advisory" />
+                      <option value="Factory & Industrial" />
+                      <option value="Commercial Land" />
+                      <option value="Retail & Showrooms" />
+                    </datalist>
+                  </div>
+                </div>
+
+                {/* Date, Read Time & Author */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold mb-1">Publication Date *</label>
+                    <input
+                      type="text"
+                      required
+                      value={currentGuide.date || ''}
+                      onChange={(e) => setCurrentGuide(prev => ({ ...prev, date: e.target.value }))}
+                      placeholder="e.g. March 2026"
+                      className="glass-input w-full px-3 py-2 rounded-xl text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold mb-1">Read Time *</label>
+                    <input
+                      type="text"
+                      required
+                      value={currentGuide.readTime || ''}
+                      onChange={(e) => setCurrentGuide(prev => ({ ...prev, readTime: e.target.value }))}
+                      placeholder="e.g. 6 min read"
+                      className="glass-input w-full px-3 py-2 rounded-xl text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold mb-1">Author / Desk</label>
+                    <input
+                      type="text"
+                      value={currentGuide.author || ''}
+                      onChange={(e) => setCurrentGuide(prev => ({ ...prev, author: e.target.value }))}
+                      placeholder="e.g. Shristi Estate Advisory Desk"
+                      className="glass-input w-full px-3 py-2 rounded-xl text-xs"
                     />
                   </div>
                 </div>
-              </div>
 
-              {/* Excerpt */}
-              <div>
-                <label className="block text-xs font-semibold mb-1">Excerpt / Summary *</label>
-                <textarea
-                  rows={2}
-                  required
-                  value={currentGuide.excerpt || ''}
-                  onChange={(e) => setCurrentGuide(prev => ({ ...prev, excerpt: e.target.value }))}
-                  placeholder="Summary shown on market guide cards and SEO descriptions (2-3 sentences)..."
-                  className="glass-input w-full px-3 py-2 rounded-xl text-xs"
-                />
-              </div>
+                {/* FEATURED IMAGE CONTROLS */}
+                <div className="glass-card p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                      Featured Image
+                    </label>
+                    <span className="text-[11px] text-slate-400">
+                      {currentGuide.featured_image_url || currentGuide.image
+                        ? 'Custom image uploaded'
+                        : 'No image uploaded (default placeholder will display)'}
+                    </span>
+                  </div>
 
-              {/* Full Content */}
-              <div>
-                <label className="block text-xs font-semibold mb-1">Full Article / Advisory Content</label>
-                <textarea
-                  rows={5}
-                  value={currentGuide.content || ''}
-                  onChange={(e) => setCurrentGuide(prev => ({ ...prev, content: e.target.value }))}
-                  placeholder="Detailed market analysis, tenant guidance, regulations, or financial calculations..."
-                  className="glass-input w-full px-3 py-2 rounded-xl text-xs"
-                />
-              </div>
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                    {/* Visual Preview */}
+                    <div className="relative aspect-[16/10] w-full sm:w-44 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shrink-0 shadow-sm">
+                      <img
+                        src={getBlogFeaturedImage(currentGuide)}
+                        alt={getBlogImageAlt(currentGuide)}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute top-2 left-2">
+                        <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${
+                          currentGuide.featured_image_url || currentGuide.image 
+                            ? 'bg-emerald-600 text-white' 
+                            : 'bg-slate-800 text-slate-300'
+                        }`}>
+                          {currentGuide.featured_image_url || currentGuide.image ? 'Custom' : 'Default'}
+                        </span>
+                      </div>
+                    </div>
 
-              {/* Toggles: Published & Featured */}
-              <div className="flex items-center gap-6 pt-2 border-t border-slate-100 dark:border-slate-800">
-                <label className="flex items-center gap-2 text-xs font-semibold cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={currentGuide.published ?? true}
-                    onChange={(e) => setCurrentGuide(prev => ({ ...prev, published: e.target.checked }))}
-                    className="rounded border-slate-300 text-brand-600 focus:ring-brand-500 w-4 h-4"
+                    {/* Action Buttons */}
+                    <div className="flex-1 w-full space-y-2.5">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <label className="btn-glass-primary px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer shadow-sm">
+                          <UploadCloud className="w-4 h-4" />
+                          <span>{isUploadingGuideImage ? 'Uploading to Storage...' : (currentGuide.featured_image_url || currentGuide.image ? 'Replace Image' : 'Upload Featured Image')}</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            disabled={isUploadingGuideImage}
+                            onChange={handleGuideImageUpload}
+                            className="hidden"
+                          />
+                        </label>
+
+                        {(currentGuide.featured_image_url || currentGuide.image) && (
+                          <button
+                            type="button"
+                            onClick={handleRemoveGuideImage}
+                            className="px-3.5 py-2 rounded-xl border border-rose-200 dark:border-rose-900/60 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 text-xs font-semibold transition-colors flex items-center gap-1.5"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>Remove Image</span>
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="space-y-1">
+                        <input
+                          type="text"
+                          value={currentGuide.featured_image_url || currentGuide.image || ''}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setCurrentGuide(prev => ({ ...prev, image: val, featured_image_url: val }));
+                          }}
+                          placeholder="Or paste direct image URL (https://...)"
+                          className="glass-input w-full px-3 py-1.5 rounded-xl text-xs"
+                        />
+                        <p className="text-[10px] text-slate-400">
+                          Uploads are securely saved in Supabase storage (`blog-images`) with automatic compression.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Image Alt Text & Caption */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-slate-200/70 dark:border-slate-800">
+                    <div>
+                      <label className="block text-xs font-semibold mb-1">
+                        Image Alt Text
+                      </label>
+                      <input
+                        type="text"
+                        value={currentGuide.featured_image_alt || ''}
+                        onChange={(e) => setCurrentGuide(prev => ({ ...prev, featured_image_alt: e.target.value }))}
+                        placeholder={getBlogImageAlt(currentGuide)}
+                        className="glass-input w-full px-3 py-2 rounded-xl text-xs"
+                      />
+                      <span className="text-[10px] text-slate-400 mt-0.5 block">
+                        If left blank, title-based fallback: "{getBlogImageAlt(currentGuide)}" is used.
+                      </span>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold mb-1">
+                        Image Caption (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={currentGuide.featured_image_caption || ''}
+                        onChange={(e) => setCurrentGuide(prev => ({ ...prev, featured_image_caption: e.target.value }))}
+                        placeholder="e.g. Grade-A Tech Space at Sector 62, Noida"
+                        className="glass-input w-full px-3 py-2 rounded-xl text-xs"
+                      />
+                      <span className="text-[10px] text-slate-400 mt-0.5 block">
+                        Displayed directly below the featured image on the public article page.
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Excerpt */}
+                <div>
+                  <label className="block text-xs font-semibold mb-1">Excerpt / Summary *</label>
+                  <textarea
+                    rows={2}
+                    required
+                    value={currentGuide.excerpt || ''}
+                    onChange={(e) => setCurrentGuide(prev => ({ ...prev, excerpt: e.target.value }))}
+                    placeholder="Short summary displayed on blog cards and search engines (2-3 sentences)..."
+                    className="glass-input w-full px-3 py-2 rounded-xl text-xs"
                   />
-                  <span>Publish Live on Website</span>
-                </label>
+                </div>
 
-                <label className="flex items-center gap-2 text-xs font-semibold cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={currentGuide.featured ?? false}
-                    onChange={(e) => setCurrentGuide(prev => ({ ...prev, featured: e.target.checked }))}
-                    className="rounded border-slate-300 text-brand-600 focus:ring-brand-500 w-4 h-4"
+                {/* SEO METADATA */}
+                <div className="glass-card p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/30 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                      SEO Metadata
+                    </span>
+                    <span className="text-[10px] text-slate-400">
+                      Defaults automatically to Title and Excerpt
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-semibold mb-1">Custom SEO Title</label>
+                      <input
+                        type="text"
+                        value={currentGuide.seo_title || ''}
+                        onChange={(e) => setCurrentGuide(prev => ({ ...prev, seo_title: e.target.value }))}
+                        placeholder={currentGuide.title || 'Custom meta title...'}
+                        className="glass-input w-full px-3 py-1.5 rounded-xl text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold mb-1">Custom Meta Description</label>
+                      <input
+                        type="text"
+                        value={currentGuide.seo_description || ''}
+                        onChange={(e) => setCurrentGuide(prev => ({ ...prev, seo_description: e.target.value }))}
+                        placeholder={currentGuide.excerpt || 'Custom meta description...'}
+                        className="glass-input w-full px-3 py-1.5 rounded-xl text-xs"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* FULL ARTICLE CONTENT WITH QUICK LINK TOOLBAR */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-semibold">Full Article / Advisory Content</label>
+                    <button
+                      type="button"
+                      onClick={handleOpenAddHyperlink}
+                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-brand-600 dark:text-brand-400 hover:underline"
+                    >
+                      <Link2 className="w-3 h-3" />
+                      <span>🔗 Add Hyperlink Word</span>
+                    </button>
+                  </div>
+                  <textarea
+                    rows={6}
+                    value={currentGuide.content || ''}
+                    onChange={(e) => setCurrentGuide(prev => ({ ...prev, content: e.target.value }))}
+                    placeholder="Enter comprehensive article paragraphs, research data, lease guidelines, or regulatory details..."
+                    className="glass-input w-full px-3 py-2 rounded-xl text-xs font-mono leading-relaxed"
                   />
-                  <span>Mark as Featured Article</span>
-                </label>
-              </div>
+                  <div className="flex items-center justify-between text-[10px] text-slate-400 mt-1">
+                    <span>Supports plain text with paragraphs or standard HTML tags</span>
+                    <span>Words: {(currentGuide.content || '').split(/\s+/).filter(Boolean).length}</span>
+                  </div>
+                </div>
 
-              {/* Actions */}
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
-                <button
-                  type="button"
-                  onClick={() => setShowGuideModal(false)}
-                  className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSaving}
-                  className="btn-glass-primary px-5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm disabled:opacity-50"
-                >
-                  <Check className="w-4 h-4" />
-                  <span>{isSaving ? 'Saving...' : isEditingGuide ? 'Update Guide' : 'Save Guide'}</span>
-                </button>
+                {/* HYPERLINK WORDS SECTION */}
+                <div className="glass-card p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-brand-50/20 dark:bg-brand-950/10 space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <Link2 className="w-4 h-4 text-brand-600 dark:text-brand-400" />
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                          Hyperlink Words & Text Link Manager
+                        </h4>
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-brand-600 text-white">
+                          {(currentGuide.hyperlinks || []).length} configured
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        Automatically creates clickable links on matching words/phrases inside the public article.
+                      </p>
+                    </div>
+
+                    {!showHyperlinkForm && (
+                      <button
+                        type="button"
+                        onClick={handleOpenAddHyperlink}
+                        className="btn-glass-primary px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 self-start sm:self-auto shadow-sm"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>+ Add Hyperlink</span>
+                      </button>
+                    )}
+                  </div>
+
+                  {/* INLINE HYPERLINK ADD/EDIT FORM */}
+                  {showHyperlinkForm && (
+                    <div className="p-4 rounded-xl border border-brand-300 dark:border-brand-800 bg-white dark:bg-[#070C1E] shadow-lg space-y-3 mt-2">
+                      <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+                        <span className="text-xs font-bold text-brand-600 dark:text-brand-400">
+                          {editingHyperlinkIndex !== null ? 'Edit Hyperlink Entry' : 'New Hyperlink Entry'}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => { setShowHyperlinkForm(false); setEditingHyperlinkIndex(null); }}
+                          className="p-1 rounded text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {/* Word / Phrase */}
+                        <div>
+                          <label className="block text-[11px] font-semibold mb-1">Words / Phrase to Link *</label>
+                          <input
+                            type="text"
+                            required
+                            value={hyperlinkInput.text}
+                            onChange={(e) => setHyperlinkInput(prev => ({ ...prev, text: e.target.value }))}
+                            placeholder="e.g. Office Space in Noida"
+                            className="glass-input w-full px-3 py-1.5 rounded-xl text-xs"
+                          />
+                        </div>
+
+                        {/* Link Type */}
+                        <div>
+                          <label className="block text-[11px] font-semibold mb-1">Link Type *</label>
+                          <select
+                            value={hyperlinkInput.type}
+                            onChange={(e) => {
+                              const t = e.target.value as HyperlinkConfig['type'];
+                              setHyperlinkInput(prev => ({
+                                ...prev,
+                                type: t,
+                                open_in_new_tab: t === 'external'
+                              }));
+                            }}
+                            className="glass-input w-full px-3 py-1.5 rounded-xl text-xs"
+                          >
+                            <option value="internal">Internal Link (shristiestate.in)</option>
+                            <option value="external">External Link (https://...)</option>
+                            <option value="email">Email (mailto:...)</option>
+                            <option value="phone">Phone (tel:...)</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* Internal Preset Selector or Direct URL */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {hyperlinkInput.type === 'internal' && (
+                          <div>
+                            <label className="block text-[11px] font-semibold mb-1">Select Internal Page</label>
+                            <select
+                              onChange={(e) => {
+                                if (e.target.value) {
+                                  setHyperlinkInput(prev => ({ ...prev, url: e.target.value }));
+                                }
+                              }}
+                              className="glass-input w-full px-3 py-1.5 rounded-xl text-xs text-slate-700 dark:text-slate-200"
+                              defaultValue=""
+                            >
+                              <option value="" disabled>-- Pick Internal Route --</option>
+                              {['Main', 'Workflows', 'Categories', 'Locations', 'Inventory'].map(grp => (
+                                <optgroup key={grp} label={grp}>
+                                  {INTERNAL_PAGE_PRESETS.filter(p => p.group === grp).map(p => (
+                                    <option key={p.url} value={p.url}>
+                                      {p.label} ({p.url})
+                                    </option>
+                                  ))}
+                                </optgroup>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+
+                        <div className={hyperlinkInput.type === 'internal' ? '' : 'sm:col-span-2'}>
+                          <label className="block text-[11px] font-semibold mb-1">Link URL *</label>
+                          <input
+                            type="text"
+                            required
+                            value={hyperlinkInput.url}
+                            onChange={(e) => setHyperlinkInput(prev => ({ ...prev, url: e.target.value }))}
+                            placeholder={
+                              hyperlinkInput.type === 'internal'
+                                ? '/commercial-real-estate or /properties'
+                                : hyperlinkInput.type === 'external'
+                                ? 'https://example.com'
+                                : hyperlinkInput.type === 'email'
+                                ? 'info@shristiestate.in'
+                                : '+918750098666'
+                            }
+                            className="glass-input w-full px-3 py-1.5 rounded-xl text-xs"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Settings: Open in new tab, title, occurrences */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                        <div>
+                          <label className="block text-[11px] font-semibold mb-1">Optional Link Title (Tooltip)</label>
+                          <input
+                            type="text"
+                            value={hyperlinkInput.title || ''}
+                            onChange={(e) => setHyperlinkInput(prev => ({ ...prev, title: e.target.value }))}
+                            placeholder="e.g. Commercial Office Space in Noida"
+                            className="glass-input w-full px-3 py-1.5 rounded-xl text-xs"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-semibold mb-1">Match Occurrence</label>
+                          <select
+                            value={hyperlinkInput.match_mode || 'first'}
+                            onChange={(e) => setHyperlinkInput(prev => ({ ...prev, match_mode: e.target.value as 'first' | 'all' }))}
+                            className="glass-input w-full px-3 py-1.5 rounded-xl text-xs"
+                          >
+                            <option value="first">First occurrence only (Recommended)</option>
+                            <option value="all">All occurrences</option>
+                          </select>
+                        </div>
+
+                        <div className="flex items-center pt-5">
+                          <label className="flex items-center gap-2 text-xs font-semibold cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={hyperlinkInput.open_in_new_tab}
+                              onChange={(e) => setHyperlinkInput(prev => ({ ...prev, open_in_new_tab: e.target.checked }))}
+                              className="rounded border-slate-300 text-brand-600 focus:ring-brand-500 w-4 h-4"
+                            />
+                            <span>Open in New Tab</span>
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* Form Actions */}
+                      <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                        <button
+                          type="button"
+                          onClick={() => { setShowHyperlinkForm(false); setEditingHyperlinkIndex(null); }}
+                          className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-semibold"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleSaveHyperlink}
+                          className="btn-glass-primary px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm"
+                        >
+                          {editingHyperlinkIndex !== null ? 'Update Hyperlink' : 'Save Hyperlink'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* HYPERLINKS TABLE / LIST */}
+                  <div className="space-y-2">
+                    {(!currentGuide.hyperlinks || currentGuide.hyperlinks.length === 0) ? (
+                      <p className="text-xs text-slate-400 py-2 italic text-center">
+                        No hyperlinks configured yet. Click "+ Add Hyperlink" to convert keywords like "Office Space in Noida" into clickable links automatically.
+                      </p>
+                    ) : (
+                      <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                        <table className="w-full text-left text-xs">
+                          <thead className="bg-slate-100/70 dark:bg-slate-800/70 text-slate-500 font-semibold border-b border-slate-200 dark:border-slate-800">
+                            <tr>
+                              <th className="px-3 py-2">Words / Phrase</th>
+                              <th className="px-3 py-2">Destination URL</th>
+                              <th className="px-3 py-2">Type</th>
+                              <th className="px-3 py-2">Mode</th>
+                              <th className="px-3 py-2 text-right">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 dark:divide-slate-800 bg-white/60 dark:bg-[#070C1E]/60">
+                            {currentGuide.hyperlinks.map((hl, idx) => (
+                              <tr key={hl.id || idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                                <td className="px-3 py-2 font-bold text-brand-600 dark:text-brand-400">
+                                  {hl.text}
+                                </td>
+                                <td className="px-3 py-2 font-mono text-[11px] text-slate-600 dark:text-slate-300 max-w-[180px] truncate" title={hl.url}>
+                                  {hl.url}
+                                </td>
+                                <td className="px-3 py-2">
+                                  <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                                    {hl.type}
+                                  </span>
+                                </td>
+                                <td className="px-3 py-2 text-[11px] text-slate-400">
+                                  {hl.match_mode === 'all' ? 'All' : '1st only'}
+                                  {hl.open_in_new_tab ? ' (New tab)' : ''}
+                                </td>
+                                <td className="px-3 py-2 text-right">
+                                  <div className="flex items-center justify-end gap-1">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleOpenEditHyperlink(idx)}
+                                      className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300"
+                                      title="Edit Hyperlink"
+                                    >
+                                      <Edit3 className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDeleteHyperlink(idx)}
+                                      className="p-1 rounded hover:bg-rose-100 dark:hover:bg-rose-950/60 text-rose-600 dark:text-rose-400"
+                                      title="Delete Hyperlink"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Toggles: Published & Featured */}
+                <div className="flex items-center gap-6 pt-2 border-t border-slate-100 dark:border-slate-800">
+                  <label className="flex items-center gap-2 text-xs font-semibold cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={currentGuide.published ?? true}
+                      onChange={(e) => setCurrentGuide(prev => ({ ...prev, published: e.target.checked }))}
+                      className="rounded border-slate-300 text-brand-600 focus:ring-brand-500 w-4 h-4"
+                    />
+                    <span>Publish Live on Website</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 text-xs font-semibold cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={currentGuide.featured ?? false}
+                      onChange={(e) => setCurrentGuide(prev => ({ ...prev, featured: e.target.checked }))}
+                      className="rounded border-slate-300 text-brand-600 focus:ring-brand-500 w-4 h-4"
+                    />
+                    <span>Mark as Featured Article</span>
+                  </label>
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => setShowGuideModal(false)}
+                    className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSaving || isUploadingGuideImage}
+                    className="btn-glass-primary px-5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm disabled:opacity-50"
+                  >
+                    <Check className="w-4 h-4" />
+                    <span>{isSaving ? 'Saving...' : isEditingGuide ? 'Update Guide' : 'Save Guide'}</span>
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* TAB 2: LIVE ADMIN PREVIEW */}
+            {guideModalTab === 'preview' && (
+              <div className="space-y-4 overflow-y-auto pr-2 flex-1 -mr-1">
+                {/* Subtab Switcher */}
+                <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setGuidePreviewSubTab('card')}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                        guidePreviewSubTab === 'card'
+                          ? 'bg-brand-600 text-white shadow-sm'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                      }`}
+                    >
+                      🎴 Public Blog Card Preview
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setGuidePreviewSubTab('article')}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                        guidePreviewSubTab === 'article'
+                          ? 'bg-brand-600 text-white shadow-sm'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                      }`}
+                    >
+                      📄 Full Article & Hyperlinks Preview
+                    </button>
+                  </div>
+
+                  <span className="text-[11px] text-slate-400">
+                    Preview reflects real-time edits
+                  </span>
+                </div>
+
+                {/* Subtab 2A: Public Blog Card View */}
+                {guidePreviewSubTab === 'card' && (
+                  <div className="p-6 bg-slate-100 dark:bg-slate-950/80 rounded-2xl flex items-center justify-center">
+                    <div className="w-full max-w-sm glass-card rounded-3xl overflow-hidden border border-slate-200/90 dark:border-slate-800 bg-white/70 dark:bg-[#0B132B]/75 flex flex-col justify-between shadow-xl">
+                      <div className="relative aspect-[16/10] overflow-hidden bg-slate-100 dark:bg-slate-800">
+                        <img
+                          src={getBlogFeaturedImage(currentGuide)}
+                          alt={getBlogImageAlt(currentGuide)}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute top-3 left-3">
+                          <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-brand-600 text-white shadow-md">
+                            {currentGuide.category || 'Office Market'}
+                          </span>
+                        </div>
+                        {currentGuide.featured && (
+                          <div className="absolute top-3 right-3">
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-amber-500 text-white shadow-sm">
+                              Featured
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-xs text-slate-400">
+                            <span>{currentGuide.date || 'March 2026'}</span>
+                            <span>•</span>
+                            <span>{currentGuide.readTime || '5 min read'}</span>
+                          </div>
+                          <h3 className="font-bold text-base text-slate-900 dark:text-white font-['Outfit'] leading-snug">
+                            {currentGuide.title || 'Untitled Commercial Guide'}
+                          </h3>
+                          <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed line-clamp-3">
+                            {currentGuide.excerpt || 'Article summary will appear here on public blog cards...'}
+                          </p>
+                          {currentGuide.author && (
+                            <span className="text-[10px] text-slate-400 font-medium block">
+                              By {currentGuide.author}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-600 dark:text-brand-400">
+                            <span>Read More</span>
+                            <ArrowRight className="w-3.5 h-3.5" />
+                          </span>
+                          <span className="text-[10px] text-slate-400">
+                            /blog/{currentGuide.slug || 'slug'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Subtab 2B: Full Article Preview with Hyperlinks Rendered */}
+                {guidePreviewSubTab === 'article' && (
+                  <div className="p-4 sm:p-6 bg-slate-50 dark:bg-slate-950/70 rounded-2xl space-y-6 border border-slate-200 dark:border-slate-800">
+                    <div className="space-y-3">
+                      <span className="px-3 py-1 rounded-xl text-xs font-bold bg-brand-600 text-white">
+                        {currentGuide.category || 'Office Market'}
+                      </span>
+                      <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white font-['Outfit']">
+                        {currentGuide.title || 'Untitled Article'}
+                      </h1>
+                      <div className="flex items-center gap-3 text-xs text-slate-500 pb-2 border-b border-slate-200 dark:border-slate-800">
+                        <span>{currentGuide.date || 'March 2026'}</span>
+                        <span>•</span>
+                        <span>{currentGuide.readTime || '5 min read'}</span>
+                        {currentGuide.author && (
+                          <>
+                            <span>•</span>
+                            <span>By {currentGuide.author}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Featured Image & Caption */}
+                    <div className="space-y-2">
+                      <div className="relative aspect-[16/9] w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-md">
+                        <img
+                          src={getBlogFeaturedImage(currentGuide)}
+                          alt={getBlogImageAlt(currentGuide)}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      {currentGuide.featured_image_caption && (
+                        <p className="text-xs text-slate-500 italic px-2">
+                          📸 {currentGuide.featured_image_caption}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Excerpt callout */}
+                    {currentGuide.excerpt && (
+                      <div className="p-4 rounded-xl border-l-4 border-l-brand-600 bg-brand-50/50 dark:bg-brand-950/30 text-xs sm:text-sm text-slate-700 dark:text-slate-300">
+                        {currentGuide.excerpt}
+                      </div>
+                    )}
+
+                    {/* Rendered Content with Live Hyperlinks */}
+                    <div className="space-y-3 pt-2">
+                      <div className="flex items-center justify-between text-xs text-slate-500">
+                        <span className="font-semibold">Article Content (Hyperlinks Applied Live):</span>
+                        <span className="text-[11px] text-brand-600 dark:text-brand-400">
+                          {(currentGuide.hyperlinks || []).length} keywords active
+                        </span>
+                      </div>
+                      <div
+                        dangerouslySetInnerHTML={{
+                          __html: applyHyperlinksToContent(
+                            currentGuide.content || currentGuide.excerpt || 'No content written yet.',
+                            currentGuide.hyperlinks
+                          )
+                        }}
+                        className="text-xs sm:text-sm text-slate-800 dark:text-slate-200 space-y-3 leading-relaxed"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Preview Tab Action Bar */}
+                <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => setGuideModalTab('edit')}
+                    className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold"
+                  >
+                    ← Back to Editor Form
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleSaveGuide}
+                    disabled={isSaving}
+                    className="btn-glass-primary px-5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm disabled:opacity-50"
+                  >
+                    <Check className="w-4 h-4" />
+                    <span>{isSaving ? 'Saving...' : isEditingGuide ? 'Update Guide' : 'Save Guide'}</span>
+                  </button>
+                </div>
               </div>
-            </form>
+            )}
           </div>
         </div>
       )}

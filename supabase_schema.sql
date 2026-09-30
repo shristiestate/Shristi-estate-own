@@ -142,3 +142,44 @@ ALTER TABLE buildings ADD COLUMN IF NOT EXISTS towers JSONB DEFAULT '[]'::jsonb;
 ALTER TABLE buildings ADD COLUMN IF NOT EXISTS total_towers INTEGER DEFAULT 1;
 ALTER TABLE buildings ADD COLUMN IF NOT EXISTS tower_details TEXT;
 
+-- 5. GUIDES / BLOGS TABLE
+CREATE TABLE IF NOT EXISTS guides (
+  id TEXT PRIMARY KEY,
+  slug TEXT UNIQUE NOT NULL,
+  title TEXT NOT NULL,
+  excerpt TEXT NOT NULL,
+  content TEXT,
+  "readTime" TEXT DEFAULT '5 min read',
+  date TEXT NOT NULL,
+  category TEXT NOT NULL,
+  image TEXT NOT NULL,
+  featured_image_url TEXT,
+  featured_image_alt TEXT,
+  featured_image_caption TEXT,
+  seo_title TEXT,
+  seo_description TEXT,
+  hyperlinks JSONB DEFAULT '[]'::jsonb,
+  published BOOLEAN DEFAULT true,
+  featured BOOLEAN DEFAULT false,
+  author TEXT DEFAULT 'Shristi Estate Advisory Desk',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE guides ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public read guides" ON guides FOR SELECT USING (published = true);
+
+-- 6. STORAGE BUCKET FOR BLOG IMAGES
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('blog-images', 'blog-images', true)
+ON CONFLICT (id) DO NOTHING;
+
+CREATE POLICY "Public read blog images" 
+ON storage.objects FOR SELECT 
+USING (bucket_id = 'blog-images');
+
+CREATE POLICY "Public insert/update blog images" 
+ON storage.objects FOR INSERT 
+WITH CHECK (bucket_id = 'blog-images');
+
+

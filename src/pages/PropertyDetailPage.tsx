@@ -22,10 +22,18 @@ import {
 import { StorageService } from '../services/storageService';
 import { Property, Building as BuildingType } from '../types';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
+import { PropertyCard } from '../components/common/PropertyCard';
 import { WhatsAppIcon } from '../components/common/SocialIcons';
 import { generatePropertyWhatsAppLink } from '../utils/whatsapp';
 import { getBuildingStructureDisplay } from '../utils/textFormat';
 import { cleanPropertyAddress } from '../utils/propertyLocation';
+import { updatePageSeo } from '../utils/seo';
+import { 
+  getPropertyImageAlt, 
+  getPropertyCanonicalUrl, 
+  generatePropertyStructuredData 
+} from '../utils/seoHelpers';
+import { applyHyperlinksToContent } from '../utils/hyperlinks';
 
 interface PropertyDetailPageProps {
   onOpenEnquiry: (property: Property) => void;
@@ -41,6 +49,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
 
   const [property, setProperty] = useState<Property | null>(() => initialProp);
   const [building, setBuilding] = useState<BuildingType | null>(() => initialBld);
+  const [buildingProperties, setBuildingProperties] = useState<Property[]>([]);
   const [activeImage, setActiveImage] = useState<string>(() => initialProp?.primary_image || '');
   const [copied, setCopied] = useState(false);
   const [hasResolved, setHasResolved] = useState(() => Boolean(initialProp));
@@ -55,7 +64,13 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
         setActiveImage((prev) => prev || prop.primary_image);
         if (prop.building_id) {
           const bld = await StorageService.getBuildings().then(blds => blds.find(b => b.id === prop.building_id));
-          if (isMounted && bld) setBuilding(bld);
+          if (isMounted && bld) {
+            setBuilding(bld);
+            const related = await StorageService.getPropertiesByBuilding(bld.id);
+            if (isMounted) {
+              setBuildingProperties(related.filter(p => p.id !== prop.id));
+            }
+          }
         }
       }
       if (isMounted) setHasResolved(true);
@@ -65,6 +80,27 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
 
     return () => { isMounted = false; };
   }, [propertySlug]);
+
+  // Dynamic SEO & Structured Data update
+  useEffect(() => {
+    if (!property) return;
+    const title = property.seo_title || `${property.built_up_area ? property.built_up_area + ' sq ft ' : ''}${property.property_type} for ${property.listing_type} in ${property.building_name || property.location_name}`;
+    const desc = property.seo_description || property.short_description || property.description || `Explore this ${property.built_up_area || ''} sq.ft commercial office space for ${property.listing_type?.toLowerCase() || 'lease'} in ${property.location_name}.`;
+    const canonical = property.canonical_url || getPropertyCanonicalUrl(property);
+    const ogImg = property.og_image || property.primary_image;
+    const structuredData = generatePropertyStructuredData(property, building || undefined);
+
+    updatePageSeo({
+      title,
+      description: desc,
+      keywords: property.seo_keywords,
+      canonicalUrl: canonical,
+      ogTitle: property.og_title || title,
+      ogDescription: property.og_description || desc,
+      ogImage: ogImg,
+      structuredData
+    });
+  }, [property, building]);
 
   if (!property && hasResolved) {
     return (
@@ -95,13 +131,14 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
 
   return (
     <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-3 sm:py-8 space-y-6 sm:space-y-10">
-      {/* Hierarchical Breadcrumbs (Section 81) */}
+      {/* Hierarchical Breadcrumbs (Section 81 & Req 15) */}
       <Breadcrumbs
         items={[
           { label: property.category.replace('-', ' ').toUpperCase(), path: `/${property.category}` },
           { label: property.location_name, path: `/locations/${property.location_id.replace('loc-', '')}` },
           ...(property.building_name && building ? [{ label: property.building_name, path: `/buildings/${building.slug}` }] : []),
-          { label: property.reference_number }
+          ...(property.tower ? [{ label: property.tower, path: `/buildings/${building?.slug || ''}` }] : []),
+          { label: property.title || property.reference_number }
         ]}
       />
 
@@ -113,11 +150,15 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
           <div className="space-y-3 sm:space-y-4">
             <div className="relative aspect-[16/10] rounded-2xl sm:rounded-3xl overflow-hidden glass-card border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 shadow-xl">
               <img
-                src={activeImage || property.primary_image}
-                alt={property.title}
+                src={activeImage || property.primary_image || 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1000&q=80'}
+                alt={getPropertyImageAlt(property, activeImage === property.primary_image ? property.primary_image_alt : undefined)}
+                title={property.primary_image_title || property.title}
                 fetchPriority="high"
                 decoding="async"
                 className="w-full h-full object-cover transition-all duration-300"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1000&q=80';
+                }}
               />
 
               {/* Status & ID Badge */}
@@ -138,6 +179,13 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
               </div>
             </div>
 
+            {/* Property Image Caption */}
+            {property.primary_image_caption && (
+              <p className="text-xs text-slate-500 dark:text-slate-400 italic px-2">
+                {property.primary_image_caption}
+              </p>
+            )}
+
             {/* Thumbnails */}
             {allImages.length > 1 && (
               <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto pb-2">
@@ -149,7 +197,14 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
                       activeImage === img ? 'border-brand-500 scale-105 shadow-md' : 'border-transparent opacity-75'
                     }`}
                   >
-                    <img src={img} alt={`Thumb ${idx}`} className="w-full h-full object-cover" />
+                    <img 
+                      src={img} 
+                      alt={`${property.title} view ${idx + 1}`} 
+                      className="w-full h-full object-cover" 
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=300&q=80';
+                      }}
+                    />
                   </button>
                 ))}
               </div>
@@ -259,9 +314,37 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
             <h2 className="text-xl font-bold text-slate-900 dark:text-white font-['Outfit']">
               Commercial Overview & Highlights
             </h2>
-            <div className="overview-text text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-              {property.description}
-            </div>
+            {property.short_description && (
+              <p className="text-sm font-semibold text-brand-700 dark:text-brand-300">
+                {property.short_description}
+              </p>
+            )}
+            <div 
+              className="overview-text text-sm text-slate-600 dark:text-slate-300 leading-relaxed space-y-3 prose dark:prose-invert max-w-none"
+              dangerouslySetInnerHTML={{
+                __html: applyHyperlinksToContent(
+                  (property.overview || property.description || '').replace(/\n/g, '<br/>'),
+                  property.hyperlinks || []
+                )
+              }}
+            />
+
+            {property.location_connectivity && (
+              <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                  Location & Connectivity
+                </h4>
+                <div 
+                  className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed prose dark:prose-invert max-w-none"
+                  dangerouslySetInnerHTML={{
+                    __html: applyHyperlinksToContent(
+                      property.location_connectivity.replace(/\n/g, '<br/>'),
+                      property.hyperlinks || []
+                    )
+                  }}
+                />
+              </div>
+            )}
 
             {/* Features list */}
             {property.features && property.features.length > 0 && (
@@ -410,6 +493,60 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
           </div>
         </div>
       </div>
+
+      {/* RELATED PROPERTIES IN THIS TOWER (Req 16 & 17) */}
+      {property.tower && buildingProperties.some(p => p.tower === property.tower) && (
+        <section className="space-y-4 pt-6 border-t border-slate-200 dark:border-slate-800">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
+                Tower Inventory
+              </span>
+              <h3 className="text-xl sm:text-2xl font-bold font-['Outfit']">
+                Other Properties in {property.tower}
+              </h3>
+            </div>
+            {building && (
+              <Link to={`/buildings/${building.slug}`} className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1">
+                <span>View {property.tower} Overview</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            )}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {buildingProperties.filter(p => p.tower === property.tower).slice(0, 3).map(relProp => (
+              <PropertyCard key={relProp.id} property={relProp} onEnquire={onOpenEnquiry} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* MORE PROPERTIES IN THIS BUILDING (Req 16 & 17) */}
+      {buildingProperties.length > 0 && (
+        <section className="space-y-4 pt-6 border-t border-slate-200 dark:border-slate-800">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
+                Building Portfolio
+              </span>
+              <h3 className="text-xl sm:text-2xl font-bold font-['Outfit']">
+                More Properties in {property.building_name || building?.name || 'this Building'}
+              </h3>
+            </div>
+            {building && (
+              <Link to={`/buildings/${building.slug}`} className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1">
+                <span>All Units in {building.name}</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            )}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {buildingProperties.slice(0, 3).map(relProp => (
+              <PropertyCard key={relProp.id} property={relProp} onEnquire={onOpenEnquiry} />
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 };

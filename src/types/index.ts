@@ -40,6 +40,13 @@ export interface Location {
   featured?: boolean;
 }
 
+export interface ImageItem {
+  url: string;
+  alt?: string;
+  title?: string;
+  caption?: string;
+}
+
 export interface Building {
   id: string;
   name: string;
@@ -75,6 +82,33 @@ export interface Building {
   nearby_transport: string;
   published: boolean;
   property_count?: number;
+
+  // SEO, Images & Content Enhancements
+  tower_name?: string;
+  building_name?: string;
+  block_name?: string;
+  tower_number?: string;
+  sector?: string;
+  gmaps_direction?: string;
+  google_maps_direction?: string;
+  status?: string;
+  short_description?: string;
+  overview?: string;
+  location_connectivity?: string;
+  specs?: Record<string, any> | string;
+  air_conditioning?: string;
+  hero_image_alt?: string;
+  hero_image_title?: string;
+  hero_image_caption?: string;
+  image_details?: ImageItem[];
+  seo_title?: string;
+  seo_description?: string;
+  seo_keywords?: string;
+  canonical_url?: string;
+  og_title?: string;
+  og_description?: string;
+  og_image?: string;
+  hyperlinks?: HyperlinkConfig[];
 }
 
 export interface Property {
@@ -117,6 +151,30 @@ export interface Property {
   published: boolean;
   is_seed?: boolean; // Reference / seed indicator per spec
   created_at: string;
+
+  // SEO, Images & Content Enhancements
+  block?: string;
+  block_name?: string;
+  unit_number?: string;
+  sector?: string;
+  rent_price?: number;
+  sale_price?: number;
+  short_description?: string;
+  overview?: string;
+  location_connectivity?: string;
+  highlights?: string[] | string;
+  primary_image_alt?: string;
+  primary_image_title?: string;
+  primary_image_caption?: string;
+  image_details?: ImageItem[];
+  seo_title?: string;
+  seo_description?: string;
+  seo_keywords?: string;
+  canonical_url?: string;
+  og_title?: string;
+  og_description?: string;
+  og_image?: string;
+  hyperlinks?: HyperlinkConfig[];
 }
 
 export type LeadStatus = 
@@ -176,6 +234,17 @@ export interface Lead {
   created_at: string;
 }
 
+export interface HyperlinkConfig {
+  id?: string;
+  text: string;
+  url: string;
+  type: 'internal' | 'external' | 'email' | 'phone';
+  open_in_new_tab: boolean;
+  title?: string;
+  match_mode?: 'first' | 'all';
+  max_occurrences?: number;
+}
+
 export interface MarketGuide {
   id: string;
   slug: string;
@@ -186,6 +255,12 @@ export interface MarketGuide {
   date: string;
   category: string;
   image: string;
+  featured_image_url?: string;
+  featured_image_alt?: string;
+  featured_image_caption?: string;
+  seo_title?: string;
+  seo_description?: string;
+  hyperlinks?: HyperlinkConfig[];
   published: boolean;
   featured?: boolean;
   author?: string;

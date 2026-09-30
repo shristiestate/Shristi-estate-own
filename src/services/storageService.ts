@@ -380,6 +380,28 @@ export const StorageService = {
               ...supaBld,
               ...meta,
               ...(localBld || {}),
+              building_name: supaBld.building_name || meta.building_name || localBld?.building_name,
+              block_name: supaBld.block_name || meta.block_name || localBld?.block_name,
+              tower_number: supaBld.tower_number || meta.tower_number || localBld?.tower_number,
+              sector: supaBld.sector || meta.sector || localBld?.sector,
+              gmaps_direction: supaBld.gmaps_direction || meta.gmaps_direction || localBld?.gmaps_direction,
+              status: supaBld.status || meta.status || localBld?.status,
+              short_description: supaBld.short_description || meta.short_description || localBld?.short_description,
+              overview: supaBld.overview || meta.overview || localBld?.overview,
+              location_connectivity: supaBld.location_connectivity || meta.location_connectivity || localBld?.location_connectivity,
+              specs: supaBld.specs || meta.specs || localBld?.specs,
+              hero_image_alt: supaBld.hero_image_alt || meta.hero_image_alt || localBld?.hero_image_alt,
+              hero_image_title: supaBld.hero_image_title || meta.hero_image_title || localBld?.hero_image_title,
+              hero_image_caption: supaBld.hero_image_caption || meta.hero_image_caption || localBld?.hero_image_caption,
+              image_details: supaBld.image_details || meta.image_details || localBld?.image_details,
+              seo_title: supaBld.seo_title || meta.seo_title || localBld?.seo_title,
+              seo_description: supaBld.seo_description || meta.seo_description || localBld?.seo_description,
+              seo_keywords: supaBld.seo_keywords || meta.seo_keywords || localBld?.seo_keywords,
+              canonical_url: supaBld.canonical_url || meta.canonical_url || localBld?.canonical_url,
+              og_title: supaBld.og_title || meta.og_title || localBld?.og_title,
+              og_description: supaBld.og_description || meta.og_description || localBld?.og_description,
+              og_image: supaBld.og_image || meta.og_image || localBld?.og_image,
+              hyperlinks: supaBld.hyperlinks || meta.hyperlinks || localBld?.hyperlinks || [],
               available_floors: meta.available_floors !== undefined ? meta.available_floors : (supaBld.available_floors?.startsWith('__meta:') ? null : supaBld.available_floors),
               structure_display: supaBld.structure_display || meta.structure_display || localBld?.structure_display,
               basement_floors: supaBld.basement_floors || meta.basement_floors || localBld?.basement_floors,
@@ -488,6 +510,28 @@ export const StorageService = {
             categories: sanitized.categories,
             locations: sanitized.locations,
             location_names: sanitized.location_names,
+            building_name: sanitized.building_name,
+            block_name: sanitized.block_name,
+            tower_number: sanitized.tower_number,
+            sector: sanitized.sector,
+            gmaps_direction: sanitized.gmaps_direction,
+            status: sanitized.status,
+            short_description: sanitized.short_description,
+            overview: sanitized.overview,
+            location_connectivity: sanitized.location_connectivity,
+            specs: sanitized.specs,
+            hero_image_alt: sanitized.hero_image_alt,
+            hero_image_title: sanitized.hero_image_title,
+            hero_image_caption: sanitized.hero_image_caption,
+            image_details: sanitized.image_details,
+            seo_title: sanitized.seo_title,
+            seo_description: sanitized.seo_description,
+            seo_keywords: sanitized.seo_keywords,
+            canonical_url: sanitized.canonical_url,
+            og_title: sanitized.og_title,
+            og_description: sanitized.og_description,
+            og_image: sanitized.og_image,
+            hyperlinks: sanitized.hyperlinks,
           };
           const basePayload = {
             id: sanitized.id,
@@ -569,6 +613,27 @@ export const StorageService = {
               ...supaProp,
               ...(localProp || {}),
               tower: supaProp.tower || localProp?.tower || null,
+              block_name: supaProp.block_name || localProp?.block_name,
+              unit_number: supaProp.unit_number || localProp?.unit_number,
+              sector: supaProp.sector || localProp?.sector,
+              rent_price: supaProp.rent_price || localProp?.rent_price,
+              sale_price: supaProp.sale_price || localProp?.sale_price,
+              short_description: supaProp.short_description || localProp?.short_description,
+              overview: supaProp.overview || localProp?.overview,
+              location_connectivity: supaProp.location_connectivity || localProp?.location_connectivity,
+              highlights: supaProp.highlights || localProp?.highlights,
+              primary_image_alt: supaProp.primary_image_alt || localProp?.primary_image_alt,
+              primary_image_title: supaProp.primary_image_title || localProp?.primary_image_title,
+              primary_image_caption: supaProp.primary_image_caption || localProp?.primary_image_caption,
+              image_details: supaProp.image_details || localProp?.image_details,
+              seo_title: supaProp.seo_title || localProp?.seo_title,
+              seo_description: supaProp.seo_description || localProp?.seo_description,
+              seo_keywords: supaProp.seo_keywords || localProp?.seo_keywords,
+              canonical_url: supaProp.canonical_url || localProp?.canonical_url,
+              og_title: supaProp.og_title || localProp?.og_title,
+              og_description: supaProp.og_description || localProp?.og_description,
+              og_image: supaProp.og_image || localProp?.og_image,
+              hyperlinks: supaProp.hyperlinks || localProp?.hyperlinks || [],
             };
           });
 
@@ -671,6 +736,27 @@ export const StorageService = {
       features: Array.isArray(property.features) ? property.features : [],
       amenities: Array.isArray(property.amenities) ? property.amenities : [],
       gallery: Array.isArray(property.gallery) ? property.gallery : [],
+      block_name: property.block_name || null,
+      unit_number: property.unit_number || null,
+      sector: property.sector || null,
+      rent_price: property.rent_price || null,
+      sale_price: property.sale_price || null,
+      short_description: property.short_description || null,
+      overview: property.overview || null,
+      location_connectivity: property.location_connectivity || null,
+      highlights: property.highlights || null,
+      primary_image_alt: property.primary_image_alt || null,
+      primary_image_title: property.primary_image_title || null,
+      primary_image_caption: property.primary_image_caption || null,
+      image_details: property.image_details || [],
+      seo_title: property.seo_title || null,
+      seo_description: property.seo_description || null,
+      seo_keywords: property.seo_keywords || null,
+      canonical_url: property.canonical_url || null,
+      og_title: property.og_title || null,
+      og_description: property.og_description || null,
+      og_image: property.og_image || null,
+      hyperlinks: property.hyperlinks || [],
     };
 
     try {
@@ -691,7 +777,14 @@ export const StorageService = {
         const { error } = await supabase.from('properties').upsert(sanitized);
         if (error) {
           console.warn('Supabase upsert property error, trying fallback without optional fields:', error);
-          const { tower, ...basePayload } = sanitized as any;
+          const { 
+            tower, block_name, unit_number, sector, rent_price, sale_price,
+            short_description, overview, location_connectivity, highlights,
+            primary_image_alt, primary_image_title, primary_image_caption,
+            image_details, seo_title, seo_description, seo_keywords,
+            canonical_url, og_title, og_description, og_image, hyperlinks,
+            ...basePayload 
+          } = sanitized as any;
           const fallbackRes = await supabase.from('properties').upsert(basePayload);
           if (fallbackRes.error) {
             console.error('Supabase fallback upsert property error:', fallbackRes.error);
@@ -860,6 +953,26 @@ export const StorageService = {
 
   async getGuides(): Promise<MarketGuide[]> {
     try {
+      if (isSupabaseConfigured && supabase) {
+        try {
+          const { data, error } = await withTimeout(supabase.from('guides').select('*') as any);
+          if (!error && Array.isArray(data) && data.length > 0) {
+            const parsed = data.map((item: any) => ({
+              ...item,
+              image: item.featured_image_url || item.image,
+              featured_image_url: item.featured_image_url || item.image,
+              hyperlinks: Array.isArray(item.hyperlinks) ? item.hyperlinks : []
+            }));
+            _memGuides = parsed;
+            if (typeof window !== 'undefined') {
+              localStorage.setItem(STORAGE_KEYS.GUIDES, JSON.stringify(parsed));
+            }
+            return parsed;
+          }
+        } catch (sbErr) {
+          console.warn('Supabase guides read fallback:', sbErr);
+        }
+      }
       const local = this.getInitialGuides();
       return local;
     } catch {
@@ -877,28 +990,155 @@ export const StorageService = {
     const existingIndex = guides.findIndex(g => g.id === guide.id);
     let updatedGuides: MarketGuide[];
 
+    const sanitizedGuide: MarketGuide = {
+      ...guide,
+      image: guide.featured_image_url || guide.image,
+      featured_image_url: guide.featured_image_url || guide.image,
+      hyperlinks: Array.isArray(guide.hyperlinks) ? guide.hyperlinks : []
+    };
+
     if (existingIndex >= 0) {
       updatedGuides = [...guides];
-      updatedGuides[existingIndex] = { ...guide, updated_at: new Date().toISOString() };
+      updatedGuides[existingIndex] = { ...sanitizedGuide, updated_at: new Date().toISOString() };
     } else {
-      updatedGuides = [{ ...guide, created_at: guide.created_at || new Date().toISOString() }, ...guides];
+      updatedGuides = [{ ...sanitizedGuide, created_at: sanitizedGuide.created_at || new Date().toISOString() }, ...guides];
     }
 
     _memGuides = updatedGuides;
     if (typeof window !== 'undefined') {
       localStorage.setItem(STORAGE_KEYS.GUIDES, JSON.stringify(updatedGuides));
     }
-    return guide;
+
+    // Upsert to Supabase if configured
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase.from('guides').upsert(sanitizedGuide);
+      } catch (err) {
+        console.warn('Supabase guides upsert fallback:', err);
+      }
+    }
+
+    return sanitizedGuide;
   },
 
   async deleteGuide(guideId: string): Promise<boolean> {
     const guides = await this.getGuides();
+    const targetGuide = guides.find(g => g.id === guideId);
     const filtered = guides.filter(g => g.id !== guideId);
     _memGuides = filtered;
     if (typeof window !== 'undefined') {
       localStorage.setItem(STORAGE_KEYS.GUIDES, JSON.stringify(filtered));
     }
+
+    // Clean up Supabase image if applicable
+    if (targetGuide?.featured_image_url) {
+      this.deleteBlogImage(targetGuide.featured_image_url).catch(() => {});
+    }
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase.from('guides').delete().eq('id', guideId);
+      } catch (err) {
+        console.warn('Supabase guides delete fallback:', err);
+      }
+    }
+
     return true;
+  },
+
+  /**
+   * Uploads a blog featured image to Supabase Storage ('blog-images' bucket)
+   * if configured, with graceful fallback to high-quality compressed data URL.
+   */
+  async uploadBlogImage(file: File, previousImageUrl?: string): Promise<string> {
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+        const cleanName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+        const filePath = `featured/${cleanName}`;
+
+        const { data, error } = await supabase.storage
+          .from('blog-images')
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: true
+          });
+
+        if (!error && data) {
+          const { data: publicUrlData } = supabase.storage
+            .from('blog-images')
+            .getPublicUrl(filePath);
+
+          if (publicUrlData?.publicUrl) {
+            // Remove previous image from Supabase storage if it was stored there
+            if (previousImageUrl && previousImageUrl.includes('blog-images')) {
+              try {
+                const parts = previousImageUrl.split('blog-images/');
+                if (parts.length > 1) {
+                  const oldPath = decodeURIComponent(parts[1].split('?')[0]);
+                  await supabase.storage.from('blog-images').remove([oldPath]);
+                }
+              } catch (remErr) {
+                console.warn('Failed to clean up old blog image:', remErr);
+              }
+            }
+            return publicUrlData.publicUrl;
+          }
+        }
+      } catch (storageErr) {
+        console.warn('Supabase storage upload failed, falling back to local compressed image:', storageErr);
+      }
+    }
+
+    // Fallback: Compress locally as Data URL
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          const maxDim = 1400;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL('image/jpeg', 0.82));
+          } else {
+            resolve(e.target?.result as string);
+          }
+        };
+        img.onerror = () => resolve(e.target?.result as string);
+        img.src = e.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    });
+  },
+
+  async deleteBlogImage(imageUrl: string): Promise<void> {
+    if (!imageUrl || !isSupabaseConfigured || !supabase) return;
+    if (imageUrl.includes('blog-images')) {
+      try {
+        const parts = imageUrl.split('blog-images/');
+        if (parts.length > 1) {
+          const oldPath = decodeURIComponent(parts[1].split('?')[0]);
+          await supabase.storage.from('blog-images').remove([oldPath]);
+        }
+      } catch (err) {
+        console.warn('Failed to delete blog image from storage:', err);
+      }
+    }
   },
 
   // Reset database back to default seed data

@@ -22,6 +22,13 @@ import { Breadcrumbs } from '../components/common/Breadcrumbs';
 import { WhatsAppIcon } from '../components/common/SocialIcons';
 import { generateBuildingWhatsAppLink } from '../utils/whatsapp';
 import { getBuildingStructureDisplay } from '../utils/textFormat';
+import { updatePageSeo } from '../utils/seo';
+import { 
+  getTowerImageAlt, 
+  getTowerCanonicalUrl, 
+  generateTowerStructuredData 
+} from '../utils/seoHelpers';
+import { applyHyperlinksToContent } from '../utils/hyperlinks';
 
 interface BuildingDetailPageProps {
   onOpenEnquiry: (property?: Property) => void;
@@ -59,6 +66,27 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
     return () => { isMounted = false; };
   }, [buildingSlug]);
 
+  // Dynamic SEO & Structured Data update
+  useEffect(() => {
+    if (!building) return;
+    const title = building.seo_title || `${building.name} Office Space in ${building.location_name}`;
+    const desc = building.seo_description || building.short_description || building.description || `Explore office space and commercial properties in ${building.name}, ${building.location_name}.`;
+    const canonical = building.canonical_url || getTowerCanonicalUrl(building);
+    const ogImg = building.og_image || building.hero_image;
+    const structuredData = generateTowerStructuredData(building, properties);
+
+    updatePageSeo({
+      title,
+      description: desc,
+      keywords: building.seo_keywords,
+      canonicalUrl: canonical,
+      ogTitle: building.og_title || title,
+      ogDescription: building.og_description || desc,
+      ogImage: ogImg,
+      structuredData
+    });
+  }, [building, properties]);
+
   if (!building && hasResolved) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-20 text-center space-y-4">
@@ -94,11 +122,15 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
         <div className="lg:col-span-7 space-y-4">
           <div className="relative aspect-[16/10] rounded-3xl overflow-hidden glass-card border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 shadow-xl">
             <img
-              src={activeImage || building.hero_image}
-              alt={building.name}
+              src={activeImage || building.hero_image || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80'}
+              alt={getTowerImageAlt(building, activeImage === building.hero_image ? building.hero_image_alt : undefined)}
+              title={building.hero_image_title || building.name}
               fetchPriority="high"
               decoding="async"
               className="w-full h-full object-cover transition-all duration-300"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80';
+              }}
             />
             <div className="absolute top-4 left-4">
               <span className="px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider bg-brand-600 text-white shadow-lg">
@@ -106,6 +138,13 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
               </span>
             </div>
           </div>
+
+          {/* Image Caption */}
+          {building.hero_image_caption && (
+            <p className="text-xs text-slate-500 dark:text-slate-400 italic px-2">
+              {building.hero_image_caption}
+            </p>
+          )}
 
           {/* Thumbnails */}
           {building.gallery && building.gallery.length > 0 && (
@@ -116,7 +155,13 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
                   activeImage === building.hero_image ? 'border-brand-500 scale-105' : 'border-transparent opacity-70'
                 }`}
               >
-                <img src={building.hero_image} alt="Hero" className="w-full h-full object-cover" />
+                <img 
+                  src={building.hero_image} 
+                  alt={getTowerImageAlt(building, building.hero_image_alt)} 
+                  title={building.hero_image_title || building.name}
+                  className="w-full h-full object-cover" 
+                  onError={(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=300&q=80'; }}
+                />
               </button>
               {building.gallery.map((img, idx) => (
                 <button
@@ -126,7 +171,12 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
                     activeImage === img ? 'border-brand-500 scale-105' : 'border-transparent opacity-70'
                   }`}
                 >
-                  <img src={img} alt={`Gallery ${idx}`} className="w-full h-full object-cover" />
+                  <img 
+                    src={img} 
+                    alt={`${building.name} - View ${idx + 1}`} 
+                    className="w-full h-full object-cover" 
+                    onError={(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=300&q=80'; }}
+                  />
                 </button>
               ))}
             </div>
@@ -243,10 +293,38 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
             <h2 className="text-xl font-bold text-slate-900 dark:text-white font-['Outfit']">
               Building Overview & Specifications
             </h2>
-            <div className="overview-text text-sm text-slate-600 dark:text-slate-300 mt-3 leading-relaxed">
-              {building.description}
-            </div>
+            {building.short_description && (
+              <p className="text-sm font-semibold text-brand-700 dark:text-brand-300 mt-2">
+                {building.short_description}
+              </p>
+            )}
+            <div 
+              className="overview-text text-sm text-slate-600 dark:text-slate-300 mt-3 leading-relaxed space-y-3 prose dark:prose-invert max-w-none"
+              dangerouslySetInnerHTML={{
+                __html: applyHyperlinksToContent(
+                  (building.overview || building.description || '').replace(/\n/g, '<br/>'),
+                  building.hyperlinks || []
+                )
+              }}
+            />
           </div>
+
+          {building.location_connectivity && (
+            <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400 mb-2">
+                Location & Connectivity
+              </h3>
+              <div 
+                className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed prose dark:prose-invert max-w-none"
+                dangerouslySetInnerHTML={{
+                  __html: applyHyperlinksToContent(
+                    building.location_connectivity.replace(/\n/g, '<br/>'),
+                    building.hyperlinks || []
+                  )
+                }}
+              />
+            </div>
+          )}
 
           <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
             <h3 className="text-sm font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">

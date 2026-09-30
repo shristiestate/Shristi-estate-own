@@ -24,6 +24,7 @@ import { AboutPage } from './pages/AboutPage';
 import { ServicesPage } from './pages/ServicesPage';
 import { ContactPage } from './pages/ContactPage';
 import { BlogPage } from './pages/BlogPage';
+import { BlogDetailPage } from './pages/BlogDetailPage';
 import { LegalPage } from './pages/LegalPage';
 
 // Lazy load heavy admin dashboard off the critical path (zero delay for public visitors)
@@ -107,10 +108,13 @@ export const AppContent: React.FC = () => {
           {/* Properties */}
           <Route path="/properties" element={<PropertiesPage onOpenEnquiry={handleOpenEnquiry} />} />
           <Route path="/properties/:propertySlug" element={<PropertyDetailPage onOpenEnquiry={handleOpenEnquiry} />} />
+          <Route path="/property/:propertySlug" element={<PropertyDetailPage onOpenEnquiry={handleOpenEnquiry} />} />
 
-          {/* Buildings */}
+          {/* Buildings & Towers */}
           <Route path="/buildings/:buildingSlug" element={<BuildingDetailPage onOpenEnquiry={handleOpenEnquiry} />} />
           <Route path="/buildings/:buildingSlug/properties" element={<BuildingDetailPage onOpenEnquiry={handleOpenEnquiry} />} />
+          <Route path="/tower/:buildingSlug" element={<BuildingDetailPage onOpenEnquiry={handleOpenEnquiry} />} />
+          <Route path="/towers/:buildingSlug" element={<BuildingDetailPage onOpenEnquiry={handleOpenEnquiry} />} />
 
           {/* Locations */}
           <Route path="/locations" element={<LocationsDirectoryPage />} />
@@ -125,6 +129,7 @@ export const AppContent: React.FC = () => {
           <Route path="/services" element={<ServicesPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/blog" element={<BlogPage />} />
+          <Route path="/blog/:slug" element={<BlogDetailPage onOpenEnquiry={() => handleOpenEnquiry()} />} />
           <Route path="/legal/:docType" element={<LegalPage />} />
           <Route path="/legal" element={<LegalPage />} />
 

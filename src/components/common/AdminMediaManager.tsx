@@ -81,7 +81,12 @@ export const AdminMediaManager: React.FC<AdminMediaManagerProps> = ({
       const compressed = await compressImageFile(file);
       if (compressed) {
         onPrimaryImageChange(compressed);
+      } else {
+        alert('Could not process this image file. Please choose a valid JPG, PNG, or WebP image.');
       }
+    } catch (err: any) {
+      console.error('Failed to compress primary image:', err);
+      alert('Image upload failed: ' + (err?.message || 'Please choose a different image file.'));
     } finally {
       setIsUploadingPrimary(false);
       e.target.value = '';
@@ -96,12 +101,21 @@ export const AdminMediaManager: React.FC<AdminMediaManagerProps> = ({
     try {
       const results: string[] = [];
       for (const file of files) {
-        const compressed = await compressImageFile(file);
-        if (compressed) results.push(compressed);
+        try {
+          const compressed = await compressImageFile(file);
+          if (compressed) results.push(compressed);
+        } catch (fErr) {
+          console.warn('Failed compressing a gallery image:', fErr);
+        }
       }
       if (results.length > 0) {
         onGalleryChange([...gallery, ...results]);
+      } else {
+        alert('Could not process the selected photos. Please ensure files are valid images.');
       }
+    } catch (err: any) {
+      console.error('Gallery upload error:', err);
+      alert('Gallery upload failed: ' + (err?.message || 'Please try again.'));
     } finally {
       setIsUploadingGallery(false);
       e.target.value = '';
@@ -109,8 +123,13 @@ export const AdminMediaManager: React.FC<AdminMediaManagerProps> = ({
   };
 
   const handleAddGalleryUrl = () => {
-    if (!newGalleryUrl.trim()) return;
-    onGalleryChange([...gallery, newGalleryUrl.trim()]);
+    const trimmed = newGalleryUrl.trim();
+    if (!trimmed) return;
+    if (gallery.includes(trimmed)) {
+      alert('This image URL is already in the gallery.');
+      return;
+    }
+    onGalleryChange([...gallery, trimmed]);
     setNewGalleryUrl('');
   };
 
@@ -196,7 +215,11 @@ export const AdminMediaManager: React.FC<AdminMediaManagerProps> = ({
                 alt={primaryAlt || fallbackAltText}
                 className="w-full h-full object-cover"
                 onError={(e) => {
-                  (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80';
+                  const target = e.currentTarget;
+                  if (!target.dataset.failed) {
+                    target.dataset.failed = 'true';
+                    target.src = 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80';
+                  }
                 }}
               />
               <span className="absolute bottom-2 left-2 px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-slate-900/80 text-white backdrop-blur-sm">
@@ -344,7 +367,11 @@ export const AdminMediaManager: React.FC<AdminMediaManagerProps> = ({
                         alt={detail.alt || `${entityName} photo ${idx + 1}`}
                         className="w-full h-full object-cover"
                         onError={(e) => {
-                          (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=400&q=80';
+                          const target = e.currentTarget;
+                          if (!target.dataset.failed) {
+                            target.dataset.failed = 'true';
+                            target.src = 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=400&q=80';
+                          }
                         }}
                       />
                       <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-black/70 text-white">

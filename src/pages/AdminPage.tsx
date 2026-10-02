@@ -62,6 +62,7 @@ import { INTERNAL_PAGE_PRESETS, formatHyperlinkUrl, applyHyperlinksToContent } f
 import { DEFAULT_BLOG_PLACEHOLDER_IMAGE, getBlogFeaturedImage, getBlogImageAlt, generateBlogSlug } from '../utils/blogConstants';
 import { AdminSeoPreviewSection } from '../components/common/AdminSeoPreviewSection';
 import { AdminMediaManager } from '../components/common/AdminMediaManager';
+import { compressImageFile } from '../utils/imageCompression';
 import { AdminHyperlinksManager } from '../components/common/AdminHyperlinksManager';
 import { 
   computeSeoStatus, 
@@ -527,50 +528,6 @@ export const AdminPage: React.FC = () => {
         : [lead.list_property_details.images];
     }
     return rawImgs.filter(img => typeof img === 'string' && img.length > 10 && !img.includes('[uploaded image]'));
-  };
-
-  const compressImageFile = (file: File, maxWidth = 1400, quality = 0.82): Promise<string> => {
-    return new Promise((resolve) => {
-      if (file.type === 'image/svg+xml' || file.type === 'image/gif') {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = () => resolve('');
-        reader.readAsDataURL(file);
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-          let width = img.width;
-          let height = img.height;
-          if (width > maxWidth || height > maxWidth) {
-            if (width > height) {
-              height = Math.round((height * maxWidth) / width);
-              width = maxWidth;
-            } else {
-              width = Math.round((width * maxWidth) / height);
-              height = maxWidth;
-            }
-          }
-          const canvas = document.createElement('canvas');
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          if (ctx) {
-            ctx.drawImage(img, 0, 0, width, height);
-            resolve(canvas.toDataURL('image/jpeg', quality));
-          } else {
-            resolve((e.target?.result as string) || '');
-          }
-        };
-        img.onerror = () => resolve((e.target?.result as string) || '');
-        img.src = (e.target?.result as string) || '';
-      };
-      reader.onerror = () => resolve('');
-      reader.readAsDataURL(file);
-    });
   };
 
   const handleMediaFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -2360,6 +2317,13 @@ export const AdminPage: React.FC = () => {
                             <img 
                               src={prop.primary_image} 
                               alt="" 
+                              onError={(e) => {
+                                const target = e.currentTarget;
+                                if (!target.dataset.failed) {
+                                  target.dataset.failed = 'true';
+                                  target.src = 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=600&q=80';
+                                }
+                              }}
                               className="w-16 h-12 rounded-xl object-cover border border-slate-200 dark:border-slate-700 group-hover/img:opacity-80 transition-opacity" 
                             />
                             <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-xl opacity-0 group-hover/img:opacity-100 transition-opacity">
@@ -2543,7 +2507,18 @@ export const AdminPage: React.FC = () => {
                       className="relative rounded-xl overflow-hidden w-20 h-16 shrink-0 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 cursor-pointer"
                       onClick={() => handleOpenEditProperty(prop)}
                     >
-                      <img src={prop.primary_image} alt="" className="w-full h-full object-cover" />
+                      <img 
+                        src={prop.primary_image} 
+                        alt="" 
+                        onError={(e) => {
+                          const target = e.currentTarget;
+                          if (!target.dataset.failed) {
+                            target.dataset.failed = 'true';
+                            target.src = 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=600&q=80';
+                          }
+                        }}
+                        className="w-full h-full object-cover" 
+                      />
                       <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
                         <Edit3 className="w-3.5 h-3.5 text-white" />
                       </div>
@@ -2703,7 +2678,11 @@ export const AdminPage: React.FC = () => {
                     src={bld.hero_image || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80'} 
                     alt={bld.name} 
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80';
+                      const target = e.currentTarget;
+                      if (!target.dataset.failed) {
+                        target.dataset.failed = 'true';
+                        target.src = 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80';
+                      }
                     }}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
                   />
@@ -4428,7 +4407,11 @@ export const AdminPage: React.FC = () => {
                 <div className="p-1">
                   <AdminMediaManager
                     primaryImage={currentProperty.primary_image || ''}
-                    onPrimaryImageChange={(url) => setCurrentProperty(prev => ({ ...prev, primary_image: url }))}
+                    onPrimaryImageChange={(url) => setCurrentProperty(prev => ({ 
+                      ...prev, 
+                      primary_image: url,
+                      og_image: prev.og_image && prev.og_image !== prev.primary_image ? prev.og_image : url
+                    }))}
                     primaryAlt={currentProperty.primary_image_alt || ''}
                     onPrimaryAltChange={(alt) => setCurrentProperty(prev => ({ ...prev, primary_image_alt: alt }))}
                     primaryTitle={currentProperty.primary_image_title || ''}
@@ -5597,7 +5580,11 @@ export const AdminPage: React.FC = () => {
                 <div className="p-1">
                   <AdminMediaManager
                     primaryImage={currentBuilding.hero_image || ''}
-                    onPrimaryImageChange={(url) => setCurrentBuilding(prev => ({ ...prev, hero_image: url }))}
+                    onPrimaryImageChange={(url) => setCurrentBuilding(prev => ({ 
+                      ...prev, 
+                      hero_image: url,
+                      og_image: prev.og_image && prev.og_image !== prev.hero_image ? prev.og_image : url
+                    }))}
                     primaryAlt={currentBuilding.hero_image_alt || ''}
                     onPrimaryAltChange={(alt) => setCurrentBuilding(prev => ({ ...prev, hero_image_alt: alt }))}
                     primaryTitle={currentBuilding.hero_image_title || ''}

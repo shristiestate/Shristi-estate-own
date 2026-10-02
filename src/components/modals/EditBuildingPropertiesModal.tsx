@@ -25,6 +25,7 @@ import { Building, Property, FurnishingType, PropertyStatus } from '../../types'
 import { StorageService } from '../../services/storageService';
 import { formatIndianCurrency, extractBaseRate } from '../../utils/buildingUnits';
 import { EditPropertyModal } from './EditPropertyModal';
+import { compressImageFile } from '../../utils/imageCompression';
 
 export const CURATED_OFFICE_IMAGES = [
   {
@@ -240,22 +241,27 @@ export const EditBuildingPropertiesModal: React.FC<EditBuildingPropertiesModalPr
   };
 
   // Local image upload handler
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert('File size exceeds 5MB. Please choose a smaller image.');
+      if (file.size > 15 * 1024 * 1024) {
+        alert('File size exceeds 15MB. Please choose a smaller image.');
         return;
       }
-      const reader = new FileReader();
-      reader.onload = (uploadEvent) => {
-        const result = uploadEvent.target?.result as string;
-        if (result) {
-          setSelectedImageUrl(result);
-          setInputImageUrl(result);
+      try {
+        const compressed = await compressImageFile(file);
+        if (compressed) {
+          setSelectedImageUrl(compressed);
+          setInputImageUrl(compressed);
+        } else {
+          alert('Could not process this image. Please choose a valid JPG, PNG, or WebP file.');
         }
-      };
-      reader.readAsDataURL(file);
+      } catch (err: any) {
+        console.error('Failed to compress unit image:', err);
+        alert('Image processing failed: ' + (err?.message || 'Please try another file.'));
+      } finally {
+        e.target.value = '';
+      }
     }
   };
 
@@ -661,7 +667,18 @@ export const EditBuildingPropertiesModal: React.FC<EditBuildingPropertiesModalPr
                       className="relative group/thumb w-14 h-14 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 shrink-0 border-2 border-slate-200 dark:border-slate-700 hover:border-brand-500 cursor-pointer shadow-sm transition-all"
                       title="Click to update photo for this unit"
                     >
-                      <img src={unit.primary_image} alt="" className="w-full h-full object-cover group-hover/thumb:scale-110 transition-transform duration-300" />
+                      <img 
+                        src={unit.primary_image} 
+                        alt="" 
+                        onError={(e) => {
+                          const target = e.currentTarget;
+                          if (!target.dataset.failed) {
+                            target.dataset.failed = 'true';
+                            target.src = 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=600&q=80';
+                          }
+                        }}
+                        className="w-full h-full object-cover group-hover/thumb:scale-110 transition-transform duration-300" 
+                      />
                       <div className="absolute inset-0 bg-slate-950/70 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex flex-col items-center justify-center text-white p-0.5 text-center">
                         <Camera className="w-4 h-4 text-brand-300" />
                         <span className="text-[9px] font-bold mt-0.5 leading-tight">Update</span>
@@ -870,6 +887,13 @@ export const EditBuildingPropertiesModal: React.FC<EditBuildingPropertiesModalPr
                     <img 
                       src={selectedImageUrl || editingImageUnit.primary_image} 
                       alt="Selected Preview" 
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        if (!target.dataset.failed) {
+                          target.dataset.failed = 'true';
+                          target.src = 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80';
+                        }
+                      }}
                       className="w-full h-full object-cover"
                     />
                     <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-900/80 text-white backdrop-blur flex items-center gap-1">

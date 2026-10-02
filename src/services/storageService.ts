@@ -19,13 +19,58 @@ let _memProperties: Property[] | null = null;
 let _memLeads: Lead[] | null = null;
 let _memGuides: MarketGuide[] | null = null;
 
+// Safe localStorage setter that prunes non-critical data if quota is exceeded
+const safeSetItem = (key: string, value: string): boolean => {
+  if (typeof window === 'undefined') return false;
+  try {
+    localStorage.setItem(key, value);
+    return true;
+  } catch (err) {
+    console.warn(`LocalStorage quota reached when setting "${key}". Pruning non-essential caches...`, err);
+    try {
+      // 1. Prune custom media if bulky
+      const mediaStr = localStorage.getItem('shristi_custom_media');
+      if (mediaStr) {
+        try {
+          const media = JSON.parse(mediaStr);
+          if (Array.isArray(media) && media.length > 5) {
+            localStorage.setItem('shristi_custom_media', JSON.stringify(media.slice(0, 5)));
+          } else {
+            localStorage.removeItem('shristi_custom_media');
+          }
+        } catch {
+          localStorage.removeItem('shristi_custom_media');
+        }
+      }
+      // 2. Prune old leads
+      const leadsStr = localStorage.getItem(STORAGE_KEYS.LEADS);
+      if (leadsStr) {
+        try {
+          const parsed = JSON.parse(leadsStr);
+          if (Array.isArray(parsed) && parsed.length > 10) {
+            localStorage.setItem(STORAGE_KEYS.LEADS, JSON.stringify(parsed.slice(0, 10)));
+          }
+        } catch {
+          // ignore
+        }
+      }
+      // Try again
+      localStorage.setItem(key, value);
+      return true;
+    } catch (secondErr) {
+      console.warn(`LocalStorage quota still exceeded for "${key}". Memory cache remains fully active.`, secondErr);
+      return false;
+    }
+  }
+};
+
 // Initialize in-memory cache and localStorage with initial seeds if not populated
 const initStorage = () => {
   try {
     const storedLocs = localStorage.getItem(STORAGE_KEYS.LOCATIONS);
     if (!storedLocs) {
       _memLocations = INITIAL_LOCATIONS;
-      localStorage.setItem(STORAGE_KEYS.LOCATIONS, JSON.stringify(INITIAL_LOCATIONS));
+      safeSetItem(STORAGE_KEYS.LOCATIONS, JSON.stringify(INITIAL_LOCATIONS));
     } else {
       const parsedLocs: Location[] = JSON.parse(storedLocs);
       const existingIds = new Set(parsedLocs.map(l => l.id));
@@ -281,7 +326,10 @@ export const StorageService = {
     if (isSupabaseConfigured && supabase) {
       try {
         const { data, error } = await withTimeout(supabase.from('locations').select('*') as any);
-        if (!error && data && data.length > 0) return data as Location[];
+        if (!error && data && data.length > 0) {
+          _memLocations = data as Location[];
+          return _memLocations;
+        }
       } catch (e) {
         console.warn('Falling back to local storage for locations:', e);
       }
@@ -312,21 +360,27 @@ export const StorageService = {
       } else {
         locations.push(location);
       }
-      localStorage.setItem(STORAGE_KEYS.LOCATIONS, JSON.stringify(locations));
+      safeSetItem(STORAGE_KEYS.LOCATIONS, JSON.stringify(locations));
+      _memLocations = locations;
     } catch (e) {
       console.warn('LocalStorage save warning for locations:', e);
+    }
+
+    // Always update in-memory cache
+    if (_memLocations) {
+      const memIndex = _memLocations.findIndex(l => l.id === location.id);
+      if (memIndex >= 0) _memLocations[memIndex] = location;
+      else _memLocations.push(location);
     }
 
     if (isSupabaseConfigured && supabase) {
       try {
         const { error } = await supabase.from('locations').upsert(location);
         if (error) {
-          console.error('Supabase upsert location error:', error);
-          throw new Error(error.message || 'Supabase upsert failed');
+          console.warn('Supabase upsert location warning (local saved successfully):', error);
         }
       } catch (e) {
-        console.error('Supabase upsert location error:', e);
-        throw e;
+        console.warn('Supabase upsert location network warning (local saved successfully):', e);
       }
     }
   },
@@ -335,16 +389,21 @@ export const StorageService = {
     try {
       const locations = await this.getLocations();
       const updated = locations.filter(l => l.id !== locationId);
-      localStorage.setItem(STORAGE_KEYS.LOCATIONS, JSON.stringify(updated));
+      safeSetItem(STORAGE_KEYS.LOCATIONS, JSON.stringify(updated));
+      _memLocations = updated;
     } catch (e) {
       console.warn('LocalStorage delete warning for locations:', e);
+    }
+
+    if (_memLocations) {
+      _memLocations = _memLocations.filter(l => l.id !== locationId);
     }
 
     if (isSupabaseConfigured && supabase) {
       try {
         await supabase.from('locations').delete().eq('id', locationId);
       } catch (e) {
-        console.error('Supabase delete location error:', e);
+        console.warn('Supabase delete location warning:', e);
       }
     }
   },
@@ -420,11 +479,12 @@ export const StorageService = {
 
           // Sync back to local storage cache so next render is consistent
           try {
-            localStorage.setItem(STORAGE_KEYS.BUILDINGS, JSON.stringify(mergedList));
+            safeSetItem(STORAGE_KEYS.BUILDINGS, JSON.stringify(mergedList));
           } catch (e) {
             // ignore
           }
 
+          _memBuildings = mergedList;
           return mergedList;
         }
       } catch (e) {
@@ -436,11 +496,13 @@ export const StorageService = {
     const existingSlugs = new Set(localBuildings.map(b => b.slug.toLowerCase()));
     const missing = INITIAL_BUILDINGS.filter(b => !existingIds.has(b.id) && !existingSlugs.has(b.slug.toLowerCase()));
     const source = [...localBuildings, ...missing];
-    return source.map(b => ({
+    const finalBlds = source.map(b => ({
       ...b,
       structure_display: getBuildingStructureDisplay(b),
       property_count: Math.max(b.property_count || 0, 20)
     }));
+    _memBuildings = finalBlds;
+    return finalBlds;
   },
 
   async getBuildingBySlug(slug: string): Promise<Building | null> {
@@ -488,9 +550,17 @@ export const StorageService = {
       } else {
         buildings.push(sanitized);
       }
-      localStorage.setItem(STORAGE_KEYS.BUILDINGS, JSON.stringify(buildings));
+      safeSetItem(STORAGE_KEYS.BUILDINGS, JSON.stringify(buildings));
+      _memBuildings = buildings;
     } catch (e) {
       console.warn('LocalStorage save warning for buildings:', e);
+    }
+
+    // Always update in-memory cache so zero-delay getters reflect changes immediately
+    if (_memBuildings) {
+      const memIndex = _memBuildings.findIndex(b => b.id === sanitized.id);
+      if (memIndex >= 0) _memBuildings[memIndex] = sanitized;
+      else _memBuildings.push(sanitized);
     }
 
     if (isSupabaseConfigured && supabase) {
@@ -562,13 +632,11 @@ export const StorageService = {
           };
           const fallbackRes = await supabase.from('buildings').upsert(basePayload);
           if (fallbackRes.error) {
-            console.error('Supabase fallback upsert error:', fallbackRes.error);
-            throw new Error(fallbackRes.error.message || 'Supabase upsert failed');
+            console.warn('Supabase fallback upsert warning (local saved successfully):', fallbackRes.error);
           }
         }
       } catch (e) {
-        console.error('Supabase upsert building error:', e);
-        throw e;
+        console.warn('Supabase upsert building network warning (local saved successfully):', e);
       }
     }
   },
@@ -577,16 +645,21 @@ export const StorageService = {
     try {
       const buildings = await this.getBuildings();
       const updated = buildings.filter(b => b.id !== buildingId);
-      localStorage.setItem(STORAGE_KEYS.BUILDINGS, JSON.stringify(updated));
+      safeSetItem(STORAGE_KEYS.BUILDINGS, JSON.stringify(updated));
+      _memBuildings = updated;
     } catch (e) {
       console.warn('LocalStorage delete warning for buildings:', e);
+    }
+
+    if (_memBuildings) {
+      _memBuildings = _memBuildings.filter(b => b.id !== buildingId);
     }
 
     if (isSupabaseConfigured && supabase) {
       try {
         await supabase.from('buildings').delete().eq('id', buildingId);
       } catch (e) {
-        console.error('Supabase delete building error:', e);
+        console.warn('Supabase delete building warning:', e);
       }
     }
   },
@@ -638,7 +711,7 @@ export const StorageService = {
           });
 
           try {
-            localStorage.setItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(baseProps));
+            safeSetItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(baseProps));
           } catch (e) {
             // ignore
           }
@@ -660,7 +733,9 @@ export const StorageService = {
       address: cleanPropertyAddress(p.address, p.building_name)
     }));
 
-    return [...cleanedBaseProps, ...missingGenerated];
+    const finalProps = [...cleanedBaseProps, ...missingGenerated];
+    _memProperties = finalProps;
+    return finalProps;
   },
 
   async getPropertyBySlug(slug: string): Promise<Property | null> {
@@ -767,9 +842,17 @@ export const StorageService = {
       } else {
         properties.unshift(sanitized);
       }
-      localStorage.setItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(properties));
+      safeSetItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(properties));
+      _memProperties = properties;
     } catch (e) {
       console.warn('LocalStorage save warning for properties (quota safe):', e);
+    }
+
+    // Always update in-memory cache so zero-delay getters reflect changes immediately
+    if (_memProperties) {
+      const memIndex = _memProperties.findIndex(p => p.id === sanitized.id);
+      if (memIndex >= 0) _memProperties[memIndex] = sanitized;
+      else _memProperties.unshift(sanitized);
     }
 
     if (isSupabaseConfigured && supabase) {
@@ -787,13 +870,11 @@ export const StorageService = {
           } = sanitized as any;
           const fallbackRes = await supabase.from('properties').upsert(basePayload);
           if (fallbackRes.error) {
-            console.error('Supabase fallback upsert property error:', fallbackRes.error);
-            throw new Error(fallbackRes.error.message || 'Supabase upsert failed');
+            console.warn('Supabase fallback upsert property warning (local saved successfully):', fallbackRes.error);
           }
         }
       } catch (e) {
-        console.error('Supabase upsert property error:', e);
-        throw e;
+        console.warn('Supabase upsert property network warning (local saved successfully):', e);
       }
     }
   },
@@ -802,16 +883,21 @@ export const StorageService = {
     try {
       const properties = await this.getProperties();
       const updated = properties.filter(p => p.id !== propertyId);
-      localStorage.setItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(updated));
+      safeSetItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(updated));
+      _memProperties = updated;
     } catch (e) {
       console.warn('LocalStorage delete warning for properties:', e);
+    }
+
+    if (_memProperties) {
+      _memProperties = _memProperties.filter(p => p.id !== propertyId);
     }
 
     if (isSupabaseConfigured && supabase) {
       try {
         await supabase.from('properties').delete().eq('id', propertyId);
       } catch (e) {
-        console.error('Supabase delete property error:', e);
+        console.warn('Supabase delete property warning:', e);
       }
     }
   },

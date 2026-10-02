@@ -98,12 +98,33 @@ const initStorage = () => {
       }));
       localStorage.setItem(STORAGE_KEYS.BUILDINGS, JSON.stringify(INITIAL_BUILDINGS));
     } else {
-      const parsedBlds: Building[] = JSON.parse(storedBlds);
+      let parsedBlds: Building[] = JSON.parse(storedBlds);
+      // Auto-purge any stale residential villa photos from older local seeds
+      let hasPurgedVilla = false;
+      parsedBlds = parsedBlds.map(b => {
+        let bldChanged = false;
+        let hero = b.hero_image;
+        let gal = Array.isArray(b.gallery) ? [...b.gallery] : [];
+        if (hero && hero.includes('photo-1512917774080-9991f1c4c750')) {
+          hero = 'https://images.unsplash.com/photo-1554469384-e58fac16e23a?auto=format&fit=crop&w=1200&q=80';
+          bldChanged = true;
+        }
+        if (gal.some(img => img && img.includes('photo-1512917774080-9991f1c4c750'))) {
+          gal = gal.filter(img => img && !img.includes('photo-1512917774080-9991f1c4c750'));
+          bldChanged = true;
+        }
+        if (bldChanged) {
+          hasPurgedVilla = true;
+          return { ...b, hero_image: hero, gallery: gal };
+        }
+        return b;
+      });
+
       const existingIds = new Set(parsedBlds.map(b => b.id));
       const existingSlugs = new Set(parsedBlds.map(b => b.slug.toLowerCase()));
       const missingBlds = INITIAL_BUILDINGS.filter(b => !existingIds.has(b.id) && !existingSlugs.has(b.slug.toLowerCase()));
       const source = missingBlds.length > 0 ? [...parsedBlds, ...missingBlds] : parsedBlds;
-      if (missingBlds.length > 0) {
+      if (missingBlds.length > 0 || hasPurgedVilla) {
         localStorage.setItem(STORAGE_KEYS.BUILDINGS, JSON.stringify(source));
       }
       _memBuildings = source.map(b => ({

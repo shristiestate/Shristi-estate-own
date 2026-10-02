@@ -61,7 +61,8 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
       if (!isMounted) return;
       if (prop) {
         setProperty(prop);
-        setActiveImage((prev) => prev || prop.primary_image);
+        const validImages = [prop.primary_image, ...(prop.gallery || [])].filter(Boolean);
+        setActiveImage((prev) => (prev && validImages.includes(prev) ? prev : prop.primary_image));
         if (prop.building_id) {
           const bld = await StorageService.getBuildings().then(blds => blds.find(b => b.id === prop.building_id));
           if (isMounted && bld) {

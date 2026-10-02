@@ -97,7 +97,7 @@ export const STANDARD_BUILDING_UNITS: UnitSpec[] = [
     furnishing: 'Plug-and-Play',
     floor: '7th Floor',
     features: ['30 Workstations', '3 Executive Cabins', '10-Seater Conference Room', 'Server Room', 'Central HVAC'],
-    image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1000&q=80',
+    image: 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=1000&q=80',
     gallery: [
       'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80',
       'https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=800&q=80'
@@ -269,7 +269,7 @@ export const STANDARD_BUILDING_UNITS: UnitSpec[] = [
     image: 'https://images.unsplash.com/photo-1577495508048-b635879837f1?auto=format&fit=crop&w=1000&q=80',
     gallery: [
       'https://images.unsplash.com/photo-1486325212027-8081e485255e?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80'
+      'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80'
     ]
   }
 ];

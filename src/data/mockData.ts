@@ -351,7 +351,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     categories: ['office-space', 'it-business-parks'],
     address: 'Sector 62, Institutional Area, Noida, Uttar Pradesh 201309',
     description: 'Iconic high-rise corporate tower designed to elevate workplace experiences with breathtaking skyline views, energy-efficient glazing, and customizable enterprise floors.',
-    hero_image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80',
+    hero_image: 'https://images.unsplash.com/photo-1554469384-e58fac16e23a?auto=format&fit=crop&w=1200&q=80',
     gallery: [
       'https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=800&q=80',
       'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=800&q=80'
@@ -812,7 +812,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     categories: ['office-space', 'it-business-parks'],
     address: 'Plot No. A-16, Sector 62, Noida, Uttar Pradesh 201309',
     description: 'High-efficiency corporate commercial building featuring open column layouts, dedicated floor plans, and prominent visibility in Sector 62.',
-    hero_image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80',
+    hero_image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80',
     gallery: [
       'https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=800&q=80'
     ],
@@ -1339,7 +1339,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     categories: ['office-space', 'shops-retail'],
     address: 'Commercial Road, Sector 73, Noida, Uttar Pradesh 201307',
     description: 'Multi-story commercial office and retail tower offering flexible floor spaces, glass frontage, and strategic proximity to Sector 51/72 Metro Station.',
-    hero_image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80',
+    hero_image: 'https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1200&q=80',
     gallery: [
       'https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=800&q=80'
     ],

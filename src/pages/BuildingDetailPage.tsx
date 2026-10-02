@@ -54,7 +54,8 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
       if (!isMounted) return;
       if (bld) {
         setBuilding(bld);
-        setActiveImage((prev) => prev || bld.hero_image);
+        const validImages = [bld.hero_image, ...(bld.gallery || [])].filter(Boolean);
+        setActiveImage((prev) => (prev && validImages.includes(prev) ? prev : bld.hero_image));
         const props = await StorageService.getPropertiesByBuilding(bld.id);
         if (isMounted) setProperties(props);
       }
@@ -147,40 +148,36 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
           )}
 
           {/* Thumbnails */}
-          {building.gallery && building.gallery.length > 0 && (
-            <div className="flex items-center gap-3 overflow-x-auto pb-2">
-              <button
-                onClick={() => setActiveImage(building.hero_image)}
-                className={`relative w-20 h-16 rounded-xl overflow-hidden border-2 shrink-0 transition-all ${
-                  activeImage === building.hero_image ? 'border-brand-500 scale-105' : 'border-transparent opacity-70'
-                }`}
-              >
-                <img 
-                  src={building.hero_image} 
-                  alt={getTowerImageAlt(building, building.hero_image_alt)} 
-                  title={building.hero_image_title || building.name}
-                  className="w-full h-full object-cover" 
-                  onError={(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=300&q=80'; }}
-                />
-              </button>
-              {building.gallery.map((img, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setActiveImage(img)}
-                  className={`relative w-20 h-16 rounded-xl overflow-hidden border-2 shrink-0 transition-all ${
-                    activeImage === img ? 'border-brand-500 scale-105' : 'border-transparent opacity-70'
-                  }`}
-                >
-                  <img 
-                    src={img} 
-                    alt={`${building.name} - View ${idx + 1}`} 
-                    className="w-full h-full object-cover" 
-                    onError={(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=300&q=80'; }}
-                  />
-                </button>
-              ))}
-            </div>
-          )}
+          {(() => {
+            const rawGallery = Array.isArray(building.gallery) ? building.gallery : [];
+            const displayHero = building.hero_image;
+            // Filter out empty items and any duplicates of hero image
+            const cleanGallery = rawGallery.filter(img => img && img !== displayHero);
+            const allThumbnails = [displayHero, ...cleanGallery].filter(Boolean);
+
+            if (allThumbnails.length <= 1) return null;
+
+            return (
+              <div className="flex items-center gap-3 overflow-x-auto pb-2">
+                {allThumbnails.map((img, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setActiveImage(img)}
+                    className={`relative w-20 h-16 rounded-xl overflow-hidden border-2 shrink-0 transition-all cursor-pointer ${
+                      activeImage === img ? 'border-brand-500 scale-105 shadow-md' : 'border-transparent opacity-70 hover:opacity-100'
+                    }`}
+                  >
+                    <img 
+                      src={img} 
+                      alt={`${building.name} - View ${idx + 1}`} 
+                      className="w-full h-full object-cover" 
+                      onError={(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1554469384-e58fac16e23a?auto=format&fit=crop&w=300&q=80'; }}
+                    />
+                  </button>
+                ))}
+              </div>
+            );
+          })()}
         </div>
 
         {/* Building Title & Quick Commercial Specs (5 Cols) */}

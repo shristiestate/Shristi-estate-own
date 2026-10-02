@@ -178,8 +178,39 @@ export const AdminMediaManager: React.FC<AdminMediaManagerProps> = ({
     }
   };
 
+  const handleDeletePrimary = () => {
+    if (!window.confirm(`Are you sure you want to delete this featured photo?`)) return;
+    if (gallery.length > 0) {
+      const nextPrimary = gallery[0];
+      const nextDetail = getDetailFor(nextPrimary, 0);
+      onPrimaryImageChange(nextPrimary);
+      onPrimaryAltChange(nextDetail.alt || '');
+      onPrimaryTitleChange(nextDetail.title || '');
+      onPrimaryCaptionChange(nextDetail.caption || '');
+      onGalleryChange(gallery.slice(1));
+      if (onImageDetailsChange) {
+        onImageDetailsChange(imageDetails.filter(d => d.url !== nextPrimary));
+      }
+    } else {
+      onPrimaryImageChange('');
+      onPrimaryAltChange('');
+      onPrimaryTitleChange('');
+      onPrimaryCaptionChange('');
+    }
+  };
+
   return (
     <div className="space-y-6">
+      {/* Sync reminder banner */}
+      <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 text-blue-900 dark:text-blue-200 text-xs flex items-center justify-between gap-2 shadow-sm">
+        <div className="flex items-center gap-2">
+          <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+          <span>
+            <strong>Photo Updates:</strong> When deleting, uploading, or reordering images, remember to click the <strong>Update / Save</strong> button at the bottom of the modal to sync your changes across the website.
+          </span>
+        </div>
+      </div>
+
       {/* 1. PRIMARY / FEATURED IMAGE */}
       <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
@@ -193,17 +224,31 @@ export const AdminMediaManager: React.FC<AdminMediaManagerProps> = ({
             </p>
           </div>
 
-          <label className="btn-glass-primary px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer flex items-center gap-1.5 shrink-0 self-start sm:self-auto shadow-sm">
-            <UploadCloud className="w-3.5 h-3.5" />
-            <span>{isUploadingPrimary ? 'Uploading...' : 'Upload Image'}</span>
-            <input
-              type="file"
-              accept="image/*"
-              disabled={isUploadingPrimary}
-              onChange={handlePrimaryUpload}
-              className="hidden"
-            />
-          </label>
+          <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
+            {primaryImage ? (
+              <button
+                type="button"
+                onClick={handleDeletePrimary}
+                className="px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer flex items-center gap-1.5 text-rose-600 dark:text-rose-400 hover:text-white hover:bg-rose-600 dark:hover:bg-rose-600 border border-rose-200 dark:border-rose-800 transition-colors shadow-sm"
+                title="Delete this featured photo"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Delete Photo</span>
+              </button>
+            ) : null}
+
+            <label className="btn-glass-primary px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer flex items-center gap-1.5 shadow-sm">
+              <UploadCloud className="w-3.5 h-3.5" />
+              <span>{isUploadingPrimary ? 'Uploading...' : 'Upload Image'}</span>
+              <input
+                type="file"
+                accept="image/*"
+                disabled={isUploadingPrimary}
+                onChange={handlePrimaryUpload}
+                className="hidden"
+              />
+            </label>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
@@ -211,20 +256,30 @@ export const AdminMediaManager: React.FC<AdminMediaManagerProps> = ({
           <div className="md:col-span-4 space-y-1.5">
             <div className="relative aspect-[16/10] rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800">
               <img
-                src={primaryImage || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80'}
+                src={primaryImage || 'https://images.unsplash.com/photo-1554469384-e58fac16e23a?auto=format&fit=crop&w=800&q=80'}
                 alt={primaryAlt || fallbackAltText}
                 className="w-full h-full object-cover"
                 onError={(e) => {
                   const target = e.currentTarget;
                   if (!target.dataset.failed) {
                     target.dataset.failed = 'true';
-                    target.src = 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80';
+                    target.src = 'https://images.unsplash.com/photo-1554469384-e58fac16e23a?auto=format&fit=crop&w=800&q=80';
                   }
                 }}
               />
               <span className="absolute bottom-2 left-2 px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-slate-900/80 text-white backdrop-blur-sm">
                 Featured
               </span>
+              {primaryImage ? (
+                <button
+                  type="button"
+                  onClick={handleDeletePrimary}
+                  className="absolute top-2 right-2 p-1.5 rounded-lg bg-rose-600/90 text-white hover:bg-rose-700 shadow-md backdrop-blur-sm transition-all"
+                  title="Delete Featured Photo"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              ) : null}
             </div>
             <span className="text-[10px] text-slate-400 block text-center">
               16:10 Aspect Ratio • Cover Fit

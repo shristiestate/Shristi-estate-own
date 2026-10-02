@@ -19,7 +19,8 @@ import {
   Camera,
   UploadCloud,
   Sparkles,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Loader2
 } from 'lucide-react';
 import { Building, Property, FurnishingType, PropertyStatus } from '../../types';
 import { StorageService } from '../../services/storageService';
@@ -125,6 +126,7 @@ export const EditBuildingPropertiesModal: React.FC<EditBuildingPropertiesModalPr
   const [customStatus, setCustomStatus] = useState<PropertyStatus>('Available');
   const [customImage, setCustomImage] = useState<string>('');
   const [deletedIds, setDeletedIds] = useState<string[]>([]);
+  const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
 
   // Image Update Modal State for specific unit
   const [editingImageUnit, setEditingImageUnit] = useState<Property | null>(null);
@@ -344,10 +346,29 @@ export const EditBuildingPropertiesModal: React.FC<EditBuildingPropertiesModalPr
     setShowAddForm(false);
   };
 
-  // Delete Unit
-  const handleDeleteUnit = (id: string) => {
-    setDeletedIds(prev => [...prev, id]);
-    setProperties(prev => prev.filter(p => p.id !== id));
+  // Delete Unit immediately & persist
+  const handleDeleteUnit = async (id: string) => {
+    const targetUnit = properties.find(p => p.id === id);
+    const unitName = targetUnit?.reference_number || targetUnit?.title || 'this unit';
+    if (!window.confirm(`Are you sure you want to permanently delete ${unitName}? This change will persist immediately.`)) {
+      return;
+    }
+
+    setIsDeletingId(id);
+    try {
+      await StorageService.deleteProperty(id);
+      const updated = properties.filter(p => p.id !== id);
+      setProperties(updated);
+      setDeletedIds(prev => Array.from(new Set([...prev, id])));
+      if (onPropertiesUpdated) {
+        onPropertiesUpdated(updated);
+      }
+    } catch (err) {
+      console.error('Failed to delete unit:', err);
+      alert('Failed to delete unit. Please check your network and try again.');
+    } finally {
+      setIsDeletingId(null);
+    }
   };
 
   // Save All Changes
@@ -360,6 +381,14 @@ export const EditBuildingPropertiesModal: React.FC<EditBuildingPropertiesModalPr
       for (const prop of properties) {
         await StorageService.saveProperty(prop);
       }
+
+      // Also ensure parent building's deleted_unit_ids and property_count are updated
+      const updatedBuilding: Building = {
+        ...building,
+        property_count: properties.length,
+        deleted_unit_ids: Array.from(new Set([...(building.deleted_unit_ids || []), ...deletedIds]))
+      };
+      await StorageService.saveBuilding(updatedBuilding);
 
       setSavedSuccess(true);
       if (onPropertiesUpdated) {
@@ -801,11 +830,16 @@ export const EditBuildingPropertiesModal: React.FC<EditBuildingPropertiesModalPr
 
                     <button
                       type="button"
+                      disabled={isDeletingId === unit.id}
                       onClick={() => handleDeleteUnit(unit.id)}
-                      className="p-2 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors cursor-pointer"
+                      className="p-2 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors cursor-pointer disabled:opacity-50"
                       title="Remove this unit from building"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      {isDeletingId === unit.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin text-rose-500" />
+                      ) : (
+                        <Trash2 className="w-4 h-4" />
+                      )}
                     </button>
                   </div>
                 </div>

@@ -1522,7 +1522,8 @@ export const AdminPage: React.FC = () => {
       ground_option: ground,
       structure_display: structureDisplay,
       tower_details: bld.tower_details || (existingTowers.length > 1 ? `${existingTowers.length} Towers (${existingTowers.join(', ')})` : (existingTowers[0] || 'Single Tower')),
-      gallery: bld.gallery && Array.isArray(bld.gallery) ? [...bld.gallery] : []
+      gallery: bld.gallery && Array.isArray(bld.gallery) ? [...bld.gallery] : [],
+      deleted_unit_ids: bld.deleted_unit_ids || []
     });
     setNewBuildingGalleryUrl('');
     setNewTowerInput('');
@@ -1656,6 +1657,7 @@ export const AdminPage: React.FC = () => {
         nearby_transport: currentBuilding.nearby_transport || 'Short walk to metro station',
         published: true,
         property_count: currentBuilding.property_count || 1,
+        deleted_unit_ids: currentBuilding.deleted_unit_ids || (buildings.find(b => b.id === currentBuilding.id)?.deleted_unit_ids || []),
       };
 
       await StorageService.saveBuilding(buildingObj);

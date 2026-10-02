@@ -291,8 +291,17 @@ export function formatIndianCurrency(num: number): string {
 export function generateAvailablePropertiesForBuilding(building: Building): Property[] {
   const baseRate = extractBaseRate(building.rent_range);
   const cleanBuildingCode = building.slug.replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase() || 'PROP';
+  const deletedSet = new Set(building.deleted_unit_ids || []);
 
-  return STANDARD_BUILDING_UNITS.map((unit, index) => {
+  return STANDARD_BUILDING_UNITS
+    .filter(unit => {
+      const unitId = `prop-${building.id}-${unit.area}`;
+      const areaSlug = unit.area >= 100000 ? '100000-plus' : `${unit.area}`;
+      const slug = `${areaSlug}-sqft-office-${building.slug}`;
+      const referenceNumber = `SE-${cleanBuildingCode}-${unit.area >= 1000 ? (unit.area / 1000) + 'K' : unit.area}`;
+      return !deletedSet.has(unitId) && !deletedSet.has(slug) && !deletedSet.has(referenceNumber);
+    })
+    .map((unit, index) => {
     // Slight realistic rate tiering: compact offices command a slightly higher per sqft rate, large floorplates get enterprise volume rates
     let unitRate = baseRate;
     if (unit.area <= 1000) unitRate = Math.round(baseRate * 1.08);

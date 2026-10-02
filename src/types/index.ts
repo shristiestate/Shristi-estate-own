@@ -111,6 +111,7 @@ export interface Building {
   hyperlinks?: HyperlinkConfig[];
   updated_at?: string;
   created_at?: string;
+  deleted_unit_ids?: string[];
 }
 
 export interface Property {

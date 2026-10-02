@@ -9,6 +9,7 @@ const STORAGE_KEYS = {
   LOCATIONS: 'shristi_locations_v1',
   BUILDINGS: 'shristi_buildings_v1',
   PROPERTIES: 'shristi_properties_v1',
+  DELETED_PROPERTIES: 'shristi_deleted_properties_v1',
   LEADS: 'shristi_leads_v1',
   GUIDES: 'shristi_guides_v1',
 };
@@ -16,6 +17,7 @@ const STORAGE_KEYS = {
 let _memLocations: Location[] | null = null;
 let _memBuildings: Building[] | null = null;
 let _memProperties: Property[] | null = null;
+let _memDeletedProperties: Set<string> | null = null;
 let _memLeads: Lead[] | null = null;
 let _memGuides: MarketGuide[] | null = null;
 
@@ -94,6 +96,59 @@ const safeSetItem = (key: string, value: string): boolean => {
   }
 };
 
+// Tombstone tracker for deleted properties & units
+const getDeletedPropertyIdsSet = (): Set<string> => {
+  if (_memDeletedProperties) return _memDeletedProperties;
+  const set = new Set<string>();
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEYS.DELETED_PROPERTIES);
+      if (stored) {
+        const list = JSON.parse(stored);
+        if (Array.isArray(list)) list.forEach(id => set.add(id));
+      }
+    } catch {
+      // ignore
+    }
+  }
+  const blds = _memBuildings || [];
+  for (const b of blds) {
+    if (Array.isArray(b.deleted_unit_ids)) {
+      b.deleted_unit_ids.forEach(id => set.add(id));
+    }
+  }
+  _memDeletedProperties = set;
+  return _memDeletedProperties;
+};
+
+const recordDeletedPropertyId = (id: string) => {
+  if (!id) return;
+  const set = getDeletedPropertyIdsSet();
+  set.add(id);
+  _memDeletedProperties = set;
+  if (typeof window !== 'undefined') {
+    try {
+      safeSetItem(STORAGE_KEYS.DELETED_PROPERTIES, JSON.stringify(Array.from(set)));
+    } catch {
+      // ignore
+    }
+  }
+};
+
+const clearDeletedPropertyId = (id: string) => {
+  if (!id) return;
+  const set = getDeletedPropertyIdsSet();
+  set.delete(id);
+  _memDeletedProperties = set;
+  if (typeof window !== 'undefined') {
+    try {
+      safeSetItem(STORAGE_KEYS.DELETED_PROPERTIES, JSON.stringify(Array.from(set)));
+    } catch {
+      // ignore
+    }
+  }
+};
+
 // Initialize in-memory cache and localStorage with initial seeds if not populated
 const initStorage = () => {
   try {
@@ -165,20 +220,21 @@ const initStorage = () => {
     }
 
     const storedProps = localStorage.getItem(STORAGE_KEYS.PROPERTIES);
+    const deletedSet = getDeletedPropertyIdsSet();
     if (!storedProps) {
       _memProperties = [
-        ...INITIAL_PROPERTIES,
-        ...INITIAL_BUILDINGS.flatMap(b => generateAvailablePropertiesForBuilding(b))
+        ...INITIAL_PROPERTIES.filter(p => !deletedSet.has(p.id)),
+        ...INITIAL_BUILDINGS.flatMap(b => generateAvailablePropertiesForBuilding(b)).filter(p => !deletedSet.has(p.id))
       ];
-      localStorage.setItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(INITIAL_PROPERTIES));
+      localStorage.setItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(_memProperties));
     } else {
       const parsedProps: Property[] = JSON.parse(storedProps);
       const buildings = _memBuildings || INITIAL_BUILDINGS;
       const allGenerated = buildings.flatMap(b => generateAvailablePropertiesForBuilding(b));
       const existingIds = new Set(parsedProps.map(p => p.id));
       const existingSlugs = new Set(parsedProps.map(p => p.slug.toLowerCase()));
-      const missingGenerated = allGenerated.filter(p => !existingIds.has(p.id) && !existingSlugs.has(p.slug.toLowerCase()));
-      const cleanedExisting = parsedProps.map(p => ({
+      const missingGenerated = allGenerated.filter(p => !existingIds.has(p.id) && !existingSlugs.has(p.slug.toLowerCase()) && !deletedSet.has(p.id));
+      const cleanedExisting = parsedProps.filter(p => !deletedSet.has(p.id)).map(p => ({
         ...p,
         title: p.title.replace(/\s+in\s+I-Thum\s+Tower\s+[A-Za-z0-9-]+\b/i, ' in I-Thum'),
         address: cleanPropertyAddress(p.address, p.building_name)
@@ -231,6 +287,18 @@ if (typeof window !== 'undefined') {
 }
 
 export const StorageService = {
+  getDeletedPropertyIds(): Set<string> {
+    return getDeletedPropertyIdsSet();
+  },
+
+  saveDeletedPropertyId(id: string): void {
+    recordDeletedPropertyId(id);
+  },
+
+  unmarkDeletedPropertyId(id: string): void {
+    clearDeletedPropertyId(id);
+  },
+
   // SYNCHRONOUS IMMEDIATE GETTERS (Zero delay, instant page shell rendering)
   getInitialLocations(): Location[] {
     if (_memLocations && _memLocations.length > 0) return _memLocations;
@@ -294,6 +362,7 @@ export const StorageService = {
   getInitialProperties(): Property[] {
     if (_memProperties && _memProperties.length > 0) return _memProperties;
     try {
+      const deletedSet = getDeletedPropertyIdsSet();
       let localProps: Property[] = [];
       const stored = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.PROPERTIES) : null;
       if (stored) localProps = JSON.parse(stored);
@@ -302,8 +371,8 @@ export const StorageService = {
       const allGenerated = buildings.flatMap(b => generateAvailablePropertiesForBuilding(b));
       const existingIds = new Set(baseProps.map(p => p.id));
       const existingSlugs = new Set(baseProps.map(p => p.slug.toLowerCase()));
-      const missingGenerated = allGenerated.filter(p => !existingIds.has(p.id) && !existingSlugs.has(p.slug.toLowerCase()));
-      const cleanedBaseProps = baseProps.map(p => ({
+      const missingGenerated = allGenerated.filter(p => !existingIds.has(p.id) && !existingSlugs.has(p.slug.toLowerCase()) && !deletedSet.has(p.id));
+      const cleanedBaseProps = baseProps.filter(p => !deletedSet.has(p.id)).map(p => ({
         ...p,
         title: p.title.replace(/\s+in\s+I-Thum\s+Tower\s+[A-Za-z0-9-]+\b/i, ' in I-Thum'),
         address: cleanPropertyAddress(p.address, p.building_name)
@@ -311,7 +380,8 @@ export const StorageService = {
       _memProperties = [...cleanedBaseProps, ...missingGenerated];
       return _memProperties;
     } catch {
-      return INITIAL_PROPERTIES;
+      const deletedSet = getDeletedPropertyIdsSet();
+      return INITIAL_PROPERTIES.filter(p => !deletedSet.has(p.id));
     }
   },
 
@@ -335,7 +405,13 @@ export const StorageService = {
     const buildings = this.getInitialBuildings();
     const building = buildings.find(b => b.id === buildingId || b.slug.toLowerCase() === buildingId.toLowerCase());
     const allProps = this.getInitialProperties();
-    const existing = allProps.filter(p => p.building_id === buildingId || (building && (p.building_name?.toLowerCase() === building.name.toLowerCase() || p.building_id === building.id)));
+    const deletedSet = getDeletedPropertyIdsSet();
+    const bldDeleted = new Set(building?.deleted_unit_ids || []);
+    const existing = allProps.filter(p => 
+      !deletedSet.has(p.id) && 
+      !bldDeleted.has(p.id) && 
+      (p.building_id === buildingId || (building && (p.building_name?.toLowerCase() === building.name.toLowerCase() || p.building_id === building.id)))
+    );
 
     if (!building) return existing;
 
@@ -343,7 +419,7 @@ export const StorageService = {
     const existingAreas = new Set(existing.map(p => p.built_up_area));
     const merged = [
       ...existing,
-      ...standardUnits.filter(u => !existingAreas.has(u.built_up_area))
+      ...standardUnits.filter(u => !existingAreas.has(u.built_up_area) && !deletedSet.has(u.id) && !bldDeleted.has(u.id))
     ];
 
     return merged.sort((a, b) => a.built_up_area - b.built_up_area);
@@ -540,8 +616,19 @@ export const StorageService = {
               tower_details: supaBld.tower_details || meta.tower_details || localBld?.tower_details,
               categories: (Array.isArray(supaBld.categories) && supaBld.categories.length > 0) ? supaBld.categories : (meta.categories || localBld?.categories || [supaBld.category || 'office-space']),
               locations: (Array.isArray(supaBld.locations) && supaBld.locations.length > 0) ? supaBld.locations : (meta.locations || localBld?.locations || (supaBld.location_id ? [supaBld.location_id] : [])),
-              location_names: (Array.isArray(supaBld.location_names) && supaBld.location_names.length > 0) ? supaBld.location_names : (meta.location_names || localBld?.location_names || (supaBld.location_name ? [supaBld.location_name] : []))
+              location_names: (Array.isArray(supaBld.location_names) && supaBld.location_names.length > 0) ? supaBld.location_names : (meta.location_names || localBld?.location_names || (supaBld.location_name ? [supaBld.location_name] : [])),
+              deleted_unit_ids: Array.from(new Set([
+                ...(Array.isArray(supaBld.deleted_unit_ids) ? supaBld.deleted_unit_ids : []),
+                ...(Array.isArray(meta.deleted_unit_ids) ? meta.deleted_unit_ids : []),
+                ...(Array.isArray(localBld?.deleted_unit_ids) ? localBld.deleted_unit_ids : [])
+              ]))
             };
+
+            if (combined.deleted_unit_ids && combined.deleted_unit_ids.length > 0) {
+              const delSet = getDeletedPropertyIdsSet();
+              combined.deleted_unit_ids.forEach(id => delSet.add(id));
+              safeSetItem(STORAGE_KEYS.DELETED_PROPERTIES, JSON.stringify(Array.from(delSet)));
+            }
 
             combined.structure_display = getBuildingStructureDisplay(combined);
             combined.property_count = Math.max(combined.property_count || 0, 20);
@@ -598,9 +685,19 @@ export const StorageService = {
   async saveBuilding(building: Building): Promise<void> {
     const structureDisplay = getBuildingStructureDisplay(building);
     const now = new Date().toISOString();
+    const existingBld = (_memBuildings || []).find(b => b.id === building.id);
+    const mergedDeleted = Array.from(new Set([
+      ...(Array.isArray(building.deleted_unit_ids) ? building.deleted_unit_ids : []),
+      ...(Array.isArray(existingBld?.deleted_unit_ids) ? existingBld.deleted_unit_ids : [])
+    ]));
+    if (mergedDeleted.length > 0) {
+      mergedDeleted.forEach(id => recordDeletedPropertyId(id));
+    }
+
     const sanitized: Building = {
       ...building,
       updated_at: now,
+      deleted_unit_ids: mergedDeleted,
       og_image: typeof building.og_image === 'string' ? building.og_image.trim() : '',
       location_id: (building.location_id && String(building.location_id).trim() !== '') ? building.location_id : null as any,
       locations: Array.isArray(building.locations) ? building.locations : (building.location_id ? [building.location_id] : []),
@@ -675,6 +772,7 @@ export const StorageService = {
             og_description: sanitized.og_description,
             og_image: sanitized.og_image !== undefined ? sanitized.og_image : '',
             hyperlinks: sanitized.hyperlinks,
+            deleted_unit_ids: mergedDeleted,
             updated_at: now
           };
           const basePayload: any = {
@@ -836,12 +934,13 @@ export const StorageService = {
     }
 
     // Merge standard available unit tiers for all buildings
+    const deletedSet = getDeletedPropertyIdsSet();
     const buildings = await this.getBuildings();
     const allGenerated = buildings.flatMap(b => generateAvailablePropertiesForBuilding(b));
     const existingIds = new Set(baseProps.map(p => p.id));
     const existingSlugs = new Set(baseProps.map(p => p.slug.toLowerCase()));
-    const missingGenerated = allGenerated.filter(p => !existingIds.has(p.id) && !existingSlugs.has(p.slug.toLowerCase()));
-    const cleanedBaseProps = baseProps.map(p => ({
+    const missingGenerated = allGenerated.filter(p => !existingIds.has(p.id) && !existingSlugs.has(p.slug.toLowerCase()) && !deletedSet.has(p.id));
+    const cleanedBaseProps = baseProps.filter(p => !deletedSet.has(p.id)).map(p => ({
       ...p,
       title: p.title.replace(/\s+in\s+I-Thum\s+Tower\s+[A-Za-z0-9-]+\b/i, ' in I-Thum'),
       address: cleanPropertyAddress(p.address, p.building_name)
@@ -878,7 +977,14 @@ export const StorageService = {
     const buildings = await this.getBuildings();
     const building = buildings.find(b => b.id === buildingId || b.slug.toLowerCase() === buildingId.toLowerCase());
     const allProps = await this.getProperties();
-    const existing = allProps.filter(p => p.building_id === buildingId || (building && (p.building_name?.toLowerCase() === building.name.toLowerCase() || p.building_id === building.id)));
+    const deletedSet = getDeletedPropertyIdsSet();
+    const bldDeleted = new Set(building?.deleted_unit_ids || []);
+
+    const existing = allProps.filter(p => 
+      !deletedSet.has(p.id) &&
+      !bldDeleted.has(p.id) &&
+      (p.building_id === buildingId || (building && (p.building_name?.toLowerCase() === building.name.toLowerCase() || p.building_id === building.id)))
+    );
 
     if (!building) return existing;
 
@@ -886,7 +992,7 @@ export const StorageService = {
     const existingAreas = new Set(existing.map(p => p.built_up_area));
     const merged = [
       ...existing,
-      ...standardUnits.filter(u => !existingAreas.has(u.built_up_area))
+      ...standardUnits.filter(u => !existingAreas.has(u.built_up_area) && !deletedSet.has(u.id) && !bldDeleted.has(u.id))
     ];
 
     return merged.sort((a, b) => a.built_up_area - b.built_up_area);
@@ -964,6 +1070,21 @@ export const StorageService = {
       console.warn('LocalStorage save warning for properties (quota safe):', e);
     }
 
+    // Clear any tombstone for this property since it is actively saved/restored
+    clearDeletedPropertyId(sanitized.id);
+    if (sanitized.building_id) {
+      try {
+        const buildings = await this.getBuildings();
+        const bld = buildings.find(b => b.id === sanitized.building_id);
+        if (bld && bld.deleted_unit_ids && bld.deleted_unit_ids.includes(sanitized.id)) {
+          bld.deleted_unit_ids = bld.deleted_unit_ids.filter(id => id !== sanitized.id);
+          await this.saveBuilding(bld);
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+
     // Always update in-memory cache so zero-delay getters reflect changes immediately
     if (_memProperties) {
       const memIndex = _memProperties.findIndex(p => p.id === sanitized.id);
@@ -1020,8 +1141,19 @@ export const StorageService = {
   },
 
   async deleteProperty(propertyId: string): Promise<void> {
+    if (!propertyId) return;
+
+    // 1. Mark as deleted in tombstone storage & memory cache
+    recordDeletedPropertyId(propertyId);
+
+    // 2. Identify parent building
+    let buildingIdToUpdate: string | null = null;
     try {
       const properties = await this.getProperties();
+      const targetProp = properties.find(p => p.id === propertyId);
+      if (targetProp?.building_id) {
+        buildingIdToUpdate = targetProp.building_id;
+      }
       const updated = properties.filter(p => p.id !== propertyId);
       safeSetItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(updated));
       _memProperties = updated;
@@ -1033,6 +1165,30 @@ export const StorageService = {
       _memProperties = _memProperties.filter(p => p.id !== propertyId);
     }
 
+    // Try identifying building from prop ID if pattern: prop-${buildingId}-${area}
+    if (!buildingIdToUpdate && propertyId.startsWith('prop-')) {
+      const buildings = await this.getBuildings();
+      const matchBld = buildings.find(b => propertyId.startsWith(`prop-${b.id}-`));
+      if (matchBld) buildingIdToUpdate = matchBld.id;
+    }
+
+    // 3. Persist deletion in parent building's deleted_unit_ids (in local storage and Supabase)
+    if (buildingIdToUpdate) {
+      try {
+        const buildings = await this.getBuildings();
+        const bld = buildings.find(b => b.id === buildingIdToUpdate);
+        if (bld) {
+          const currentDeleted = new Set(bld.deleted_unit_ids || []);
+          currentDeleted.add(propertyId);
+          bld.deleted_unit_ids = Array.from(currentDeleted);
+          await this.saveBuilding(bld);
+        }
+      } catch (err) {
+        console.warn('Error updating parent building deleted_unit_ids:', err);
+      }
+    }
+
+    // 4. Delete from Supabase properties table if present
     if (isSupabaseConfigured && supabase) {
       try {
         await supabase.from('properties').delete().eq('id', propertyId);

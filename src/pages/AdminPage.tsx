@@ -378,6 +378,8 @@ export const AdminPage: React.FC = () => {
     max_occurrences: 1
   });
   const [isUploadingBuildingImg, setIsUploadingBuildingImg] = useState(false);
+  const [isUploadingBuildingOgImg, setIsUploadingBuildingOgImg] = useState(false);
+  const [isUploadingPropertyOgImg, setIsUploadingPropertyOgImg] = useState(false);
   const [showQuickLocationModal, setShowQuickLocationModal] = useState(false);
   const [quickLocationName, setQuickLocationName] = useState('');
   const [quickLocationCity, setQuickLocationCity] = useState('Noida');
@@ -611,11 +613,29 @@ export const AdminPage: React.FC = () => {
         setCurrentProperty(prev => ({ 
           ...prev, 
           primary_image: compressed,
-          og_image: prev.og_image || compressed 
+          og_image: prev.og_image || '' 
         }));
       }
     } finally {
       setIsUploadingPropertyImg(false);
+      e.target.value = '';
+    }
+  };
+
+  const handlePropertyOgImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploadingPropertyOgImg(true);
+    try {
+      const compressed = await compressImageFile(file, 1200, 0.76);
+      if (compressed) {
+        setCurrentProperty(prev => ({ 
+          ...prev, 
+          og_image: compressed 
+        }));
+      }
+    } finally {
+      setIsUploadingPropertyOgImg(false);
       e.target.value = '';
     }
   };
@@ -630,11 +650,29 @@ export const AdminPage: React.FC = () => {
         setCurrentBuilding(prev => ({ 
           ...prev, 
           hero_image: compressed,
-          og_image: prev.og_image || compressed 
+          og_image: prev.og_image || '' 
         }));
       }
     } finally {
       setIsUploadingBuildingImg(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleBuildingOgImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploadingBuildingOgImg(true);
+    try {
+      const compressed = await compressImageFile(file, 1200, 0.76);
+      if (compressed) {
+        setCurrentBuilding(prev => ({ 
+          ...prev, 
+          og_image: compressed 
+        }));
+      }
+    } finally {
+      setIsUploadingBuildingOgImg(false);
       e.target.value = '';
     }
   };
@@ -1143,7 +1181,7 @@ export const AdminPage: React.FC = () => {
       canonical_url: prop.canonical_url || '',
       og_title: prop.og_title || '',
       og_description: prop.og_description || '',
-      og_image: prop.og_image || prop.primary_image || '',
+      og_image: prop.og_image ?? '',
       hyperlinks: Array.isArray(prop.hyperlinks) ? [...prop.hyperlinks] : [],
       features: prop.features && Array.isArray(prop.features) ? [...prop.features] : [],
       amenities: prop.amenities && Array.isArray(prop.amenities) ? [...prop.amenities] : [],
@@ -1255,7 +1293,7 @@ export const AdminPage: React.FC = () => {
         canonical_url: currentProperty.canonical_url || undefined,
         og_title: currentProperty.og_title || undefined,
         og_description: currentProperty.og_description || undefined,
-        og_image: currentProperty.og_image || currentProperty.primary_image || undefined,
+        og_image: currentProperty.og_image ? currentProperty.og_image.trim() : '',
         hyperlinks: Array.isArray(currentProperty.hyperlinks) ? currentProperty.hyperlinks : [],
         published: true,
         created_at: currentProperty.created_at || new Date().toISOString(),
@@ -1475,7 +1513,7 @@ export const AdminPage: React.FC = () => {
       canonical_url: bld.canonical_url || '',
       og_title: bld.og_title || '',
       og_description: bld.og_description || '',
-      og_image: bld.og_image || bld.hero_image || '',
+      og_image: bld.og_image ?? '',
       hyperlinks: Array.isArray(bld.hyperlinks) ? [...bld.hyperlinks] : [],
       categories: existingCats,
       locations: existingLocs,
@@ -1596,7 +1634,7 @@ export const AdminPage: React.FC = () => {
         canonical_url: currentBuilding.canonical_url || undefined,
         og_title: currentBuilding.og_title || undefined,
         og_description: currentBuilding.og_description || undefined,
-        og_image: currentBuilding.og_image || currentBuilding.hero_image || undefined,
+        og_image: currentBuilding.og_image ? currentBuilding.og_image.trim() : '',
         hyperlinks: Array.isArray(currentBuilding.hyperlinks) ? currentBuilding.hyperlinks : [],
         total_floors: Number(currentBuilding.total_floors) || 1,
         basement_floors: currentBuilding.basement_floors || '2 Basements (2B)',
@@ -4600,22 +4638,98 @@ export const AdminPage: React.FC = () => {
 
                       <div>
                         <div className="flex items-center justify-between mb-1">
-                          <label className="text-xs font-semibold">OG Image URL</label>
-                          <button
-                            type="button"
-                            onClick={() => setCurrentProperty({ ...currentProperty, og_image: currentProperty.primary_image })}
-                            className="text-[10px] font-bold text-brand-600 dark:text-brand-400 hover:underline cursor-pointer"
-                          >
-                            Use Primary Image
-                          </button>
+                          <label className="text-xs font-semibold flex items-center gap-1">
+                            <span>OG Image URL</span>
+                            <span className="text-[10px] text-slate-400 font-normal">(WhatsApp / Social Preview)</span>
+                          </label>
+                          <div className="flex items-center gap-2">
+                            {currentProperty.primary_image && (
+                              <button
+                                type="button"
+                                onClick={() => setCurrentProperty({ ...currentProperty, og_image: currentProperty.primary_image })}
+                                className="text-[10px] font-bold text-brand-600 dark:text-brand-400 hover:underline cursor-pointer"
+                              >
+                                Use Primary
+                              </button>
+                            )}
+                            {currentProperty.og_image && (
+                              <button
+                                type="button"
+                                onClick={() => setCurrentProperty({ ...currentProperty, og_image: '' })}
+                                className="text-[10px] font-bold text-red-500 hover:underline cursor-pointer"
+                              >
+                                Clear
+                              </button>
+                            )}
+                          </div>
                         </div>
-                        <input
-                          type="text"
-                          value={currentProperty.og_image || ''}
-                          onChange={(e) => setCurrentProperty({ ...currentProperty, og_image: e.target.value })}
-                          placeholder={currentProperty.primary_image || 'Image URL for WhatsApp preview'}
-                          className="glass-input w-full px-3 py-2 rounded-xl text-xs font-mono"
-                        />
+
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={currentProperty.og_image || ''}
+                            onChange={(e) => setCurrentProperty({ ...currentProperty, og_image: e.target.value })}
+                            placeholder={currentProperty.primary_image || 'Primary Image URL fallback'}
+                            className="glass-input flex-1 px-3 py-2 rounded-xl text-xs font-mono"
+                          />
+                          <label className="cursor-pointer px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold flex items-center gap-1 shrink-0 border border-slate-200 dark:border-slate-700">
+                            {isUploadingPropertyOgImg ? (
+                              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <UploadCloud className="w-3.5 h-3.5" />
+                            )}
+                            <span>{isUploadingPropertyOgImg ? 'Uploading...' : 'Upload'}</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={handlePropertyOgImageUpload}
+                              disabled={isUploadingPropertyOgImg}
+                            />
+                          </label>
+                        </div>
+
+                        {/* Preview thumbnail */}
+                        <div className="mt-2 flex items-center gap-2">
+                          {currentProperty.og_image ? (
+                            <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/40 p-1.5 rounded-lg w-full">
+                              <img
+                                src={currentProperty.og_image}
+                                alt="OG Preview"
+                                className="w-10 h-10 object-cover rounded border border-emerald-300 dark:border-emerald-700 shrink-0"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 truncate">
+                                  Custom OG Image Active
+                                </p>
+                                <p className="text-[9px] text-slate-500 truncate font-mono">
+                                  {currentProperty.og_image.startsWith('data:') ? 'Custom Uploaded Image (Base64)' : currentProperty.og_image}
+                                </p>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setCurrentProperty({ ...currentProperty, og_image: '' })}
+                                className="text-red-500 hover:text-red-700 p-1 cursor-pointer"
+                                title="Remove OG image (fall back to Primary Image)"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ) : currentProperty.primary_image ? (
+                            <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 p-1.5 rounded-lg w-full">
+                              <img
+                                src={currentProperty.primary_image}
+                                alt="Fallback Primary"
+                                className="w-10 h-10 object-cover rounded border border-slate-300 dark:border-slate-600 opacity-70 shrink-0"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-[10px] font-medium text-slate-600 dark:text-slate-400">
+                                  Using Primary Image as OG fallback
+                                </p>
+                              </div>
+                            </div>
+                          ) : null}
+                        </div>
                       </div>
                     </div>
 
@@ -5583,7 +5697,7 @@ export const AdminPage: React.FC = () => {
                     onPrimaryImageChange={(url) => setCurrentBuilding(prev => ({ 
                       ...prev, 
                       hero_image: url,
-                      og_image: prev.og_image && prev.og_image !== prev.hero_image ? prev.og_image : url
+                      og_image: prev.og_image || ''
                     }))}
                     primaryAlt={currentBuilding.hero_image_alt || ''}
                     onPrimaryAltChange={(alt) => setCurrentBuilding(prev => ({ ...prev, hero_image_alt: alt }))}
@@ -5758,14 +5872,99 @@ export const AdminPage: React.FC = () => {
                       </div>
 
                       <div>
-                        <label className="block text-xs font-semibold mb-1">OG Image URL (defaults to Featured Image)</label>
-                        <input
-                          type="text"
-                          value={currentBuilding.og_image || ''}
-                          onChange={(e) => setCurrentBuilding({ ...currentBuilding, og_image: e.target.value })}
-                          placeholder={currentBuilding.hero_image || 'Featured Image URL'}
-                          className="glass-input w-full px-3 py-2 rounded-xl text-xs font-mono"
-                        />
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="text-xs font-semibold flex items-center gap-1">
+                            <span>OG Image URL</span>
+                            <span className="text-[10px] text-slate-400 font-normal">(WhatsApp / Social Preview)</span>
+                          </label>
+                          <div className="flex items-center gap-2">
+                            {currentBuilding.hero_image && (
+                              <button
+                                type="button"
+                                onClick={() => setCurrentBuilding({ ...currentBuilding, og_image: currentBuilding.hero_image })}
+                                className="text-[10px] font-bold text-brand-600 dark:text-brand-400 hover:underline cursor-pointer"
+                              >
+                                Use Featured
+                              </button>
+                            )}
+                            {currentBuilding.og_image && (
+                              <button
+                                type="button"
+                                onClick={() => setCurrentBuilding({ ...currentBuilding, og_image: '' })}
+                                className="text-[10px] font-bold text-red-500 hover:underline cursor-pointer"
+                              >
+                                Clear
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={currentBuilding.og_image || ''}
+                            onChange={(e) => setCurrentBuilding({ ...currentBuilding, og_image: e.target.value })}
+                            placeholder={currentBuilding.hero_image || 'Featured Image URL fallback'}
+                            className="glass-input flex-1 px-3 py-2 rounded-xl text-xs font-mono"
+                          />
+                          <label className="cursor-pointer px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold flex items-center gap-1 shrink-0 border border-slate-200 dark:border-slate-700">
+                            {isUploadingBuildingOgImg ? (
+                              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <UploadCloud className="w-3.5 h-3.5" />
+                            )}
+                            <span>{isUploadingBuildingOgImg ? 'Uploading...' : 'Upload'}</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={handleBuildingOgImageUpload}
+                              disabled={isUploadingBuildingOgImg}
+                            />
+                          </label>
+                        </div>
+
+                        {/* Preview thumbnail */}
+                        <div className="mt-2 flex items-center gap-2">
+                          {currentBuilding.og_image ? (
+                            <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/40 p-1.5 rounded-lg w-full">
+                              <img
+                                src={currentBuilding.og_image}
+                                alt="OG Preview"
+                                className="w-10 h-10 object-cover rounded border border-emerald-300 dark:border-emerald-700 shrink-0"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 truncate">
+                                  Custom OG Image Active
+                                </p>
+                                <p className="text-[9px] text-slate-500 truncate font-mono">
+                                  {currentBuilding.og_image.startsWith('data:') ? 'Custom Uploaded Image (Base64)' : currentBuilding.og_image}
+                                </p>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setCurrentBuilding({ ...currentBuilding, og_image: '' })}
+                                className="text-red-500 hover:text-red-700 p-1 cursor-pointer"
+                                title="Remove OG image (fall back to Featured Image)"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ) : currentBuilding.hero_image ? (
+                            <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 p-1.5 rounded-lg w-full">
+                              <img
+                                src={currentBuilding.hero_image}
+                                alt="Fallback Featured"
+                                className="w-10 h-10 object-cover rounded border border-slate-300 dark:border-slate-600 opacity-70 shrink-0"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-[10px] font-medium text-slate-600 dark:text-slate-400">
+                                  Using Featured Image as OG fallback
+                                </p>
+                              </div>
+                            </div>
+                          ) : null}
+                        </div>
                       </div>
                     </div>
 

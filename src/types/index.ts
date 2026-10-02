@@ -109,6 +109,8 @@ export interface Building {
   og_description?: string;
   og_image?: string;
   hyperlinks?: HyperlinkConfig[];
+  updated_at?: string;
+  created_at?: string;
 }
 
 export interface Property {
@@ -175,6 +177,7 @@ export interface Property {
   og_description?: string;
   og_image?: string;
   hyperlinks?: HyperlinkConfig[];
+  updated_at?: string;
 }
 
 export type LeadStatus = 

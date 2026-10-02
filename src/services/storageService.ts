@@ -58,6 +58,36 @@ const safeSetItem = (key: string, value: string): boolean => {
       localStorage.setItem(key, value);
       return true;
     } catch (secondErr) {
+      // 3. Compact bulky base64 data from cached items if quota is still exceeded
+      try {
+        if (key === STORAGE_KEYS.BUILDINGS) {
+          const parsed = JSON.parse(value);
+          if (Array.isArray(parsed)) {
+            const compacted = parsed.map((b: any) => ({
+              ...b,
+              gallery: Array.isArray(b.gallery)
+                ? b.gallery.filter((img: string) => typeof img === 'string' && (img.startsWith('http') || img.length < 50000))
+                : b.gallery
+            }));
+            localStorage.setItem(key, JSON.stringify(compacted));
+            return true;
+          }
+        } else if (key === STORAGE_KEYS.PROPERTIES) {
+          const parsed = JSON.parse(value);
+          if (Array.isArray(parsed)) {
+            const compacted = parsed.map((p: any) => ({
+              ...p,
+              gallery: Array.isArray(p.gallery)
+                ? p.gallery.filter((img: string) => typeof img === 'string' && (img.startsWith('http') || img.length < 50000))
+                : p.gallery
+            }));
+            localStorage.setItem(key, JSON.stringify(compacted));
+            return true;
+          }
+        }
+      } catch (thirdErr) {
+        console.warn(`LocalStorage compact save also failed for "${key}":`, thirdErr);
+      }
       console.warn(`LocalStorage quota still exceeded for "${key}". Memory cache remains fully active.`, secondErr);
       return false;
     }
@@ -456,6 +486,25 @@ export const StorageService = {
               }
             }
 
+            const localUpdated = localBld?.updated_at ? new Date(localBld.updated_at).getTime() : 0;
+            const metaUpdated = meta?.updated_at ? new Date(meta.updated_at).getTime() : 0;
+            const isLocalNewer = localUpdated > 0 && localUpdated > metaUpdated;
+
+            const resolvedOgImage = (isLocalNewer && localBld?.og_image !== undefined)
+              ? localBld.og_image
+              : (meta?.og_image !== undefined && meta.og_image !== null)
+                ? meta.og_image
+                : (supaBld.og_image !== undefined && supaBld.og_image !== null)
+                  ? supaBld.og_image
+                  : (localBld?.og_image || '');
+
+            const resolvedSeoTitle = (isLocalNewer && localBld?.seo_title !== undefined) ? localBld.seo_title : (meta.seo_title || supaBld.seo_title || localBld?.seo_title || '');
+            const resolvedSeoDesc = (isLocalNewer && localBld?.seo_description !== undefined) ? localBld.seo_description : (meta.seo_description || supaBld.seo_description || localBld?.seo_description || '');
+            const resolvedSeoKeys = (isLocalNewer && localBld?.seo_keywords !== undefined) ? localBld.seo_keywords : (meta.seo_keywords || supaBld.seo_keywords || localBld?.seo_keywords || '');
+            const resolvedCanonical = (isLocalNewer && localBld?.canonical_url !== undefined) ? localBld.canonical_url : (meta.canonical_url || supaBld.canonical_url || localBld?.canonical_url || '');
+            const resolvedOgTitle = (isLocalNewer && localBld?.og_title !== undefined) ? localBld.og_title : (meta.og_title || supaBld.og_title || localBld?.og_title || '');
+            const resolvedOgDesc = (isLocalNewer && localBld?.og_description !== undefined) ? localBld.og_description : (meta.og_description || supaBld.og_description || localBld?.og_description || '');
+
             const combined: Building = {
               ...supaBld,
               ...meta,
@@ -474,13 +523,14 @@ export const StorageService = {
               hero_image_title: supaBld.hero_image_title || meta.hero_image_title || localBld?.hero_image_title,
               hero_image_caption: supaBld.hero_image_caption || meta.hero_image_caption || localBld?.hero_image_caption,
               image_details: supaBld.image_details || meta.image_details || localBld?.image_details,
-              seo_title: supaBld.seo_title || meta.seo_title || localBld?.seo_title,
-              seo_description: supaBld.seo_description || meta.seo_description || localBld?.seo_description,
-              seo_keywords: supaBld.seo_keywords || meta.seo_keywords || localBld?.seo_keywords,
-              canonical_url: supaBld.canonical_url || meta.canonical_url || localBld?.canonical_url,
-              og_title: supaBld.og_title || meta.og_title || localBld?.og_title,
-              og_description: supaBld.og_description || meta.og_description || localBld?.og_description,
-              og_image: supaBld.og_image || meta.og_image || localBld?.og_image,
+              seo_title: resolvedSeoTitle,
+              seo_description: resolvedSeoDesc,
+              seo_keywords: resolvedSeoKeys,
+              canonical_url: resolvedCanonical,
+              og_title: resolvedOgTitle,
+              og_description: resolvedOgDesc,
+              og_image: resolvedOgImage,
+              updated_at: isLocalNewer ? localBld?.updated_at : (meta.updated_at || supaBld.created_at || localBld?.updated_at),
               hyperlinks: supaBld.hyperlinks || meta.hyperlinks || localBld?.hyperlinks || [],
               available_floors: meta.available_floors !== undefined ? meta.available_floors : (supaBld.available_floors?.startsWith('__meta:') ? null : supaBld.available_floors),
               structure_display: supaBld.structure_display || meta.structure_display || localBld?.structure_display,
@@ -547,8 +597,11 @@ export const StorageService = {
 
   async saveBuilding(building: Building): Promise<void> {
     const structureDisplay = getBuildingStructureDisplay(building);
+    const now = new Date().toISOString();
     const sanitized: Building = {
       ...building,
+      updated_at: now,
+      og_image: typeof building.og_image === 'string' ? building.og_image.trim() : '',
       location_id: (building.location_id && String(building.location_id).trim() !== '') ? building.location_id : null as any,
       locations: Array.isArray(building.locations) ? building.locations : (building.location_id ? [building.location_id] : []),
       location_names: Array.isArray(building.location_names) ? building.location_names : (building.location_name ? [building.location_name] : []),
@@ -589,7 +642,6 @@ export const StorageService = {
         const { error } = await supabase.from('buildings').upsert(sanitized);
         if (error) {
           // If upsert fails due to missing optional columns on Supabase, attempt fallback with core schema columns and encode metadata
-          console.warn('Supabase upsert building error, trying fallback with base columns and packed metadata:', error);
           const metaPayload = {
             available_floors: sanitized.available_floors || null,
             structure_display: sanitized.structure_display,
@@ -621,10 +673,11 @@ export const StorageService = {
             canonical_url: sanitized.canonical_url,
             og_title: sanitized.og_title,
             og_description: sanitized.og_description,
-            og_image: sanitized.og_image,
+            og_image: sanitized.og_image !== undefined ? sanitized.og_image : '',
             hyperlinks: sanitized.hyperlinks,
+            updated_at: now
           };
-          const basePayload = {
+          const basePayload: any = {
             id: sanitized.id,
             name: sanitized.name,
             slug: sanitized.slug,
@@ -651,7 +704,13 @@ export const StorageService = {
             published: sanitized.published,
             property_count: sanitized.property_count || 0
           };
-          const fallbackRes = await supabase.from('buildings').upsert(basePayload);
+          let fallbackRes = await supabase.from('buildings').upsert(basePayload);
+          if (fallbackRes.error && fallbackRes.error.code === '23503') {
+            // Foreign key violation on location_id (e.g. location not seeded in DB)
+            // Retry with location_id = null since full location info is preserved in metaPayload
+            basePayload.location_id = null;
+            fallbackRes = await supabase.from('buildings').upsert(basePayload);
+          }
           if (fallbackRes.error) {
             console.warn('Supabase fallback upsert warning (local saved successfully):', fallbackRes.error);
           }
@@ -703,31 +762,65 @@ export const StorageService = {
         if (!error && data && data.length > 0) {
           baseProps = (data as any[]).map(supaProp => {
             const localProp = localProps.find(lp => lp.id === supaProp.id || lp.slug === supaProp.slug);
+            let meta: any = {};
+            let cleanFeatures = supaProp.features;
+            if (Array.isArray(supaProp.features)) {
+              cleanFeatures = supaProp.features.filter((f: any) => {
+                if (typeof f === 'string' && f.startsWith('__meta:')) {
+                  try { meta = JSON.parse(f.replace('__meta:', '')); } catch(e){}
+                  return false;
+                }
+                return true;
+              });
+            }
+
+            const localUpdated = localProp?.updated_at ? new Date(localProp.updated_at).getTime() : 0;
+            const metaUpdated = meta?.updated_at ? new Date(meta.updated_at).getTime() : 0;
+            const isLocalNewer = localUpdated > 0 && localUpdated > metaUpdated;
+
+            const resolvedOgImage = (isLocalNewer && localProp?.og_image !== undefined)
+              ? localProp.og_image
+              : (meta?.og_image !== undefined && meta.og_image !== null)
+                ? meta.og_image
+                : (supaProp.og_image !== undefined && supaProp.og_image !== null)
+                  ? supaProp.og_image
+                  : (localProp?.og_image || '');
+
+            const resolvedSeoTitle = (isLocalNewer && localProp?.seo_title !== undefined) ? localProp.seo_title : (meta.seo_title || supaProp.seo_title || localProp?.seo_title);
+            const resolvedSeoDesc = (isLocalNewer && localProp?.seo_description !== undefined) ? localProp.seo_description : (meta.seo_description || supaProp.seo_description || localProp?.seo_description);
+            const resolvedSeoKeys = (isLocalNewer && localProp?.seo_keywords !== undefined) ? localProp.seo_keywords : (meta.seo_keywords || supaProp.seo_keywords || localProp?.seo_keywords);
+            const resolvedCanonical = (isLocalNewer && localProp?.canonical_url !== undefined) ? localProp.canonical_url : (meta.canonical_url || supaProp.canonical_url || localProp?.canonical_url);
+            const resolvedOgTitle = (isLocalNewer && localProp?.og_title !== undefined) ? localProp.og_title : (meta.og_title || supaProp.og_title || localProp?.og_title);
+            const resolvedOgDesc = (isLocalNewer && localProp?.og_description !== undefined) ? localProp.og_description : (meta.og_description || supaProp.og_description || localProp?.og_description);
+
             return {
               ...supaProp,
+              ...meta,
               ...(localProp || {}),
+              features: cleanFeatures,
               tower: supaProp.tower || localProp?.tower || null,
               block_name: supaProp.block_name || localProp?.block_name,
               unit_number: supaProp.unit_number || localProp?.unit_number,
               sector: supaProp.sector || localProp?.sector,
               rent_price: supaProp.rent_price || localProp?.rent_price,
               sale_price: supaProp.sale_price || localProp?.sale_price,
-              short_description: supaProp.short_description || localProp?.short_description,
-              overview: supaProp.overview || localProp?.overview,
-              location_connectivity: supaProp.location_connectivity || localProp?.location_connectivity,
-              highlights: supaProp.highlights || localProp?.highlights,
-              primary_image_alt: supaProp.primary_image_alt || localProp?.primary_image_alt,
-              primary_image_title: supaProp.primary_image_title || localProp?.primary_image_title,
-              primary_image_caption: supaProp.primary_image_caption || localProp?.primary_image_caption,
-              image_details: supaProp.image_details || localProp?.image_details,
-              seo_title: supaProp.seo_title || localProp?.seo_title,
-              seo_description: supaProp.seo_description || localProp?.seo_description,
-              seo_keywords: supaProp.seo_keywords || localProp?.seo_keywords,
-              canonical_url: supaProp.canonical_url || localProp?.canonical_url,
-              og_title: supaProp.og_title || localProp?.og_title,
-              og_description: supaProp.og_description || localProp?.og_description,
-              og_image: supaProp.og_image || localProp?.og_image,
-              hyperlinks: supaProp.hyperlinks || localProp?.hyperlinks || [],
+              short_description: supaProp.short_description || meta.short_description || localProp?.short_description,
+              overview: supaProp.overview || meta.overview || localProp?.overview,
+              location_connectivity: supaProp.location_connectivity || meta.location_connectivity || localProp?.location_connectivity,
+              highlights: supaProp.highlights || meta.highlights || localProp?.highlights,
+              primary_image_alt: supaProp.primary_image_alt || meta.primary_image_alt || localProp?.primary_image_alt,
+              primary_image_title: supaProp.primary_image_title || meta.primary_image_title || localProp?.primary_image_title,
+              primary_image_caption: supaProp.primary_image_caption || meta.primary_image_caption || localProp?.primary_image_caption,
+              image_details: supaProp.image_details || meta.image_details || localProp?.image_details,
+              seo_title: resolvedSeoTitle,
+              seo_description: resolvedSeoDesc,
+              seo_keywords: resolvedSeoKeys,
+              canonical_url: resolvedCanonical,
+              og_title: resolvedOgTitle,
+              og_description: resolvedOgDesc,
+              og_image: resolvedOgImage,
+              updated_at: isLocalNewer ? localProp?.updated_at : (meta.updated_at || supaProp.created_at || localProp?.updated_at),
+              hyperlinks: supaProp.hyperlinks || meta.hyperlinks || localProp?.hyperlinks || [],
             };
           });
 
@@ -810,8 +903,11 @@ export const StorageService = {
   },
 
   async saveProperty(property: Property): Promise<void> {
+    const now = new Date().toISOString();
     const sanitized: Property = {
       ...property,
+      updated_at: now,
+      og_image: typeof property.og_image === 'string' ? property.og_image.trim() : '',
       category: property.category || 'office-space',
       property_type: property.property_type || 'Commercial Office',
       building_id: (property.building_id && String(property.building_id).trim() !== '') ? property.building_id : null as any,
@@ -851,7 +947,6 @@ export const StorageService = {
       canonical_url: property.canonical_url || null,
       og_title: property.og_title || null,
       og_description: property.og_description || null,
-      og_image: property.og_image || null,
       hyperlinks: property.hyperlinks || [],
     };
 
@@ -880,15 +975,39 @@ export const StorageService = {
       try {
         const { error } = await supabase.from('properties').upsert(sanitized);
         if (error) {
-          console.warn('Supabase upsert property error, trying fallback without optional fields:', error);
+          const metaPayload = {
+            og_image: sanitized.og_image !== undefined ? sanitized.og_image : '',
+            seo_title: sanitized.seo_title || null,
+            seo_description: sanitized.seo_description || null,
+            seo_keywords: sanitized.seo_keywords || null,
+            canonical_url: sanitized.canonical_url || null,
+            og_title: sanitized.og_title || null,
+            og_description: sanitized.og_description || null,
+            primary_image_alt: sanitized.primary_image_alt || null,
+            primary_image_title: sanitized.primary_image_title || null,
+            primary_image_caption: sanitized.primary_image_caption || null,
+            short_description: sanitized.short_description || null,
+            overview: sanitized.overview || null,
+            location_connectivity: sanitized.location_connectivity || null,
+            highlights: sanitized.highlights || null,
+            hyperlinks: sanitized.hyperlinks || [],
+            updated_at: now
+          };
+          const baseFeatures = Array.isArray(sanitized.features)
+            ? sanitized.features.filter(f => typeof f !== 'string' || !f.startsWith('__meta:'))
+            : [];
+          baseFeatures.push('__meta:' + JSON.stringify(metaPayload));
+
           const { 
             tower, block_name, unit_number, sector, rent_price, sale_price,
             short_description, overview, location_connectivity, highlights,
             primary_image_alt, primary_image_title, primary_image_caption,
             image_details, seo_title, seo_description, seo_keywords,
             canonical_url, og_title, og_description, og_image, hyperlinks,
+            updated_at,
             ...basePayload 
           } = sanitized as any;
+          basePayload.features = baseFeatures;
           const fallbackRes = await supabase.from('properties').upsert(basePayload);
           if (fallbackRes.error) {
             console.warn('Supabase fallback upsert property warning (local saved successfully):', fallbackRes.error);

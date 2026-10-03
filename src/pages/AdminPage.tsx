@@ -1215,8 +1215,9 @@ export const AdminPage: React.FC = () => {
   };
 
   const handleDeleteProperty = async (propertyId: string) => {
+    const prop = properties.find(p => p.id === propertyId);
     if (window.confirm('Are you sure you want to remove this property listing?')) {
-      await StorageService.deleteProperty(propertyId);
+      await StorageService.deleteProperty(propertyId, prop?.building_id);
       setProperties(prev => prev.filter(p => p.id !== propertyId));
     }
   };

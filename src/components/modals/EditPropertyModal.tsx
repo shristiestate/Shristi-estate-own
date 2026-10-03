@@ -22,6 +22,7 @@ import {
 import { Property, Building, Location, PropertyCategory, PropertyStatus, FurnishingType } from '../../types';
 import { StorageService } from '../../services/storageService';
 import { handleOverviewPaste } from '../../utils/textFormat';
+import { compressImageFile } from '../../utils/imageCompression';
 
 export const CATEGORY_CONFIG: Record<PropertyCategory, {
   label: string;
@@ -203,6 +204,7 @@ export interface EditPropertyModalProps {
   buildings?: Building[];
   onClose: () => void;
   onSave: (updatedProperty: Property) => void | Promise<void>;
+  onDelete?: (property: Property) => void | Promise<void>;
 }
 
 export const EditPropertyModal: React.FC<EditPropertyModalProps> = ({
@@ -211,7 +213,8 @@ export const EditPropertyModal: React.FC<EditPropertyModalProps> = ({
   locations: initialLocations,
   buildings: initialBuildings,
   onClose,
-  onSave
+  onSave,
+  onDelete
 }) => {
   const [formData, setFormData] = useState<Property | null>(null);
   const [locations, setLocations] = useState<Location[]>(initialLocations || []);
@@ -220,6 +223,9 @@ export const EditPropertyModal: React.FC<EditPropertyModalProps> = ({
   const [newFeatureTag, setNewFeatureTag] = useState('');
   const [customPropertyTypeInput, setCustomPropertyTypeInput] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isUploadingPrimary, setIsUploadingPrimary] = useState(false);
+  const [isUploadingGallery, setIsUploadingGallery] = useState(false);
 
   // Sync when property changes or opens
   useEffect(() => {
@@ -247,45 +253,48 @@ export const EditPropertyModal: React.FC<EditPropertyModalProps> = ({
 
   if (!isOpen || !formData) return null;
 
-  // Handle Primary Image Upload
-  const handlePrimaryImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle Primary Image Upload with compression
+  const handlePrimaryImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert('File size exceeds 5MB. Please choose a smaller image.');
-        return;
-      }
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const result = event.target?.result as string;
-        if (result) {
-          setFormData(prev => prev ? { ...prev, primary_image: result } : null);
+      setIsUploadingPrimary(true);
+      try {
+        const compressed = await compressImageFile(file, 1200, 0.78);
+        if (compressed) {
+          setFormData(prev => prev ? { ...prev, primary_image: compressed } : null);
         }
-      };
-      reader.readAsDataURL(file);
+      } catch (err) {
+        console.error('Error compressing primary image:', err);
+      } finally {
+        setIsUploadingPrimary(false);
+        e.target.value = '';
+      }
     }
   };
 
-  // Handle Gallery Multi-upload
-  const handleGalleryMultiUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle Gallery Multi-upload with compression
+  const handleGalleryMultiUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    Array.from(files).forEach((file) => {
-      if (file.size > 5 * 1024 * 1024) return;
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const result = event.target?.result as string;
-        if (result) {
-          setFormData(prev => prev ? {
-            ...prev,
-            gallery: [...(prev.gallery || []), result]
-          } : null);
-        }
-      };
-      reader.readAsDataURL(file);
-    });
-    e.target.value = '';
+    setIsUploadingGallery(true);
+    try {
+      const fileList = Array.from(files);
+      const compressPromises = fileList.map(f => compressImageFile(f, 1000, 0.75));
+      const compressedResults = await Promise.all(compressPromises);
+      const valid = compressedResults.filter(Boolean);
+      if (valid.length > 0) {
+        setFormData(prev => prev ? {
+          ...prev,
+          gallery: [...(prev.gallery || []), ...valid]
+        } : null);
+      }
+    } catch (err) {
+      console.error('Error compressing gallery images:', err);
+    } finally {
+      setIsUploadingGallery(false);
+      e.target.value = '';
+    }
   };
 
   // Add Gallery URL
@@ -333,18 +342,39 @@ export const EditPropertyModal: React.FC<EditPropertyModalProps> = ({
     });
   };
 
-  // Replace single gallery item with file
-  const handleReplaceGalleryItem = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+  // Replace single gallery item with file and compression
+  const handleReplaceGalleryItem = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const result = event.target?.result as string;
-        if (result) {
-          handleUpdateGalleryUrl(index, result);
+      try {
+        const compressed = await compressImageFile(file, 1000, 0.75);
+        if (compressed) {
+          handleUpdateGalleryUrl(index, compressed);
         }
-      };
-      reader.readAsDataURL(file);
+      } catch (err) {
+        console.error('Error replacing gallery item:', err);
+      } finally {
+        e.target.value = '';
+      }
+    }
+  };
+
+  // Delete Unit / Property handler
+  const handleDeleteSelf = async () => {
+    if (!formData || !onDelete) return;
+    const name = formData.reference_number || formData.title || 'this property listing';
+    if (!window.confirm(`Are you sure you want to permanently delete "${name}"? This action will persist immediately.`)) {
+      return;
+    }
+    setIsDeleting(true);
+    try {
+      await onDelete(formData);
+      onClose();
+    } catch (err) {
+      console.error('Failed to delete property:', err);
+      alert('Could not delete property. Please try again.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -1048,31 +1078,48 @@ export const EditPropertyModal: React.FC<EditPropertyModalProps> = ({
           </div>
 
           {/* Actions */}
-          <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-3 pt-3 sm:pt-4 border-t border-slate-200 dark:border-slate-800 shrink-0">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2.5 sm:py-2 rounded-xl text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 text-center cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSaving}
-              className="px-6 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-brand-600 via-brand-500 to-cyan-600 hover:from-brand-500 hover:to-cyan-400 shadow-lg shadow-brand-500/25 active:scale-95 flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed group cursor-pointer"
-            >
-              {isSaving ? (
-                <>
-                  <RefreshCw className="w-4 h-4 animate-spin text-white" />
-                  <span>Updating Property Listing...</span>
-                </>
-              ) : (
-                <>
-                  <RefreshCw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
-                  <span>Update Property & Live Data</span>
-                </>
-              )}
-            </button>
+          <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2 sm:gap-3 pt-3 sm:pt-4 border-t border-slate-200 dark:border-slate-800 shrink-0">
+            {onDelete ? (
+              <button
+                type="button"
+                onClick={handleDeleteSelf}
+                disabled={isDeleting || isSaving}
+                className="px-3.5 py-2 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 border border-rose-200 dark:border-rose-900/50 flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+                title="Permanently remove this property/unit"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>{isDeleting ? 'Deleting...' : 'Delete Unit'}</span>
+              </button>
+            ) : (
+              <div />
+            )}
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2.5 sm:py-2 rounded-xl text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 text-center cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSaving || isDeleting}
+                className="px-6 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-brand-600 via-brand-500 to-cyan-600 hover:from-brand-500 hover:to-cyan-400 shadow-lg shadow-brand-500/25 active:scale-95 flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed group cursor-pointer"
+              >
+                {isSaving ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin text-white" />
+                    <span>Updating Property Listing...</span>
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
+                    <span>Update Property & Live Data</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </form>
       </div>

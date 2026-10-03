@@ -20,7 +20,11 @@ import {
   UploadCloud,
   Sparkles,
   Link as LinkIcon,
-  Loader2
+  Loader2,
+  Copy,
+  ArrowUpDown,
+  CheckCheck,
+  AlertCircle
 } from 'lucide-react';
 import { Building, Property, FurnishingType, PropertyStatus } from '../../types';
 import { StorageService } from '../../services/storageService';
@@ -109,9 +113,12 @@ export const EditBuildingPropertiesModal: React.FC<EditBuildingPropertiesModalPr
   const [saving, setSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
 
-  // Filters & Search
+  // Filters, Sorting & Search
   const [searchQuery, setSearchQuery] = useState('');
   const [tierFilter, setTierFilter] = useState<'all' | 'compact' | 'enterprise'>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<'area-asc' | 'area-desc' | 'price-asc' | 'price-desc' | 'floor'>('area-asc');
+  const [feedbackToast, setFeedbackToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   // Bulk rate apply
   const [bulkRate, setBulkRate] = useState<string>('');
@@ -355,34 +362,66 @@ export const EditBuildingPropertiesModal: React.FC<EditBuildingPropertiesModalPr
     }
 
     setIsDeletingId(id);
+    // Optimistic removal from UI state
+    const updated = properties.filter(p => p.id !== id);
+    setProperties(updated);
+    setDeletedIds(prev => Array.from(new Set([...prev, id])));
+    if (onPropertiesUpdated) {
+      onPropertiesUpdated(updated);
+    }
+
     try {
-      await StorageService.deleteProperty(id);
-      const updated = properties.filter(p => p.id !== id);
-      setProperties(updated);
-      setDeletedIds(prev => Array.from(new Set([...prev, id])));
-      if (onPropertiesUpdated) {
-        onPropertiesUpdated(updated);
-      }
+      await StorageService.deleteProperty(id, building.id);
+      setFeedbackToast({ type: 'success', message: `${unitName} deleted successfully` });
+      setTimeout(() => setFeedbackToast(null), 3000);
     } catch (err) {
       console.error('Failed to delete unit:', err);
-      alert('Failed to delete unit. Please check your network and try again.');
+      setFeedbackToast({ type: 'error', message: 'Failed to delete unit. Please check your network and try again.' });
+      setTimeout(() => setFeedbackToast(null), 4000);
     } finally {
       setIsDeletingId(null);
     }
   };
 
-  // Save All Changes
+  // Quick Duplicate / Clone Unit
+  const handleDuplicateUnit = (unit: Property) => {
+    const cleanBuildingCode = building.slug.replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase() || 'PROP';
+    const timestamp = Date.now().toString().slice(-4);
+    const newUnitId = `prop-${building.id}-${unit.built_up_area}-${timestamp}`;
+    const newSlug = `${unit.built_up_area}-sqft-office-${building.slug}-${timestamp}`;
+
+    const clonedUnit: Property = {
+      ...unit,
+      id: newUnitId,
+      slug: newSlug,
+      title: `${unit.built_up_area.toLocaleString('en-IN')} sq.ft. (Copy) in ${building.name}`,
+      reference_number: `SE-${cleanBuildingCode}-${unit.built_up_area >= 1000 ? (unit.built_up_area / 1000) + 'K' : unit.built_up_area}-C${timestamp.slice(-2)}`,
+      status: 'Available',
+      created_at: new Date().toISOString()
+    };
+
+    const updated = [clonedUnit, ...properties];
+    setProperties(updated);
+    if (onPropertiesUpdated) {
+      onPropertiesUpdated(updated);
+    }
+    setFeedbackToast({ type: 'success', message: `Unit duplicated: ${clonedUnit.reference_number}` });
+    setTimeout(() => setFeedbackToast(null), 3000);
+  };
+
+  // Save All Changes (Optimized batch save)
   const handleSaveAll = async () => {
     setSaving(true);
     try {
+      // 1. Delete all tombstoned properties
       for (const delId of deletedIds) {
-        await StorageService.deleteProperty(delId);
-      }
-      for (const prop of properties) {
-        await StorageService.saveProperty(prop);
+        await StorageService.deleteProperty(delId, building.id);
       }
 
-      // Also ensure parent building's deleted_unit_ids and property_count are updated
+      // 2. Fast batch save all units in one operation
+      await StorageService.saveProperties(properties);
+
+      // 3. Update parent building's deleted_unit_ids and property_count
       const updatedBuilding: Building = {
         ...building,
         property_count: properties.length,
@@ -401,26 +440,38 @@ export const EditBuildingPropertiesModal: React.FC<EditBuildingPropertiesModalPr
       }, 900);
     } catch (e) {
       console.error('Error saving building properties:', e);
-      alert('Failed to save properties. Please try again.');
+      setFeedbackToast({ type: 'error', message: 'Failed to save properties. Please try again.' });
+      setTimeout(() => setFeedbackToast(null), 4000);
     } finally {
       setSaving(false);
     }
   };
 
-  // Filtered properties for viewing
-  const filteredUnits = properties.filter((p) => {
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      const match = p.title.toLowerCase().includes(q) || 
-                    String(p.built_up_area).includes(q) || 
-                    p.reference_number.toLowerCase().includes(q) ||
-                    p.furnishing.toLowerCase().includes(q);
-      if (!match) return false;
-    }
-    if (tierFilter === 'compact') return p.built_up_area <= 2600;
-    if (tierFilter === 'enterprise') return p.built_up_area >= 20000;
-    return true;
-  });
+  // Filtered and sorted properties for viewing
+  const filteredUnits = properties
+    .filter((p) => {
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        const match = p.title.toLowerCase().includes(q) || 
+                      String(p.built_up_area).includes(q) || 
+                      p.reference_number.toLowerCase().includes(q) ||
+                      p.furnishing.toLowerCase().includes(q) ||
+                      (p.floor !== undefined && String(p.floor).toLowerCase().includes(q));
+        if (!match) return false;
+      }
+      if (tierFilter === 'compact') return p.built_up_area <= 2600;
+      if (tierFilter === 'enterprise') return p.built_up_area >= 20000;
+      if (statusFilter !== 'all' && p.status !== statusFilter) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'area-asc') return a.built_up_area - b.built_up_area;
+      if (sortBy === 'area-desc') return b.built_up_area - a.built_up_area;
+      if (sortBy === 'price-asc') return a.price - b.price;
+      if (sortBy === 'price-desc') return b.price - a.price;
+      if (sortBy === 'floor') return String(a.floor || '').localeCompare(String(b.floor || ''));
+      return 0;
+    });
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/70 backdrop-blur-md overflow-y-auto animate-fade-in">
@@ -511,49 +562,84 @@ export const EditBuildingPropertiesModal: React.FC<EditBuildingPropertiesModalPr
             </div>
           </div>
 
-          {/* Sub Toolbar: Tier Filters & Unit Search */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
-            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs self-start">
-              <button
-                type="button"
-                onClick={() => setTierFilter('all')}
-                className={`px-3 py-1 rounded-lg font-semibold transition-all ${
-                  tierFilter === 'all' 
-                    ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' 
-                    : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-                }`}
-              >
-                All Units ({properties.length})
-              </button>
-              <button
-                type="button"
-                onClick={() => setTierFilter('compact')}
-                className={`px-3 py-1 rounded-lg font-semibold transition-all ${
-                  tierFilter === 'compact' 
-                    ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' 
-                    : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-                }`}
-              >
-                Compact (600 - 2,600 sq.ft)
-              </button>
-              <button
-                type="button"
-                onClick={() => setTierFilter('enterprise')}
-                className={`px-3 py-1 rounded-lg font-semibold transition-all ${
-                  tierFilter === 'enterprise' 
-                    ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' 
-                    : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-                }`}
-              >
-                Enterprise (20K - 100K+ sq.ft)
-              </button>
+          {/* Sub Toolbar: Tier Filters, Status Filter, Sorting & Unit Search */}
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pt-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Tier Filters */}
+              <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setTierFilter('all')}
+                  className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+                    tierFilter === 'all' 
+                      ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' 
+                      : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                  }`}
+                >
+                  All ({properties.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTierFilter('compact')}
+                  className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+                    tierFilter === 'compact' 
+                      ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' 
+                      : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                  }`}
+                >
+                  Compact (&le; 2.6K)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTierFilter('enterprise')}
+                  className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+                    tierFilter === 'enterprise' 
+                      ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' 
+                      : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                  }`}
+                >
+                  Enterprise (&ge; 20K)
+                </button>
+              </div>
+
+              {/* Status Filter */}
+              <div className="flex items-center gap-1.5 text-xs">
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300"
+                >
+                  <option value="all">All Statuses</option>
+                  <option value="Available">Available</option>
+                  <option value="Ready to Move">Ready to Move</option>
+                  <option value="Under Negotiation">Under Negotiation</option>
+                  <option value="Rented">Rented</option>
+                  <option value="Sold">Sold</option>
+                </select>
+              </div>
+
+              {/* Sort Dropdown */}
+              <div className="flex items-center gap-1.5 text-xs">
+                <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />
+                <select
+                  value={sortBy}
+                  onChange={(e: any) => setSortBy(e.target.value)}
+                  className="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300"
+                >
+                  <option value="area-asc">Area: Smallest First</option>
+                  <option value="area-desc">Area: Largest First</option>
+                  <option value="price-asc">Rent: Lowest First</option>
+                  <option value="price-desc">Rent: Highest First</option>
+                  <option value="floor">Floor Level</option>
+                </select>
+              </div>
             </div>
 
             <div className="relative w-full sm:w-64">
               <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
               <input
                 type="text"
-                placeholder="Search size, title, status..."
+                placeholder="Search size, title, ref..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-8 pr-3 py-1.5 rounded-xl text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"
@@ -561,6 +647,31 @@ export const EditBuildingPropertiesModal: React.FC<EditBuildingPropertiesModalPr
             </div>
           </div>
         </div>
+
+        {/* Feedback Alert Toast */}
+        {feedbackToast && (
+          <div className={`mx-4 sm:mx-5 mt-3 p-3 rounded-2xl flex items-center justify-between text-xs font-bold border transition-all animate-fade-in ${
+            feedbackToast.type === 'success'
+              ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300'
+              : 'bg-rose-50 dark:bg-rose-950/60 border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-300'
+          }`}>
+            <div className="flex items-center gap-2">
+              {feedbackToast.type === 'success' ? (
+                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+              ) : (
+                <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
+              )}
+              <span>{feedbackToast.message}</span>
+            </div>
+            <button 
+              type="button" 
+              onClick={() => setFeedbackToast(null)} 
+              className="p-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
 
         {/* Add Custom Unit Drawer Form */}
         {showAddForm && (
@@ -815,6 +926,15 @@ export const EditBuildingPropertiesModal: React.FC<EditBuildingPropertiesModalPr
 
                   {/* Right Actions */}
                   <div className="flex items-center gap-2 self-end md:self-center shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => handleDuplicateUnit(unit)}
+                      className="p-2 rounded-xl text-slate-400 hover:text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-950/50 transition-colors cursor-pointer"
+                      title="Duplicate this unit as a template"
+                    >
+                      <Copy className="w-4 h-4" />
+                    </button>
+
                     <button
                       type="button"
                       onClick={() => {
@@ -1172,6 +1292,11 @@ export const EditBuildingPropertiesModal: React.FC<EditBuildingPropertiesModalPr
             setFullEditingUnit(null);
           }}
           onSave={handleSaveFullUnit}
+          onDelete={async (deletedUnit) => {
+            setShowFullEditModal(false);
+            setFullEditingUnit(null);
+            await handleDeleteUnit(deletedUnit.id);
+          }}
         />
       )}
     </div>

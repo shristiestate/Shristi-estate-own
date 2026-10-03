@@ -224,13 +224,13 @@ const initStorage = () => {
     if (!storedProps) {
       _memProperties = [
         ...INITIAL_PROPERTIES.filter(p => !deletedSet.has(p.id)),
-        ...INITIAL_BUILDINGS.flatMap(b => generateAvailablePropertiesForBuilding(b)).filter(p => !deletedSet.has(p.id))
+        ...INITIAL_BUILDINGS.flatMap(b => generateAvailablePropertiesForBuilding(b, deletedSet)).filter(p => !deletedSet.has(p.id))
       ];
       localStorage.setItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(_memProperties));
     } else {
       const parsedProps: Property[] = JSON.parse(storedProps);
       const buildings = _memBuildings || INITIAL_BUILDINGS;
-      const allGenerated = buildings.flatMap(b => generateAvailablePropertiesForBuilding(b));
+      const allGenerated = buildings.flatMap(b => generateAvailablePropertiesForBuilding(b, deletedSet));
       const existingIds = new Set(parsedProps.map(p => p.id));
       const existingSlugs = new Set(parsedProps.map(p => p.slug.toLowerCase()));
       const missingGenerated = allGenerated.filter(p => !existingIds.has(p.id) && !existingSlugs.has(p.slug.toLowerCase()) && !deletedSet.has(p.id));
@@ -392,8 +392,9 @@ export const StorageService = {
     if (found) return found;
 
     const buildings = this.getInitialBuildings();
+    const deletedSet = getDeletedPropertyIdsSet();
     for (const bld of buildings) {
-      const units = generateAvailablePropertiesForBuilding(bld);
+      const units = generateAvailablePropertiesForBuilding(bld, deletedSet);
       const match = units.find(u => u.slug.toLowerCase() === slug.toLowerCase());
       if (match) return match;
     }
@@ -415,7 +416,7 @@ export const StorageService = {
 
     if (!building) return existing;
 
-    const standardUnits = generateAvailablePropertiesForBuilding(building);
+    const standardUnits = generateAvailablePropertiesForBuilding(building, deletedSet);
     const existingAreas = new Set(existing.map(p => p.built_up_area));
     const merged = [
       ...existing,
@@ -736,7 +737,7 @@ export const StorageService = {
 
     if (isSupabaseConfigured && supabase) {
       try {
-        const { error } = await supabase.from('buildings').upsert(sanitized);
+        const { error } = await withTimeout(supabase.from('buildings').upsert(sanitized));
         if (error) {
           // If upsert fails due to missing optional columns on Supabase, attempt fallback with core schema columns and encode metadata
           const metaPayload = {
@@ -802,12 +803,12 @@ export const StorageService = {
             published: sanitized.published,
             property_count: sanitized.property_count || 0
           };
-          let fallbackRes = await supabase.from('buildings').upsert(basePayload);
+          let fallbackRes = await withTimeout(supabase.from('buildings').upsert(basePayload));
           if (fallbackRes.error && fallbackRes.error.code === '23503') {
             // Foreign key violation on location_id (e.g. location not seeded in DB)
             // Retry with location_id = null since full location info is preserved in metaPayload
             basePayload.location_id = null;
-            fallbackRes = await supabase.from('buildings').upsert(basePayload);
+            fallbackRes = await withTimeout(supabase.from('buildings').upsert(basePayload));
           }
           if (fallbackRes.error) {
             console.warn('Supabase fallback upsert warning (local saved successfully):', fallbackRes.error);
@@ -936,7 +937,7 @@ export const StorageService = {
     // Merge standard available unit tiers for all buildings
     const deletedSet = getDeletedPropertyIdsSet();
     const buildings = await this.getBuildings();
-    const allGenerated = buildings.flatMap(b => generateAvailablePropertiesForBuilding(b));
+    const allGenerated = buildings.flatMap(b => generateAvailablePropertiesForBuilding(b, deletedSet));
     const existingIds = new Set(baseProps.map(p => p.id));
     const existingSlugs = new Set(baseProps.map(p => p.slug.toLowerCase()));
     const missingGenerated = allGenerated.filter(p => !existingIds.has(p.id) && !existingSlugs.has(p.slug.toLowerCase()) && !deletedSet.has(p.id));
@@ -961,8 +962,9 @@ export const StorageService = {
         if (found) return found;
 
         const buildings = await this.getBuildings();
+        const deletedSet = getDeletedPropertyIdsSet();
         for (const bld of buildings) {
-          const units = generateAvailablePropertiesForBuilding(bld);
+          const units = generateAvailablePropertiesForBuilding(bld, deletedSet);
           const match = units.find(u => u.slug.toLowerCase() === slug.toLowerCase());
           if (match) return match;
         }
@@ -988,7 +990,7 @@ export const StorageService = {
 
     if (!building) return existing;
 
-    const standardUnits = generateAvailablePropertiesForBuilding(building);
+    const standardUnits = generateAvailablePropertiesForBuilding(building, deletedSet);
     const existingAreas = new Set(existing.map(p => p.built_up_area));
     const merged = [
       ...existing,
@@ -1094,7 +1096,7 @@ export const StorageService = {
 
     if (isSupabaseConfigured && supabase) {
       try {
-        const { error } = await supabase.from('properties').upsert(sanitized);
+        const { error } = await withTimeout(supabase.from('properties').upsert(sanitized));
         if (error) {
           const metaPayload = {
             og_image: sanitized.og_image !== undefined ? sanitized.og_image : '',
@@ -1129,7 +1131,7 @@ export const StorageService = {
             ...basePayload 
           } = sanitized as any;
           basePayload.features = baseFeatures;
-          const fallbackRes = await supabase.from('properties').upsert(basePayload);
+          const fallbackRes = await withTimeout(supabase.from('properties').upsert(basePayload));
           if (fallbackRes.error) {
             console.warn('Supabase fallback upsert property warning (local saved successfully):', fallbackRes.error);
           }
@@ -1140,47 +1142,155 @@ export const StorageService = {
     }
   },
 
-  async deleteProperty(propertyId: string): Promise<void> {
+  async saveProperties(propertiesToSave: Property[]): Promise<void> {
+    if (!propertiesToSave || propertiesToSave.length === 0) return;
+    const now = new Date().toISOString();
+    const sanitizedList: Property[] = propertiesToSave.map(property => ({
+      ...property,
+      updated_at: now,
+      og_image: typeof property.og_image === 'string' ? property.og_image.trim() : '',
+      category: property.category || 'office-space',
+      property_type: property.property_type || 'Commercial Office',
+      building_id: (property.building_id && String(property.building_id).trim() !== '') ? property.building_id : null as any,
+      building_name: property.building_id ? (property.building_name || null as any) : null as any,
+      tower: property.tower || null as any,
+      location_id: (property.location_id && String(property.location_id).trim() !== '') ? property.location_id : null as any,
+      carpet_area: (property.carpet_area && !isNaN(Number(property.carpet_area))) ? Number(property.carpet_area) : null as any,
+      land_area: (property.land_area && !isNaN(Number(property.land_area))) ? Number(property.land_area) : null as any,
+      area_unit: property.area_unit || 'sq.ft',
+      price: Number(property.price) || 0,
+      built_up_area: Number(property.built_up_area) || 0,
+      floor: property.floor || 'Ground',
+      total_floors: (property.total_floors && !isNaN(Number(property.total_floors))) ? Number(property.total_floors) : null as any,
+      power_load: property.power_load || '',
+      road_width: property.road_width || '',
+      possession: property.possession || 'Ready to Move',
+      parking: property.parking || '',
+      features: Array.isArray(property.features) ? property.features : [],
+      amenities: Array.isArray(property.amenities) ? property.amenities : [],
+      gallery: Array.isArray(property.gallery) ? property.gallery : [],
+      block_name: property.block_name || null,
+      unit_number: property.unit_number || null,
+      sector: property.sector || null,
+      rent_price: property.rent_price || null,
+      sale_price: property.sale_price || null,
+      short_description: property.short_description || null,
+      overview: property.overview || null,
+      location_connectivity: property.location_connectivity || null,
+      highlights: property.highlights || null,
+      primary_image_alt: property.primary_image_alt || null,
+      primary_image_title: property.primary_image_title || null,
+      primary_image_caption: property.primary_image_caption || null,
+      image_details: property.image_details || [],
+      seo_title: property.seo_title || null,
+      seo_description: property.seo_description || null,
+      seo_keywords: property.seo_keywords || null,
+      canonical_url: property.canonical_url || null,
+      og_title: property.og_title || null,
+      og_description: property.og_description || null,
+      hyperlinks: property.hyperlinks || [],
+    }));
+
+    // Local / memory cache save in one go
+    try {
+      let currentProps = _memProperties;
+      if (!currentProps) {
+        const stored = localStorage.getItem(STORAGE_KEYS.PROPERTIES);
+        currentProps = stored ? JSON.parse(stored) : [...INITIAL_PROPERTIES];
+      }
+      const map = new Map<string, Property>(currentProps!.map(p => [p.id, p]));
+      sanitizedList.forEach(p => {
+        map.set(p.id, p);
+        clearDeletedPropertyId(p.id);
+      });
+      const merged = Array.from(map.values());
+      _memProperties = merged;
+      safeSetItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(merged));
+    } catch (e) {
+      console.warn('LocalStorage save warning for batch properties:', e);
+    }
+
+    // Supabase upsert in one batch with timeout
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await withTimeout(supabase.from('properties').upsert(sanitizedList));
+      } catch (e) {
+        console.warn('Supabase batch upsert properties warning (local saved):', e);
+      }
+    }
+  },
+
+  async deleteProperty(propertyId: string, buildingIdHint?: string): Promise<void> {
     if (!propertyId) return;
 
-    // 1. Mark as deleted in tombstone storage & memory cache
-    recordDeletedPropertyId(propertyId);
+    // 1. Locate target property BEFORE tombstoning
+    let targetProp: Property | undefined = undefined;
+    if (_memProperties) {
+      targetProp = _memProperties.find(p => p.id === propertyId);
+    }
+    if (!targetProp) {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEYS.PROPERTIES);
+        if (stored) {
+          const list: Property[] = JSON.parse(stored);
+          targetProp = list.find(p => p.id === propertyId);
+        }
+      } catch {
+        // ignore
+      }
+    }
+    if (!targetProp) {
+      targetProp = INITIAL_PROPERTIES.find(p => p.id === propertyId);
+    }
 
     // 2. Identify parent building
-    let buildingIdToUpdate: string | null = null;
+    let buildingIdToUpdate: string | null = buildingIdHint || targetProp?.building_id || null;
+    if (!buildingIdToUpdate && propertyId.startsWith('prop-')) {
+      const buildings = this.getInitialBuildings();
+      const matchBld = buildings.find(b => propertyId.startsWith(`prop-${b.id}-`) || propertyId.startsWith(`prop-${b.slug}-`));
+      if (matchBld) buildingIdToUpdate = matchBld.id;
+    }
+
+    // 3. Mark as deleted in tombstone storage & memory cache for ALL associated identifiers
+    recordDeletedPropertyId(propertyId);
+    if (targetProp?.slug) {
+      recordDeletedPropertyId(targetProp.slug);
+    }
+    if (targetProp?.reference_number) {
+      recordDeletedPropertyId(targetProp.reference_number);
+    }
+    if (buildingIdToUpdate && targetProp?.built_up_area) {
+      recordDeletedPropertyId(`prop-${buildingIdToUpdate}-${targetProp.built_up_area}`);
+    }
+
+    // 4. Remove from properties memory cache & local storage
     try {
-      const properties = await this.getProperties();
-      const targetProp = properties.find(p => p.id === propertyId);
-      if (targetProp?.building_id) {
-        buildingIdToUpdate = targetProp.building_id;
+      if (_memProperties) {
+        _memProperties = _memProperties.filter(p => p.id !== propertyId && (!targetProp?.slug || p.slug !== targetProp.slug));
       }
-      const updated = properties.filter(p => p.id !== propertyId);
-      safeSetItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(updated));
-      _memProperties = updated;
+      const stored = localStorage.getItem(STORAGE_KEYS.PROPERTIES);
+      if (stored) {
+        const list: Property[] = JSON.parse(stored);
+        const updated = list.filter(p => p.id !== propertyId && (!targetProp?.slug || p.slug !== targetProp.slug));
+        safeSetItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(updated));
+      }
     } catch (e) {
       console.warn('LocalStorage delete warning for properties:', e);
     }
 
-    if (_memProperties) {
-      _memProperties = _memProperties.filter(p => p.id !== propertyId);
-    }
-
-    // Try identifying building from prop ID if pattern: prop-${buildingId}-${area}
-    if (!buildingIdToUpdate && propertyId.startsWith('prop-')) {
-      const buildings = await this.getBuildings();
-      const matchBld = buildings.find(b => propertyId.startsWith(`prop-${b.id}-`));
-      if (matchBld) buildingIdToUpdate = matchBld.id;
-    }
-
-    // 3. Persist deletion in parent building's deleted_unit_ids (in local storage and Supabase)
+    // 5. Persist deletion in parent building's deleted_unit_ids (in local storage and Supabase)
     if (buildingIdToUpdate) {
       try {
         const buildings = await this.getBuildings();
-        const bld = buildings.find(b => b.id === buildingIdToUpdate);
+        const bld = buildings.find(b => b.id === buildingIdToUpdate || b.slug.toLowerCase() === buildingIdToUpdate!.toLowerCase());
         if (bld) {
           const currentDeleted = new Set(bld.deleted_unit_ids || []);
           currentDeleted.add(propertyId);
+          if (targetProp?.slug) currentDeleted.add(targetProp.slug);
+          if (targetProp?.reference_number) currentDeleted.add(targetProp.reference_number);
+          if (targetProp?.built_up_area) currentDeleted.add(`prop-${bld.id}-${targetProp.built_up_area}`);
           bld.deleted_unit_ids = Array.from(currentDeleted);
+          bld.property_count = Math.max(0, (bld.property_count || 1) - 1);
           await this.saveBuilding(bld);
         }
       } catch (err) {
@@ -1188,12 +1298,12 @@ export const StorageService = {
       }
     }
 
-    // 4. Delete from Supabase properties table if present
+    // 6. Delete from Supabase properties table if present
     if (isSupabaseConfigured && supabase) {
       try {
-        await supabase.from('properties').delete().eq('id', propertyId);
+        await withTimeout(supabase.from('properties').delete().eq('id', propertyId));
       } catch (e) {
-        console.warn('Supabase delete property warning:', e);
+        console.warn('Supabase delete property warning (local delete succeeded):', e);
       }
     }
   },

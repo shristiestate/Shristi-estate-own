@@ -288,10 +288,13 @@ export function formatIndianCurrency(num: number): string {
   return num.toLocaleString('en-IN');
 }
 
-export function generateAvailablePropertiesForBuilding(building: Building): Property[] {
+export function generateAvailablePropertiesForBuilding(building: Building, additionalDeletedSet?: Set<string>): Property[] {
   const baseRate = extractBaseRate(building.rent_range);
   const cleanBuildingCode = building.slug.replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase() || 'PROP';
-  const deletedSet = new Set(building.deleted_unit_ids || []);
+  const deletedSet = new Set([
+    ...(Array.isArray(building.deleted_unit_ids) ? building.deleted_unit_ids : []),
+    ...(additionalDeletedSet ? Array.from(additionalDeletedSet) : [])
+  ]);
 
   return STANDARD_BUILDING_UNITS
     .filter(unit => {

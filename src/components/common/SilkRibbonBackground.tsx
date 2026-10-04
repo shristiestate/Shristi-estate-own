@@ -44,6 +44,13 @@ export const SilkRibbonBackground: React.FC = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    // Mobile / Touch Optimization:
+    // Skip heavy 258 Bezier curves canvas loop on mobile/touch to eliminate main-thread blocking
+    const isMobile = typeof window !== 'undefined' && (window.innerWidth < 768 || window.matchMedia('(hover: none)').matches);
+    if (isMobile) {
+      return;
+    }
+
     const ctx = canvas.getContext('2d', { alpha: true });
     if (!ctx) return;
 
@@ -412,15 +419,29 @@ export const SilkRibbonBackground: React.FC = () => {
   }, [isDark]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      aria-hidden="true"
-      className="fixed inset-0 pointer-events-none z-0 select-none"
-      style={{
-        width: '100%',
-        height: '100%',
-      }}
-    />
+    <>
+      {/* Lightweight CSS ambient glow for mobile (0ms JS, GPU-accelerated CSS) */}
+      <div 
+        aria-hidden="true"
+        className="md:hidden fixed inset-0 pointer-events-none z-0 select-none opacity-40 dark:opacity-25"
+        style={{
+          background: isDark
+            ? 'radial-gradient(ellipse at 85% 20%, rgba(56, 189, 248, 0.12) 0%, transparent 60%), radial-gradient(ellipse at 85% 80%, rgba(6, 182, 212, 0.08) 0%, transparent 50%)'
+            : 'radial-gradient(ellipse at 85% 20%, rgba(2, 132, 199, 0.08) 0%, transparent 60%), radial-gradient(ellipse at 85% 80%, rgba(13, 148, 136, 0.06) 0%, transparent 50%)'
+        }}
+      />
+
+      {/* Desktop high-performance silky ribbon canvas */}
+      <canvas
+        ref={canvasRef}
+        aria-hidden="true"
+        className="hidden md:block fixed inset-0 pointer-events-none z-0 select-none"
+        style={{
+          width: '100%',
+          height: '100%',
+        }}
+      />
+    </>
   );
 };
 

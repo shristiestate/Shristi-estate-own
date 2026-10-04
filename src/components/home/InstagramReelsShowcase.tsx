@@ -25,8 +25,10 @@ export const InstagramReelsShowcase: React.FC = () => {
   const [reels, setReels] = useState<InstagramReel[]>(() => {
     return StorageService.getInitialInstagramReels().filter(r => r.published);
   });
+  const sectionRef = useRef<HTMLElement | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const [isPaused, setIsPaused] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     StorageService.getInstagramReels().then((data) => {
@@ -34,10 +36,27 @@ export const InstagramReelsShowcase: React.FC = () => {
     });
   }, []);
 
-  // Smooth continuous auto-scroll
+  // Viewport Intersection: Only animate when visible to save 100% of CPU during initial load
+  useEffect(() => {
+    const target = sectionRef.current;
+    if (!target || typeof IntersectionObserver === 'undefined') {
+      setIsVisible(true);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsVisible(entry.isIntersecting);
+      },
+      { rootMargin: '150px' }
+    );
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, []);
+
+  // Smooth continuous auto-scroll only when in view and not paused
   useEffect(() => {
     const el = scrollContainerRef.current;
-    if (!el || reels.length === 0 || isPaused) return;
+    if (!el || reels.length === 0 || isPaused || !isVisible) return;
 
     let animId: number;
     const scrollStep = 0.75; // Smooth scroll speed
@@ -56,7 +75,7 @@ export const InstagramReelsShowcase: React.FC = () => {
     animId = requestAnimationFrame(scrollLoop);
 
     return () => cancelAnimationFrame(animId);
-  }, [reels.length, isPaused]);
+  }, [reels.length, isPaused, isVisible]);
 
   const handleScroll = (direction: 'left' | 'right') => {
     const el = scrollContainerRef.current;
@@ -71,7 +90,7 @@ export const InstagramReelsShowcase: React.FC = () => {
   const displayReels = [...reels, ...reels];
 
   return (
-    <section className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 overflow-hidden">
+    <section ref={sectionRef} className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 overflow-hidden">
       {/* Ambient background glow */}
       <div className="absolute top-1/2 right-1/4 w-[500px] h-[300px] bg-gradient-to-tr from-pink-500/10 via-purple-500/10 to-transparent rounded-full blur-3xl pointer-events-none -z-10" />
 
@@ -145,6 +164,7 @@ export const InstagramReelsShowcase: React.FC = () => {
               src={reel.thumbnail_url}
               alt={reel.title}
               loading="lazy"
+              decoding="async"
               className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
               onError={(e) => {
                 (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=600&q=80';

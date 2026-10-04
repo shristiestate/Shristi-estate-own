@@ -28,11 +28,30 @@ export const UnitImageShowcase: React.FC<UnitImageShowcaseProps> = ({
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Auto-animate image transition
+  // Viewport intersection observer: only animate when card is actually visible
   useEffect(() => {
-    if (images.length <= 1 || isPaused) return;
+    const el = containerRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') {
+      setIsVisible(true);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsVisible(entry.isIntersecting);
+      },
+      { rootMargin: '100px' }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  // Auto-animate image transition ONLY when in viewport and not paused
+  useEffect(() => {
+    if (images.length <= 1 || isPaused || !isVisible) return;
 
     timerRef.current = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % images.length);
@@ -41,7 +60,7 @@ export const UnitImageShowcase: React.FC<UnitImageShowcaseProps> = ({
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [images.length, interval, isPaused]);
+  }, [images.length, interval, isPaused, isVisible]);
 
   const handlePrev = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -63,13 +82,18 @@ export const UnitImageShowcase: React.FC<UnitImageShowcaseProps> = ({
 
   return (
     <div
-      className={`relative ${aspectRatio} overflow-hidden bg-slate-100 dark:bg-slate-800 ${className}`}
+      ref={containerRef}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
+      className={`relative w-full ${aspectRatio} overflow-hidden bg-slate-900 group select-none ${className}`}
     >
-      {/* Animated Image Layers */}
+      {/* Active and Adjacent Image Layers */}
       {images.map((src, idx) => {
         const isActive = idx === currentIndex;
+        // Optimization: Only mount DOM images if active or adjacent to avoid downloading entire gallery upfront
+        const isAdjacent = Math.abs(idx - currentIndex) <= 1 || (currentIndex === 0 && idx === images.length - 1) || (currentIndex === images.length - 1 && idx === 0);
+        if (!isActive && !isAdjacent) return null;
+
         return (
           <div
             key={src + idx}
@@ -80,9 +104,9 @@ export const UnitImageShowcase: React.FC<UnitImageShowcaseProps> = ({
             <img
               src={src}
               alt={`${alt} - Photo ${idx + 1}`}
-              loading={idx === 0 ? 'eager' : 'lazy'}
+              loading={idx === 0 ? 'lazy' : 'lazy'}
               decoding="async"
-              className={`w-full h-full object-cover transition-transform duration-4000 ease-out ${
+              className={`w-full h-full object-cover transition-transform duration-3000 ease-out ${
                 isActive ? 'scale-105' : 'scale-100'
               }`}
               onError={(e) => {
@@ -103,7 +127,7 @@ export const UnitImageShowcase: React.FC<UnitImageShowcaseProps> = ({
             type="button"
             onClick={handlePrev}
             aria-label="Previous unit photo"
-            className="w-7 h-7 rounded-full bg-black/50 hover:bg-black/80 text-white backdrop-blur-md flex items-center justify-center pointer-events-auto transition-transform active:scale-95 shadow-md"
+            className="w-7 h-7 rounded-full bg-black/50 hover:bg-black/80 text-white backdrop-blur-md flex items-center justify-center pointer-events-auto transition-transform active:scale-95 shadow-md cursor-pointer"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -111,7 +135,7 @@ export const UnitImageShowcase: React.FC<UnitImageShowcaseProps> = ({
             type="button"
             onClick={handleNext}
             aria-label="Next unit photo"
-            className="w-7 h-7 rounded-full bg-black/50 hover:bg-black/80 text-white backdrop-blur-md flex items-center justify-center pointer-events-auto transition-transform active:scale-95 shadow-md"
+            className="w-7 h-7 rounded-full bg-black/50 hover:bg-black/80 text-white backdrop-blur-md flex items-center justify-center pointer-events-auto transition-transform active:scale-95 shadow-md cursor-pointer"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
@@ -131,7 +155,7 @@ export const UnitImageShowcase: React.FC<UnitImageShowcaseProps> = ({
                 type="button"
                 onClick={(e) => handleDotClick(e, idx)}
                 aria-label={`Go to photo ${idx + 1}`}
-                className={`h-1.5 rounded-full transition-all duration-300 ${
+                className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
                   idx === currentIndex
                     ? 'w-5 bg-white shadow-sm'
                     : 'w-1.5 bg-white/40 hover:bg-white/70'

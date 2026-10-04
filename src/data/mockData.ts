@@ -1,4 +1,4 @@
-import { Location, Building, Property, Lead, MarketGuide } from '../types';
+import { Location, Building, Property, Lead, MarketGuide, ClientLogo, InstagramReel } from '../types';
 
 export const INITIAL_LOCATIONS: Location[] = [
   {
@@ -2206,3 +2206,154 @@ export const INITIAL_MARKET_GUIDES: MarketGuide[] = [
     author: 'Tenant Representation Desk'
   }
 ];
+
+export const INITIAL_CLIENTS: ClientLogo[] = [
+  {
+    id: 'client-1',
+    name: 'Samsung Electronics',
+    industry: 'Electronics & Tech',
+    logo: 'https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?auto=format&fit=crop&w=300&q=80',
+    website_url: 'https://www.samsung.com',
+    order: 1,
+    published: true
+  },
+  {
+    id: 'client-2',
+    name: 'HCL Technologies',
+    industry: 'IT & Cloud Services',
+    logo: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=300&q=80',
+    website_url: 'https://www.hcltech.com',
+    order: 2,
+    published: true
+  },
+  {
+    id: 'client-3',
+    name: 'Microsoft Corporation',
+    industry: 'Enterprise Software',
+    logo: 'https://images.unsplash.com/photo-1542744094-3a31f272c490?auto=format&fit=crop&w=300&q=80',
+    website_url: 'https://www.microsoft.com',
+    order: 3,
+    published: true
+  },
+  {
+    id: 'client-4',
+    name: 'Paytm (One97)',
+    industry: 'FinTech & Payments',
+    logo: 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?auto=format&fit=crop&w=300&q=80',
+    website_url: 'https://paytm.com',
+    order: 4,
+    published: true
+  },
+  {
+    id: 'client-5',
+    name: 'Adobe Systems',
+    industry: 'Creative Software & Cloud',
+    logo: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=300&q=80',
+    website_url: 'https://www.adobe.com',
+    order: 5,
+    published: true
+  },
+  {
+    id: 'client-6',
+    name: 'Oracle India',
+    industry: 'Database & Cloud',
+    logo: 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=300&q=80',
+    website_url: 'https://www.oracle.com',
+    order: 6,
+    published: true
+  },
+  {
+    id: 'client-7',
+    name: 'KPMG Advisory',
+    industry: 'Consulting & Audit',
+    logo: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=300&q=80',
+    website_url: 'https://home.kpmg',
+    order: 7,
+    published: true
+  },
+  {
+    id: 'client-8',
+    name: 'Siemens Logistics',
+    industry: 'Industrial & Automation',
+    logo: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=300&q=80',
+    website_url: 'https://www.siemens.com',
+    order: 8,
+    published: true
+  }
+];
+
+export const INITIAL_INSTAGRAM_REELS: InstagramReel[] = [
+  {
+    id: 'reel-1',
+    title: 'Tour: 12,500 sq.ft Furnished Corporate Suite in Sector 62',
+    reel_url: 'https://www.instagram.com/reels/',
+    thumbnail_url: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=600&q=80',
+    views_display: '84.2K',
+    likes_display: '4.8K',
+    duration: '0:45',
+    order: 1,
+    featured: true,
+    published: true
+  },
+  {
+    id: 'reel-2',
+    title: 'Grade-A High Clearance Logistics Warehouse in Sector 83',
+    reel_url: 'https://www.instagram.com/reels/',
+    thumbnail_url: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=600&q=80',
+    views_display: '62.7K',
+    likes_display: '3.4K',
+    duration: '0:55',
+    order: 2,
+    featured: true,
+    published: true
+  },
+  {
+    id: 'reel-3',
+    title: 'Exclusive Skyline View Office at Advant Navis Expressway',
+    reel_url: 'https://www.instagram.com/reels/',
+    thumbnail_url: 'https://images.unsplash.com/photo-1577495508048-b635879837f1?auto=format&fit=crop&w=600&q=80',
+    views_display: '115K',
+    likes_display: '8.2K',
+    duration: '0:32',
+    order: 3,
+    featured: true,
+    published: true
+  },
+  {
+    id: 'reel-4',
+    title: 'Prime Retail Showroom Frontage Tour in Sector 18 Market',
+    reel_url: 'https://www.instagram.com/reels/',
+    thumbnail_url: 'https://images.unsplash.com/photo-1519999482648-25049ddd37b1?auto=format&fit=crop&w=600&q=80',
+    views_display: '48.9K',
+    likes_display: '2.9K',
+    duration: '0:40',
+    order: 4,
+    featured: true,
+    published: true
+  },
+  {
+    id: 'reel-5',
+    title: 'Commercial Land Due Diligence Checklist: Noida Expressway',
+    reel_url: 'https://www.instagram.com/reels/',
+    thumbnail_url: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=600&q=80',
+    views_display: '39.4K',
+    likes_display: '1.9K',
+    duration: '1:02',
+    order: 5,
+    featured: true,
+    published: true
+  },
+  {
+    id: 'reel-6',
+    title: 'Plug-and-Play vs Bare Shell Office: 2026 Cost Comparison',
+    reel_url: 'https://www.instagram.com/reels/',
+    thumbnail_url: 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=600&q=80',
+    views_display: '92.1K',
+    likes_display: '6.1K',
+    duration: '0:50',
+    order: 6,
+    featured: true,
+    published: true
+  }
+];
+

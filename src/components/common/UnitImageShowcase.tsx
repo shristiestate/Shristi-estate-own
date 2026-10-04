@@ -1,0 +1,148 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+
+interface UnitImageShowcaseProps {
+  images: string[];
+  alt: string;
+  aspectRatio?: string;
+  interval?: number;
+  className?: string;
+  children?: React.ReactNode;
+}
+
+const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1000&q=80';
+
+export const UnitImageShowcase: React.FC<UnitImageShowcaseProps> = ({
+  images: rawImages,
+  alt,
+  aspectRatio = 'aspect-[16/10]',
+  interval = 3800,
+  className = '',
+  children
+}) => {
+  // Clean and deduplicate images
+  const images = React.useMemo(() => {
+    const list = (rawImages || []).filter(img => typeof img === 'string' && img.trim().length > 0);
+    return list.length > 0 ? list : [FALLBACK_IMAGE];
+  }, [rawImages]);
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Auto-animate image transition
+  useEffect(() => {
+    if (images.length <= 1 || isPaused) return;
+
+    timerRef.current = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % images.length);
+    }, interval);
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [images.length, interval, isPaused]);
+
+  const handlePrev = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
+  };
+
+  const handleNext = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setCurrentIndex((prev) => (prev + 1) % images.length);
+  };
+
+  const handleDotClick = (e: React.MouseEvent, idx: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setCurrentIndex(idx);
+  };
+
+  return (
+    <div
+      className={`relative ${aspectRatio} overflow-hidden bg-slate-100 dark:bg-slate-800 ${className}`}
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+    >
+      {/* Animated Image Layers */}
+      {images.map((src, idx) => {
+        const isActive = idx === currentIndex;
+        return (
+          <div
+            key={src + idx}
+            className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
+              isActive ? 'opacity-100 z-0' : 'opacity-0 -z-10 pointer-events-none'
+            }`}
+          >
+            <img
+              src={src}
+              alt={`${alt} - Photo ${idx + 1}`}
+              loading={idx === 0 ? 'eager' : 'lazy'}
+              decoding="async"
+              className={`w-full h-full object-cover transition-transform duration-4000 ease-out ${
+                isActive ? 'scale-105' : 'scale-100'
+              }`}
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = FALLBACK_IMAGE;
+              }}
+            />
+          </div>
+        );
+      })}
+
+      {/* Subtle Gradient Overlays for Badges & Contrast */}
+      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/20 to-black/35 pointer-events-none z-10" />
+
+      {/* Interactive Hover Navigation Chevrons (when multiple images) */}
+      {images.length > 1 && (
+        <div className="absolute inset-x-2 top-1/2 -translate-y-1/2 flex items-center justify-between pointer-events-none z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          <button
+            type="button"
+            onClick={handlePrev}
+            aria-label="Previous unit photo"
+            className="w-7 h-7 rounded-full bg-black/50 hover:bg-black/80 text-white backdrop-blur-md flex items-center justify-center pointer-events-auto transition-transform active:scale-95 shadow-md"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={handleNext}
+            aria-label="Next unit photo"
+            className="w-7 h-7 rounded-full bg-black/50 hover:bg-black/80 text-white backdrop-blur-md flex items-center justify-center pointer-events-auto transition-transform active:scale-95 shadow-md"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {/* Top/Overlay Children (Badges, Status, Ref ID) */}
+      <div className="relative z-20 h-full flex flex-col justify-between pointer-events-none">
+        {children}
+
+        {/* Animated Segmented Progress / Pagination Dots */}
+        {images.length > 1 && (
+          <div className="absolute bottom-1.5 inset-x-0 flex items-center justify-center gap-1.5 pointer-events-auto z-20 py-1">
+            {images.map((_, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={(e) => handleDotClick(e, idx)}
+                aria-label={`Go to photo ${idx + 1}`}
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  idx === currentIndex
+                    ? 'w-5 bg-white shadow-sm'
+                    : 'w-1.5 bg-white/40 hover:bg-white/70'
+                }`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default UnitImageShowcase;

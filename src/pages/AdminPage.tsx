@@ -52,12 +52,16 @@ import {
   ArrowRight,
   FileText,
   AlertCircle,
-  Share2
+  Share2,
+  Video,
+  Play
 } from 'lucide-react';
 import { StorageService } from '../services/storageService';
-import { Property, Building, Location, Lead, LeadStatus, PropertyStatus, PropertyCategory, MarketGuide, HyperlinkConfig } from '../types';
+import { Property, Building, Location, Lead, LeadStatus, PropertyStatus, PropertyCategory, MarketGuide, HyperlinkConfig, ClientLogo, InstagramReel } from '../types';
 import { handleOverviewPaste, computeStructureDisplay, getBuildingStructureDisplay } from '../utils/textFormat';
 import { EditBuildingPropertiesModal } from '../components/modals/EditBuildingPropertiesModal';
+import { AdminClientsManager } from '../components/admin/AdminClientsManager';
+import { AdminReelsManager } from '../components/admin/AdminReelsManager';
 import { INTERNAL_PAGE_PRESETS, formatHyperlinkUrl, applyHyperlinksToContent } from '../utils/hyperlinks';
 import { DEFAULT_BLOG_PLACEHOLDER_IMAGE, getBlogFeaturedImage, getBlogImageAlt, generateBlogSlug } from '../utils/blogConstants';
 import { AdminSeoPreviewSection } from '../components/common/AdminSeoPreviewSection';
@@ -254,7 +258,7 @@ export const AdminPage: React.FC = () => {
   const [authError, setAuthError] = useState('');
 
   // Active Tab
-  const [activeTab, setActiveTab] = useState<'leads' | 'properties' | 'buildings' | 'locations' | 'media' | 'guides'>('properties');
+  const [activeTab, setActiveTab] = useState<'leads' | 'properties' | 'buildings' | 'locations' | 'media' | 'guides' | 'clients' | 'reels'>('properties');
 
   // Data
   const [properties, setProperties] = useState<Property[]>(() => StorageService.getInitialProperties());
@@ -262,6 +266,8 @@ export const AdminPage: React.FC = () => {
   const [locations, setLocations] = useState<Location[]>(() => StorageService.getInitialLocations());
   const [leads, setLeads] = useState<Lead[]>(() => StorageService.getInitialLeads());
   const [guides, setGuides] = useState<MarketGuide[]>(() => StorageService.getInitialGuides());
+  const [clients, setClients] = useState<ClientLogo[]>(() => StorageService.getInitialClients());
+  const [reels, setReels] = useState<InstagramReel[]>(() => StorageService.getInitialInstagramReels());
 
   // Market Guides Admin State
   const [guideSearch, setGuideSearch] = useState('');
@@ -825,18 +831,22 @@ export const AdminPage: React.FC = () => {
 
   const loadAllData = async () => {
     setLoading(true);
-    const [p, b, l, ld, gd] = await Promise.all([
+    const [p, b, l, ld, gd, cl, rl] = await Promise.all([
       StorageService.getProperties(),
       StorageService.getBuildings(),
       StorageService.getLocations(),
       StorageService.getLeads(),
       StorageService.getGuides(),
+      StorageService.getClients(),
+      StorageService.getInstagramReels(),
     ]);
     setProperties(p);
     setBuildings(b);
     setLocations(l);
     setLeads(ld);
     setGuides(gd);
+    setClients(cl);
+    setReels(rl);
     setLoading(false);
   };
 
@@ -2252,6 +2262,24 @@ export const AdminPage: React.FC = () => {
         >
           <ImageIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           <span>Image Uploader & Media ({allMediaItems.length})</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('clients')}
+          className={`px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 sm:gap-2 ${
+            activeTab === 'clients' ? 'bg-brand-600 text-white shadow-md' : 'glass-card hover:bg-slate-100 dark:hover:bg-slate-800'
+          }`}
+        >
+          <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+          <span>Clients & Brands ({clients.length})</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('reels')}
+          className={`px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 sm:gap-2 ${
+            activeTab === 'reels' ? 'bg-brand-600 text-white shadow-md' : 'glass-card hover:bg-slate-100 dark:hover:bg-slate-800'
+          }`}
+        >
+          <Video className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+          <span>Instagram Reels ({reels.length})</span>
         </button>
       </div>
 
@@ -3734,6 +3762,22 @@ export const AdminPage: React.FC = () => {
             )}
           </div>
         </div>
+      )}
+
+      {/* TAB: CLIENTS & BRANDS MARQUEE MANAGER */}
+      {activeTab === 'clients' && (
+        <AdminClientsManager 
+          clients={clients} 
+          onRefresh={loadAllData} 
+        />
+      )}
+
+      {/* TAB: INSTAGRAM REELS SHOWCASE MANAGER */}
+      {activeTab === 'reels' && (
+        <AdminReelsManager 
+          reels={reels} 
+          onRefresh={loadAllData} 
+        />
       )}
 
       {/* PROPERTY ADD / EDIT MODAL */}

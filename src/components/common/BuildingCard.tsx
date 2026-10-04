@@ -11,7 +11,7 @@ interface BuildingCardProps {
 export const BuildingCard: React.FC<BuildingCardProps> = ({ building }) => {
   return (
     <div className="glass-card glass-card-hover rounded-3xl overflow-hidden flex flex-col group border border-slate-200/90 dark:border-slate-800/90 bg-white/70 dark:bg-[#0B132B]/75 transition-all duration-300">
-      {/* Building Image */}
+      {/* Static Building Image (No Animation) */}
       <div className="relative aspect-[16/11] sm:aspect-[16/10] overflow-hidden bg-slate-100 dark:bg-slate-800">
         <img
           src={building.hero_image}

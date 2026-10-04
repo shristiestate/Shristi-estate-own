@@ -9,6 +9,7 @@ import { Footer } from './components/layout/Footer';
 import { EnquiryModal } from './components/modals/EnquiryModal';
 import { SearchModal } from './components/modals/SearchModal';
 import { Property } from './types';
+import { SilkRibbonBackground } from './components/common/SilkRibbonBackground';
 
 // Pages
 import { HomePage } from './pages/HomePage';
@@ -82,8 +83,11 @@ export const AppContent: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#070C1E] text-slate-900 dark:text-slate-100 transition-colors duration-200">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#070C1E] text-slate-900 dark:text-slate-100 transition-colors duration-200 relative">
       <ScrollToTop />
+      
+      {/* Silky Wave Ribbon Animated Canvas Background */}
+      <SilkRibbonBackground />
       
       {/* Header */}
       <Header
@@ -92,7 +96,7 @@ export const AppContent: React.FC = () => {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1">
+      <main className="flex-1 relative z-10">
         <Routes>
           <Route path="/" element={<HomePage onOpenEnquiry={handleOpenEnquiry} />} />
           

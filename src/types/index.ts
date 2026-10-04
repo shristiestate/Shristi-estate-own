@@ -271,3 +271,37 @@ export interface MarketGuide {
   created_at?: string;
   updated_at?: string;
 }
+
+export interface ClientLogo {
+  id: string;
+  name: string;
+  logo: string;
+  industry?: string;
+  website_url?: string;
+  website?: string;
+  order?: number;
+  featured?: boolean;
+  published: boolean;
+}
+
+export interface InstagramReel {
+  id: string;
+  title: string;
+  reel_url: string;
+  instagramUrl?: string;
+  thumbnail_url: string;
+  thumbnailUrl?: string;
+  views_display?: string;
+  views?: string;
+  likes_display?: string;
+  likes?: string;
+  duration?: string;
+  category?: string;
+  caption?: string;
+  video_url?: string;
+  videoUrl?: string;
+  order?: number;
+  featured?: boolean;
+  published: boolean;
+}
+

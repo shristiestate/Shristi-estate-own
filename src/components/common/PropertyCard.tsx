@@ -15,6 +15,7 @@ import {
 import { Property } from '../../types';
 import { WhatsAppIcon } from './SocialIcons';
 import { generatePropertyWhatsAppLink } from '../../utils/whatsapp';
+import { UnitImageShowcase } from './UnitImageShowcase';
 
 interface PropertyCardProps {
   property: Property;
@@ -24,23 +25,41 @@ interface PropertyCardProps {
 export const PropertyCard: React.FC<PropertyCardProps> = ({ property, onEnquire }) => {
   const waLink = generatePropertyWhatsAppLink(property);
 
+  // Compile showcase images for auto-animating gallery
+  const showcaseImages = React.useMemo(() => {
+    const list: string[] = [];
+    if (property.primary_image) list.push(property.primary_image);
+    if (Array.isArray(property.gallery)) {
+      property.gallery.forEach((img) => {
+        if (img && typeof img === 'string' && !list.includes(img)) {
+          list.push(img);
+        }
+      });
+    }
+    // Curated high-res unit photos fallback if only 1 image exists
+    if (list.length === 1) {
+      const curations = [
+        'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1000&q=80',
+        'https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=1000&q=80',
+        'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1000&q=80',
+      ];
+      curations.forEach((c) => {
+        if (list.length < 3 && !list.includes(c)) list.push(c);
+      });
+    }
+    return list;
+  }, [property.primary_image, property.gallery]);
+
   return (
     <div className="glass-card glass-card-hover rounded-3xl overflow-hidden flex flex-col group border border-slate-200/90 dark:border-slate-800/90 bg-white/70 dark:bg-[#0B132B]/75 transition-all duration-300">
-      {/* Property Hero Image with Status & Tag Overlays */}
-      <div className="relative aspect-[16/10] overflow-hidden bg-slate-100 dark:bg-slate-800">
-        <img
-          src={property.primary_image}
-          alt={property.title}
-          loading="lazy"
-          decoding="async"
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-        />
-        
-        {/* Subtle Gradient Shade */}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-black/30 pointer-events-none" />
-
+      {/* Auto-Animated Unit Image Showcase */}
+      <UnitImageShowcase
+        images={showcaseImages}
+        alt={property.title}
+        aspectRatio="aspect-[16/10]"
+      >
         {/* Top Badges */}
-        <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2">
+        <div className="p-3 flex items-center justify-between gap-2 pointer-events-auto">
           <div className="flex items-center gap-1.5 flex-wrap">
             {/* Listing Type: Rent / Sale / Lease */}
             <span className="px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider bg-brand-600 text-white shadow-md">
@@ -61,7 +80,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, onEnquire 
         </div>
 
         {/* Bottom Image Overlay: Price & Rate */}
-        <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between">
+        <div className="p-3 pb-3.5 flex items-end justify-between pointer-events-auto">
           <div>
             <div className="text-xl sm:text-2xl font-extrabold text-white tracking-tight font-['Outfit'] drop-shadow-sm">
               {property.price_display}
@@ -83,7 +102,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, onEnquire 
             </span>
           )}
         </div>
-      </div>
+      </UnitImageShowcase>
 
       {/* Property Details Body */}
       <div className="p-5 flex-1 flex flex-col justify-between space-y-4">

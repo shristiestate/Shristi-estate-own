@@ -1,5 +1,5 @@
-import { Location, Building, Property, Lead, LeadStatus, MarketGuide } from '../types';
-import { INITIAL_LOCATIONS, INITIAL_BUILDINGS, INITIAL_PROPERTIES, INITIAL_LEADS, INITIAL_MARKET_GUIDES } from '../data/mockData';
+import { Location, Building, Property, Lead, LeadStatus, MarketGuide, ClientLogo, InstagramReel } from '../types';
+import { INITIAL_LOCATIONS, INITIAL_BUILDINGS, INITIAL_PROPERTIES, INITIAL_LEADS, INITIAL_MARKET_GUIDES, INITIAL_CLIENTS, INITIAL_INSTAGRAM_REELS } from '../data/mockData';
 import { supabase, isSupabaseConfigured } from './supabaseClient';
 import { getBuildingStructureDisplay } from '../utils/textFormat';
 import { generateAvailablePropertiesForBuilding } from '../utils/buildingUnits';
@@ -12,6 +12,8 @@ const STORAGE_KEYS = {
   DELETED_PROPERTIES: 'shristi_deleted_properties_v1',
   LEADS: 'shristi_leads_v1',
   GUIDES: 'shristi_guides_v1',
+  CLIENTS: 'shristi_clients_v1',
+  REELS: 'shristi_reels_v1',
 };
 
 let _memLocations: Location[] | null = null;
@@ -20,6 +22,8 @@ let _memProperties: Property[] | null = null;
 let _memDeletedProperties: Set<string> | null = null;
 let _memLeads: Lead[] | null = null;
 let _memGuides: MarketGuide[] | null = null;
+let _memClients: ClientLogo[] | null = null;
+let _memReels: InstagramReel[] | null = null;
 
 // Safe localStorage setter that prunes non-critical data if quota is exceeded
 const safeSetItem = (key: string, value: string): boolean => {
@@ -1633,6 +1637,84 @@ export const StorageService = {
     }
   },
 
+  // --- CLIENTS & BRANDS ---
+  getInitialClients(): ClientLogo[] {
+    if (_memClients) return _memClients;
+    if (typeof window === 'undefined') return INITIAL_CLIENTS;
+    try {
+      const stored = localStorage.getItem(STORAGE_KEYS.CLIENTS);
+      if (stored) {
+        _memClients = JSON.parse(stored);
+        return _memClients || INITIAL_CLIENTS;
+      }
+    } catch (e) {
+      console.error('Error reading stored clients:', e);
+    }
+    _memClients = INITIAL_CLIENTS;
+    return INITIAL_CLIENTS;
+  },
+
+  async getClients(): Promise<ClientLogo[]> {
+    return this.getInitialClients();
+  },
+
+  async saveClient(client: ClientLogo): Promise<void> {
+    const list = [...this.getInitialClients()];
+    const index = list.findIndex(c => c.id === client.id);
+    if (index >= 0) {
+      list[index] = client;
+    } else {
+      list.push(client);
+    }
+    _memClients = list;
+    safeSetItem(STORAGE_KEYS.CLIENTS, JSON.stringify(list));
+  },
+
+  async deleteClient(clientId: string): Promise<void> {
+    const list = this.getInitialClients().filter(c => c.id !== clientId);
+    _memClients = list;
+    safeSetItem(STORAGE_KEYS.CLIENTS, JSON.stringify(list));
+  },
+
+  // --- INSTAGRAM REELS ---
+  getInitialInstagramReels(): InstagramReel[] {
+    if (_memReels) return _memReels;
+    if (typeof window === 'undefined') return INITIAL_INSTAGRAM_REELS;
+    try {
+      const stored = localStorage.getItem(STORAGE_KEYS.REELS);
+      if (stored) {
+        _memReels = JSON.parse(stored);
+        return _memReels || INITIAL_INSTAGRAM_REELS;
+      }
+    } catch (e) {
+      console.error('Error reading stored instagram reels:', e);
+    }
+    _memReels = INITIAL_INSTAGRAM_REELS;
+    return INITIAL_INSTAGRAM_REELS;
+  },
+
+  async getInstagramReels(): Promise<InstagramReel[]> {
+    return this.getInitialInstagramReels();
+  },
+
+  async saveInstagramReel(reel: InstagramReel): Promise<void> {
+    const list = [...this.getInitialInstagramReels()];
+    const index = list.findIndex(r => r.id === reel.id);
+    if (index >= 0) {
+      list[index] = reel;
+    } else {
+      list.push(reel);
+    }
+    _memReels = list;
+    safeSetItem(STORAGE_KEYS.REELS, JSON.stringify(list));
+  },
+
+  async deleteInstagramReel(reelId: string): Promise<void> {
+    const list = this.getInitialInstagramReels().filter(r => r.id !== reelId);
+    _memReels = list;
+    safeSetItem(STORAGE_KEYS.REELS, JSON.stringify(list));
+  },
+
   // Reset database back to default seed data
   resetDefaults(): void {
     localStorage.setItem(STORAGE_KEYS.LOCATIONS, JSON.stringify(INITIAL_LOCATIONS));
@@ -1640,5 +1722,7 @@ export const StorageService = {
     localStorage.setItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(INITIAL_PROPERTIES));
     localStorage.setItem(STORAGE_KEYS.LEADS, JSON.stringify(INITIAL_LEADS));
     localStorage.setItem(STORAGE_KEYS.GUIDES, JSON.stringify(INITIAL_MARKET_GUIDES));
+    localStorage.setItem(STORAGE_KEYS.CLIENTS, JSON.stringify(INITIAL_CLIENTS));
+    localStorage.setItem(STORAGE_KEYS.REELS, JSON.stringify(INITIAL_INSTAGRAM_REELS));
   }
 };

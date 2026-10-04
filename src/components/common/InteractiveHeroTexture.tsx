@@ -123,25 +123,29 @@ export const InteractiveHeroTexture: React.FC = () => {
       aria-hidden="true" 
       className="absolute inset-0 pointer-events-none overflow-hidden -z-10 select-none"
     >
-      {/* 1. Base Layer: Optimized responsive high-performance texture (45KB mobile, 117KB desktop) */}
+      {/* 1. Mobile Texture Layer: Rendered as CSS background to prevent hijacking LCP from the headline */}
+      <div 
+        className="md:hidden absolute inset-0 w-full h-full bg-cover bg-no-repeat opacity-35 dark:opacity-20 blur-[2px] will-change-transform"
+        style={{
+          backgroundImage: "url('/hero-commercial-park-mobile.jpg')",
+          backgroundPosition: 'right bottom'
+        }}
+      />
+
+      {/* 2. Desktop Base Layer: High-performance texture (117KB desktop) for 3D mouse parallax */}
       <img
         ref={baseImgRef}
         src="/hero-commercial-park.jpg"
-        srcSet="/hero-commercial-park-mobile.jpg 640w, /hero-commercial-park.jpg 1024w"
-        sizes="(max-width: 768px) 100vw, 1024px"
-        fetchPriority="high"
         decoding="async"
         alt=""
-        className="w-full h-full object-cover object-right sm:object-[75%_35%] lg:object-right-bottom opacity-35 dark:opacity-20 blur-[2px] sm:blur-[2.5px] will-change-transform"
+        className="hidden md:block w-full h-full object-cover object-right sm:object-[75%_35%] lg:object-right-bottom opacity-35 dark:opacity-20 blur-[2px] sm:blur-[2.5px] will-change-transform"
         style={{ transformOrigin: 'center center' }}
       />
 
-      {/* 2. Interactive Cursor Reveal Lens: Sharpens under cursor on desktop only */}
+      {/* 3. Interactive Cursor Reveal Lens: Sharpens under cursor on desktop only */}
       <img
         ref={revealImgRef}
         src="/hero-commercial-park.jpg"
-        srcSet="/hero-commercial-park-mobile.jpg 640w, /hero-commercial-park.jpg 1024w"
-        sizes="(max-width: 768px) 100vw, 1024px"
         decoding="async"
         alt=""
         className="hidden md:block absolute inset-0 w-full h-full object-cover object-right sm:object-[75%_35%] lg:object-right-bottom opacity-65 dark:opacity-40 blur-[0.5px] will-change-transform"
@@ -152,13 +156,13 @@ export const InteractiveHeroTexture: React.FC = () => {
         }}
       />
 
-      {/* 3. Interactive Cursor Spotlight: Desktop only */}
+      {/* 4. Interactive Cursor Spotlight: Desktop only */}
       <div 
         ref={spotlightRef}
         className="hidden md:block absolute inset-0 pointer-events-none mix-blend-screen dark:mix-blend-lighten transition-opacity duration-300"
       />
 
-      {/* 4. Directional Gradient Masks for contrast & readability */}
+      {/* 5. Directional Gradient Masks for contrast & readability */}
       <div className="absolute inset-0 bg-gradient-to-r from-slate-50/95 via-slate-50/80 to-slate-50/20 dark:from-[#070C1E]/95 dark:via-[#070C1E]/85 dark:to-transparent" />
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-slate-50 dark:to-[#070C1E]" />
     </div>

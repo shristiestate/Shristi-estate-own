@@ -28,8 +28,10 @@ import { LocationCard } from '../components/common/LocationCard';
 import { WhatsAppIcon } from '../components/common/SocialIcons';
 import { generateGeneralEnquiryWhatsAppLink } from '../utils/whatsapp';
 import { InteractiveHeroTexture } from '../components/common/InteractiveHeroTexture';
-import { ClientsMarquee } from '../components/home/ClientsMarquee';
-import { InstagramReelsShowcase } from '../components/home/InstagramReelsShowcase';
+
+// Lazy-load non-critical below-the-fold media showcases
+const ClientsMarquee = React.lazy(() => import('../components/home/ClientsMarquee').then(m => ({ default: m.ClientsMarquee })));
+const InstagramReelsShowcase = React.lazy(() => import('../components/home/InstagramReelsShowcase').then(m => ({ default: m.InstagramReelsShowcase })));
 
 interface HomePageProps {
   onOpenEnquiry: (property?: Property) => void;
@@ -316,8 +318,10 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenEnquiry }) => {
         </div>
       </section>
 
-      {/* AUTO-ANIMATED CLIENTS & OCCUPIERS MARQUEE */}
-      <ClientsMarquee />
+      {/* AUTO-ANIMATED CLIENTS & OCCUPIERS MARQUEE (DEFERRED) */}
+      <React.Suspense fallback={<div className="h-16" />}>
+        <ClientsMarquee />
+      </React.Suspense>
 
       {/* 2. HIERARCHICAL DISCOVERY PATH EXPLAINER (SECTION 1 & 90) */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -511,8 +515,10 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenEnquiry }) => {
         </div>
       </section>
 
-      {/* AUTO-ANIMATED INSTAGRAM REELS SHOWCASE */}
-      <InstagramReelsShowcase />
+      {/* AUTO-ANIMATED INSTAGRAM REELS SHOWCASE (DEFERRED) */}
+      <React.Suspense fallback={<div className="h-64" />}>
+        <InstagramReelsShowcase />
+      </React.Suspense>
 
       {/* 7. CUSTOM REQUIREMENT BANNER ("TELL US WHAT PROPERTY YOU NEED" - SECTION 40 & 51) */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

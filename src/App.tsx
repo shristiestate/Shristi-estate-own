@@ -6,10 +6,12 @@ import { generateGeneralEnquiryWhatsAppLink } from './utils/whatsapp';
 import { ThemeProvider } from './context/ThemeContext';
 import { Header } from './components/layout/Header';
 import { Footer } from './components/layout/Footer';
-import { EnquiryModal } from './components/modals/EnquiryModal';
-import { SearchModal } from './components/modals/SearchModal';
 import { Property } from './types';
 import { SilkRibbonBackground } from './components/common/SilkRibbonBackground';
+
+// Lazy-load modals so their forms and logic don't bloat the critical initial JS bundle
+const EnquiryModal = React.lazy(() => import('./components/modals/EnquiryModal').then(m => ({ default: m.EnquiryModal })));
+const SearchModal = React.lazy(() => import('./components/modals/SearchModal').then(m => ({ default: m.SearchModal })));
 
 // Critical path: Keep HomePage eager for instant FCP and LCP
 import { HomePage } from './pages/HomePage';
@@ -185,13 +187,21 @@ export const AppContent: React.FC = () => {
         </button>
       </div>
 
-      {/* Global Modals */}
-      <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
-      <EnquiryModal
-        isOpen={isEnquiryOpen}
-        onClose={() => setIsEnquiryOpen(false)}
-        property={selectedProperty}
-      />
+      {/* Global Modals (Lazy Loaded on Demand) */}
+      {isSearchOpen && (
+        <React.Suspense fallback={null}>
+          <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+        </React.Suspense>
+      )}
+      {isEnquiryOpen && (
+        <React.Suspense fallback={null}>
+          <EnquiryModal
+            isOpen={isEnquiryOpen}
+            onClose={() => setIsEnquiryOpen(false)}
+            property={selectedProperty}
+          />
+        </React.Suspense>
+      )}
     </div>
   );
 };

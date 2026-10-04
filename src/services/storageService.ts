@@ -287,7 +287,11 @@ async function withTimeout<T = any>(promise: any, timeoutMs = SUPABASE_TIMEOUT_M
 }
 
 if (typeof window !== 'undefined') {
-  initStorage();
+  if ('requestIdleCallback' in window) {
+    (window as any).requestIdleCallback(() => initStorage(), { timeout: 3000 });
+  } else {
+    setTimeout(initStorage, 200);
+  }
 }
 
 export const StorageService = {

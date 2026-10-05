@@ -65,42 +65,42 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
       />
 
       {/* Modal Container */}
-      <div className="relative w-full max-w-2xl glass-card rounded-3xl p-6 bg-white/95 dark:bg-[#0B132B]/95 border border-slate-200 dark:border-slate-800 shadow-2xl z-10">
+      <div className="relative w-full max-w-2xl rounded-none p-6 bg-white dark:bg-[#0B132B] border border-slate-200 dark:border-slate-800 shadow-2xl z-10">
         <div className="flex items-center gap-3 border-b border-slate-200 dark:border-slate-800 pb-4">
-          <Search className="w-5 h-5 text-brand-500 shrink-0" />
+          <Search className="w-5 h-5 text-brand-600 dark:text-brand-400 shrink-0" />
           <input
             type="text"
             autoFocus
             placeholder="Search by sector, building (e.g. I-Thum), ID (SE-6201), office, warehouse..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full bg-transparent text-base sm:text-lg text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none"
+            className="w-full bg-transparent text-base sm:text-lg text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none font-medium"
           />
           <button
             onClick={onClose}
-            className="p-1.5 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+            className="p-1.5 rounded-none border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Results Area */}
         <div className="mt-4 max-h-[60vh] overflow-y-auto space-y-4">
           {!query.trim() ? (
-            <div className="py-8 text-center text-xs text-slate-400">
+            <div className="py-8 text-center text-xs text-slate-400 font-sans">
               Type a location, building name, or property specification to see instant results.
             </div>
           ) : filteredProperties.length === 0 && filteredBuildings.length === 0 && filteredLocations.length === 0 ? (
             <div className="py-8 text-center space-y-2">
-              <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+              <p className="text-sm font-semibold text-slate-900 dark:text-white">
                 We couldn't find an exact match for "{query}".
               </p>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 You can submit your custom requirement and our commercial desk will source matching inventory.
               </p>
               <button
                 onClick={() => handleSelect('/tell-us-requirement')}
-                className="mt-2 btn-glass-primary px-4 py-2 rounded-xl text-xs font-semibold"
+                className="mt-2 btn-glass-primary px-4 py-2 rounded-none text-xs font-semibold uppercase tracking-wider"
               >
                 Tell Us Your Requirement
               </button>
@@ -110,18 +110,18 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
               {/* Properties Matches */}
               {filteredProperties.length > 0 && (
                 <div>
-                  <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-brand-600 dark:text-brand-400 mb-2">
                     Available Properties
                   </div>
-                  <div className="space-y-1.5">
+                  <div className="space-y-1">
                     {filteredProperties.map(p => (
                       <button
                         key={p.id}
                         onClick={() => handleSelect(`/properties/${p.slug}`)}
-                        className="w-full text-left p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/80 flex items-center justify-between group transition-colors"
+                        className="w-full text-left p-2.5 rounded-none border border-transparent hover:border-slate-200 dark:hover:border-slate-800 hover:bg-slate-50 dark:hover:bg-[#0E1838] flex items-center justify-between group transition-colors"
                       >
                         <div className="flex items-center gap-2.5 truncate">
-                          <span className="text-xs font-mono font-bold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950 px-2 py-0.5 rounded">
+                          <span className="text-[10px] font-mono font-bold text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded-none">
                             {p.reference_number}
                           </span>
                           <span className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">
@@ -140,28 +140,28 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
               {/* Buildings Matches */}
               {filteredBuildings.length > 0 && (
                 <div>
-                  <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-brand-600 dark:text-brand-400 mb-2">
                     Commercial Buildings & Projects
                   </div>
-                  <div className="space-y-1.5">
+                  <div className="space-y-1">
                     {filteredBuildings.map(b => (
                       <button
                         key={b.id}
                         onClick={() => handleSelect(`/buildings/${b.slug}`)}
-                        className="w-full text-left p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/80 flex items-center justify-between group transition-colors"
+                        className="w-full text-left p-2.5 rounded-none border border-transparent hover:border-slate-200 dark:hover:border-slate-800 hover:bg-slate-50 dark:hover:bg-[#0E1838] flex items-center justify-between group transition-colors"
                       >
                         <div className="flex items-center gap-2.5 truncate">
-                          <Building2 className="w-4 h-4 text-brand-500 shrink-0" />
+                          <Building2 className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0" />
                           <div>
-                            <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                            <span className="text-sm font-medium text-slate-800 dark:text-slate-200">
                               {b.name}
                             </span>
-                            <span className="text-xs text-slate-500 ml-1.5">
+                            <span className="text-xs text-slate-500 dark:text-slate-400 ml-1.5">
                               • {b.location_name}
                             </span>
                           </div>
                         </div>
-                        <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-brand-500 group-hover:translate-x-1 transition-transform" />
+                        <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-brand-600 dark:group-hover:text-brand-400 group-hover:translate-x-1 transition-transform" />
                       </button>
                     ))}
                   </div>
@@ -171,23 +171,23 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
               {/* Locations Matches */}
               {filteredLocations.length > 0 && (
                 <div>
-                  <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-brand-600 dark:text-brand-400 mb-2">
                     Commercial Locations
                   </div>
-                  <div className="space-y-1.5">
+                  <div className="space-y-1">
                     {filteredLocations.map(l => (
                       <button
                         key={l.id}
                         onClick={() => handleSelect(`/locations/${l.slug}`)}
-                        className="w-full text-left p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/80 flex items-center justify-between group transition-colors"
+                        className="w-full text-left p-2.5 rounded-none border border-transparent hover:border-slate-200 dark:hover:border-slate-800 hover:bg-slate-50 dark:hover:bg-[#0E1838] flex items-center justify-between group transition-colors"
                       >
                         <div className="flex items-center gap-2.5 truncate">
-                          <MapPin className="w-4 h-4 text-accent-emerald shrink-0" />
-                          <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                          <MapPin className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0" />
+                          <span className="text-sm font-medium text-slate-800 dark:text-slate-200">
                             {l.name}
                           </span>
                         </div>
-                        <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-brand-500 group-hover:translate-x-1 transition-transform" />
+                        <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-brand-600 dark:group-hover:text-brand-400 group-hover:translate-x-1 transition-transform" />
                       </button>
                     ))}
                   </div>

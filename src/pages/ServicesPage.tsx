@@ -51,43 +51,43 @@ export const ServicesPage: React.FC = () => {
         ]}
       />
 
-      <div className="text-center max-w-3xl mx-auto space-y-4">
-        <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
+      <div className="text-center max-w-3xl mx-auto space-y-3">
+        <span className="text-[10px] sm:text-[11px] font-mono font-semibold uppercase tracking-widest text-brand-600 dark:text-brand-400">
           Commercial Advisory Suite
         </span>
-        <h1 className="text-3xl sm:text-5xl font-extrabold text-slate-900 dark:text-white font-['Outfit']">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-slate-900 dark:text-white tracking-tight">
           Commercial Real Estate Services
         </h1>
-        <p className="text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-sans max-w-2xl mx-auto">
           Tailored property solutions for business tenants, institutional buyers, and commercial property owners across Noida, Greater Noida, and Delhi-NCR.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0 border-t border-l border-slate-200 dark:border-slate-800 [&>*]:border-r [&>*]:border-b [&>*]:border-slate-200 dark:[&>*]:border-slate-800">
         {services.map((svc, i) => {
           const Icon = svc.icon;
           return (
             <div
               key={i}
-              className="glass-card rounded-3xl p-6 sm:p-8 border border-slate-200/90 dark:border-slate-800 bg-white/70 dark:bg-[#0B132B]/75 flex flex-col justify-between space-y-6"
+              className="p-6 bg-white dark:bg-[#0B132B] flex flex-col justify-between space-y-5"
             >
-              <div className="space-y-4">
-                <div className="w-12 h-12 rounded-2xl bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center">
-                  <Icon className="w-6 h-6" />
+              <div className="space-y-3">
+                <div className="w-10 h-10 rounded-none bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center border border-brand-500/20">
+                  <Icon className="w-5 h-5 stroke-[1.75]" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white font-['Outfit']">
+                <h3 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white">
                   {svc.title}
                 </h3>
-                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-sans">
                   {svc.desc}
                 </p>
 
-                <div className="pt-2 space-y-2">
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Key Benefits:</span>
-                  <ul className="space-y-1.5 text-xs text-slate-600 dark:text-slate-300">
+                <div className="pt-1 space-y-1.5">
+                  <span className="text-[10px] font-mono font-semibold text-slate-400 uppercase tracking-wider">Key Benefits:</span>
+                  <ul className="space-y-1 text-xs text-slate-600 dark:text-slate-300 font-sans">
                     {svc.benefits.map((b, idx) => (
-                      <li key={idx} className="flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-accent-teal" />
+                      <li key={idx} className="flex items-center gap-1.5">
+                        <span className="w-1 h-1 bg-brand-500 shrink-0" />
                         <span>{b}</span>
                       </li>
                     ))}
@@ -95,10 +95,10 @@ export const ServicesPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+              <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
                 <Link
                   to="/tell-us-requirement"
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-600 dark:text-brand-400 hover:gap-2 transition-all"
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-brand-600 dark:text-brand-400 uppercase tracking-wider group-hover:gap-1.5 transition-all"
                 >
                   <span>Request Service Consultation</span>
                   <ArrowRight className="w-3.5 h-3.5" />

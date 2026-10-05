@@ -4,124 +4,222 @@
 
 @layer base {
   :root {
-    --font-heading: 'Outfit', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    --font-body: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-sans: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-heading: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+    /* Fluid Typography Scale using CSS clamp() for seamless responsiveness & breathing room */
+    --text-hero: clamp(2rem, 1.3rem + 3vw, 3.5rem);
+    --text-h1: clamp(1.75rem, 1.2rem + 2.2vw, 2.5rem);
+    --text-h2: clamp(1.3rem, 1rem + 1.2vw, 1.95rem);
+    --text-h3: clamp(1.1rem, 0.92rem + 0.7vw, 1.35rem);
+    --text-card-title: clamp(0.925rem, 0.88rem + 0.25vw, 1.05rem);
+    --text-body: clamp(0.8125rem, 0.78rem + 0.15vw, 0.875rem);
+    --text-meta: clamp(0.6875rem, 0.65rem + 0.1vw, 0.75rem);
+  }
+
+  html {
+    font-family: var(--font-sans);
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
   }
 
   body {
-    font-family: var(--font-body);
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: 1.6;
     overflow-x: hidden;
+    letter-spacing: -0.005em;
   }
 
+  /* Structured Architectural Headings Hierarchy */
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
+    text-wrap: balance;
+    overflow-wrap: break-word;
+    color: inherit;
+  }
+
+  h1 {
+    font-size: var(--text-h1);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.025em;
+  }
+
+  h2 {
+    font-size: var(--text-h2);
+    font-weight: 600;
+    line-height: 1.22;
     letter-spacing: -0.02em;
+  }
+
+  h3 {
+    font-size: var(--text-h3);
+    font-weight: 600;
+    line-height: 1.28;
+    letter-spacing: -0.015em;
+  }
+
+  h4, h5, h6 {
+    font-weight: 600;
+    line-height: 1.32;
+    letter-spacing: -0.01em;
+  }
+
+  p {
+    text-wrap: pretty;
+    overflow-wrap: break-word;
+  }
+
+  /* Form Elements & Interactive Controls */
+  button, input, select, textarea {
+    font-family: inherit;
+  }
+
+  /* Consistent Card & Panel Typography Utilities */
+  .card-title {
+    font-size: var(--text-card-title);
+    font-weight: 600;
+    line-height: 1.32;
+    letter-spacing: -0.015em;
+    overflow-wrap: break-word;
+  }
+
+  .badge-tag {
+    font-size: var(--text-meta);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    line-height: 1.2;
+  }
+
+  .btn-label {
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    line-height: 1.2;
   }
 }
 
-/* Glassmorphism Design System Tokens */
+/* Architectural Website Theme Design System Tokens (Corners: 0px completely sharp) */
 @layer components {
-  /* Light Mode Glass Surface */
-  .glass-card {
-    background: rgba(255, 255, 255, 0.75);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(226, 232, 240, 0.8);
-    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
+  /* Crisp White Website Theme Surface in Light Mode */
+  .glass-card,
+  .editorial-card {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 0px !important;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.03);
   }
 
-  /* Dark Mode Glass Surface */
-  .dark .glass-card {
-    background: rgba(11, 19, 43, 0.72);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 10px 35px -10px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+  /* Deep Corporate Midnight Navy in Dark Mode (Matches site theme #0B132B) */
+  .dark .glass-card,
+  .dark .editorial-card {
+    background: #0B132B;
+    border: 1px solid #1E293B;
+    border-radius: 0px !important;
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.35);
   }
 
-  .glass-card-hover {
-    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  .glass-card-hover,
+  .editorial-card-hover {
+    border-radius: 0px !important;
+    transition: background-color 0.25s ease, border-color 0.25s ease;
   }
 
-  .glass-card-hover:hover {
-    transform: translateY(-4px);
-    border-color: rgba(2, 132, 199, 0.4);
-    box-shadow: 0 20px 40px -15px rgba(2, 132, 199, 0.15);
+  .glass-card-hover:hover,
+  .editorial-card-hover:hover {
+    background: #F8FAFC;
+    border-color: #0284c7;
   }
 
-  .dark .glass-card-hover:hover {
-    border-color: rgba(56, 189, 248, 0.35);
-    box-shadow: 0 20px 45px -15px rgba(0, 0, 0, 0.7), 0 0 25px -5px rgba(2, 132, 199, 0.2);
+  .dark .glass-card-hover:hover,
+  .dark .editorial-card-hover:hover {
+    background: #0E1838;
+    border-color: #38bdf8;
   }
 
-  /* Glass Nav & Sticky Header */
+  /* Theme Nav & Header (Sharp 0px, blurred glass) */
   .glass-nav {
-    background: rgba(255, 255, 255, 0.82);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-bottom: 1px solid rgba(226, 232, 240, 0.85);
+    background: rgba(255, 255, 255, 0.95);
+    border-bottom: 1px solid #E2E8F0;
+    border-radius: 0px !important;
+    backdrop-filter: blur(16px);
   }
 
   .dark .glass-nav {
-    background: rgba(7, 12, 30, 0.85);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(7, 12, 30, 0.95);
+    border-bottom: 1px solid #1E293B;
+    border-radius: 0px !important;
+    backdrop-filter: blur(16px);
   }
 
-  /* Glass Input Controls */
-  .glass-input {
-    background: rgba(255, 255, 255, 0.65);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(203, 213, 225, 0.8);
+  /* Architectural Input Controls */
+  .glass-input,
+  .editorial-input {
+    background: #FFFFFF;
+    border: 1px solid #CBD5E1;
+    border-radius: 0px !important;
+    color: #0F172A;
     transition: all 0.2s ease;
   }
 
-  .glass-input:focus {
-    background: rgba(255, 255, 255, 0.95);
+  .glass-input:focus,
+  .editorial-input:focus {
+    background: #FFFFFF;
     border-color: #0284c7;
-    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+    box-shadow: 0 0 0 1px #0284c7;
     outline: none;
   }
 
-  .dark .glass-input {
-    background: rgba(15, 23, 42, 0.65);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    color: #f8fafc;
+  .dark .glass-input,
+  .dark .editorial-input {
+    background: #070C1E;
+    border: 1px solid #1E293B;
+    border-radius: 0px !important;
+    color: #F8FAFC;
   }
 
-  .dark .glass-input:focus {
-    background: rgba(15, 23, 42, 0.9);
+  .dark .glass-input:focus,
+  .dark .editorial-input:focus {
+    background: #0B132B;
     border-color: #38bdf8;
-    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+    box-shadow: 0 0 0 1px #38bdf8;
     outline: none;
   }
 
-  /* Glass Button Primary (Cyan to Emerald, strictly no gold) */
-  .btn-glass-primary {
-    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  /* Architectural Primary Button (Corporate Cyan-Blue #0284c7) */
+  .btn-glass-primary,
+  .btn-editorial-primary {
+    background: #0284c7;
     color: #ffffff;
-    box-shadow: 0 4px 14px 0 rgba(2, 132, 199, 0.35);
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    border: 1px solid #0369a1;
+    border-radius: 0px !important;
+    transition: all 0.2s ease;
   }
 
-  .btn-glass-primary:hover {
-    background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
-    box-shadow: 0 6px 20px 0 rgba(2, 132, 199, 0.45);
-    transform: translateY(-1px);
+  .btn-glass-primary:hover,
+  .btn-editorial-primary:hover {
+    background: #0369a1;
+    border-color: #38bdf8;
+    box-shadow: 0 4px 16px -2px rgba(2, 132, 199, 0.45);
   }
 
-  /* WhatsApp Glass Action */
+  /* WhatsApp Action (Sharp 0px) */
   .btn-whatsapp {
-    background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+    background: #25D366;
     color: #ffffff;
-    box-shadow: 0 4px 14px 0 rgba(37, 211, 102, 0.3);
+    border: 1px solid #1ebe5d;
+    border-radius: 0px !important;
     transition: all 0.2s ease;
   }
 
   .btn-whatsapp:hover {
-    box-shadow: 0 6px 20px 0 rgba(37, 211, 102, 0.45);
-    transform: translateY(-1px);
+    background: #1ebe5d;
+    box-shadow: 0 4px 16px -2px rgba(37, 211, 102, 0.4);
   }
 }
 

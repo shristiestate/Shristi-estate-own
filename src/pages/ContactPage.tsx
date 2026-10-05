@@ -60,68 +60,68 @@ export const ContactPage: React.FC = () => {
       />
 
       <div className="text-center max-w-2xl mx-auto space-y-3">
-        <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
+        <span className="text-[10px] sm:text-[11px] font-mono font-semibold uppercase tracking-widest text-brand-600 dark:text-brand-400">
           Get in Touch
         </span>
-        <h1 className="text-3xl sm:text-5xl font-extrabold text-slate-900 dark:text-white font-['Outfit']">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-slate-900 dark:text-white tracking-tight">
           Contact Shristi Estate
         </h1>
-        <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-sans">
           Visit our corporate office at I-Thum Tower, Sector 62, Noida, or connect directly with our commercial specialists.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Contact Info (5 Cols) */}
         <div className="lg:col-span-5 space-y-6">
-          <div className="glass-card rounded-3xl p-6 sm:p-8 border border-slate-200/90 dark:border-slate-800 bg-white/70 dark:bg-[#0B132B]/75 space-y-6">
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white font-['Outfit']">
+          <div className="rounded-none p-6 sm:p-7 border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B132B] space-y-5">
+            <h2 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white">
               Corporate Headquarters
             </h2>
 
-            <div className="space-y-4 text-sm">
-              <div className="flex items-start gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0">
-                  <MapPin className="w-5 h-5" />
+            <div className="space-y-3.5 text-xs font-sans">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-none bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0 border border-brand-500/20">
+                  <MapPin className="w-4 h-4 stroke-[1.75]" />
                 </div>
                 <div>
-                  <span className="text-xs font-semibold text-slate-400 block">Registered Address</span>
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block">Registered Address</span>
                   <p className="text-slate-800 dark:text-slate-200 font-medium leading-snug mt-0.5">
                     Unit No. 1035, 10th Floor, Tower-B, iThum Tower, Plot No. A-40, Sector-62, Noida, Uttar Pradesh 201309
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-start gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-accent-teal/10 text-accent-teal flex items-center justify-center shrink-0">
-                  <Phone className="w-5 h-5" />
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-none bg-accent-teal/10 text-accent-teal flex items-center justify-center shrink-0 border border-accent-teal/20">
+                  <Phone className="w-4 h-4 stroke-[1.75]" />
                 </div>
                 <div>
-                  <span className="text-xs font-semibold text-slate-400 block">Direct Telephone</span>
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block">Direct Telephone</span>
                   <a href="tel:+918750098666" className="text-slate-800 dark:text-slate-200 font-semibold hover:text-brand-600 mt-0.5 block">
                     +91 87500 98666
                   </a>
                 </div>
               </div>
 
-              <div className="flex items-start gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center shrink-0">
-                  <Mail className="w-5 h-5" />
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-none bg-indigo-500/10 text-indigo-500 flex items-center justify-center shrink-0 border border-indigo-500/20">
+                  <Mail className="w-4 h-4 stroke-[1.75]" />
                 </div>
                 <div>
-                  <span className="text-xs font-semibold text-slate-400 block">Corporate Email</span>
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block">Corporate Email</span>
                   <a href="mailto:contact@shristiestate.in" className="text-slate-800 dark:text-slate-200 font-semibold hover:text-brand-600 mt-0.5 block">
                     contact@shristiestate.in
                   </a>
                 </div>
               </div>
 
-              <div className="flex items-start gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center shrink-0">
-                  <Clock className="w-5 h-5" />
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-none bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center shrink-0 border border-slate-200 dark:border-slate-700">
+                  <Clock className="w-4 h-4 stroke-[1.75]" />
                 </div>
                 <div>
-                  <span className="text-xs font-semibold text-slate-400 block">Consultation Hours</span>
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block">Consultation Hours</span>
                   <p className="text-slate-800 dark:text-slate-200 text-xs mt-0.5">
                     Monday to Saturday: 9:30 AM – 7:30 PM <br />
                     Sunday: Assisted Site Visits by Appointment
@@ -130,7 +130,7 @@ export const ContactPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+            <div className="pt-3 border-t border-slate-200 dark:border-slate-800">
               <a
                 href={generateGeneralEnquiryWhatsAppLink({
                   propertyName: formData.subject || 'Commercial Space Enquiry',
@@ -138,7 +138,7 @@ export const ContactPage: React.FC = () => {
                 })}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn-whatsapp w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2"
+                className="btn-whatsapp w-full py-2.5 rounded-none font-semibold text-xs uppercase tracking-wider flex items-center justify-center gap-2"
               >
                 <WhatsAppIcon className="w-4 h-4" />
                 <span>Chat Direct on WhatsApp</span>
@@ -149,30 +149,30 @@ export const ContactPage: React.FC = () => {
 
         {/* Contact Form (7 Cols) */}
         <div className="lg:col-span-7">
-          <div className="glass-card rounded-3xl p-6 sm:p-8 border border-slate-200/90 dark:border-slate-800 bg-white/70 dark:bg-[#0B132B]/75 space-y-6">
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white font-['Outfit']">
+          <div className="rounded-none p-6 sm:p-7 border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B132B] space-y-5">
+            <h2 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white">
               Send an Advisory Inquiry
             </h2>
 
             {submitted ? (
               <div className="text-center py-10 space-y-3">
-                <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto" />
-                <h3 className="text-xl font-bold">Message Dispatched</h3>
-                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-sm mx-auto">
+                <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto" />
+                <h3 className="text-lg font-semibold">Message Dispatched</h3>
+                <p className="text-xs text-slate-600 dark:text-slate-400 max-w-sm mx-auto font-sans">
                   Thank you for writing to Shristi Estate. An advisor will contact you within business hours.
                 </p>
                 <button
                   onClick={() => setSubmitted(false)}
-                  className="btn-glass-primary px-5 py-2 rounded-xl text-xs font-semibold mt-2"
+                  className="btn-glass-primary px-4 py-2 rounded-none text-xs font-semibold uppercase tracking-wider mt-2"
                 >
                   Send Another Message
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <form onSubmit={handleSubmit} className="space-y-3.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                    <label className="block text-[10px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
                       Your Full Name *
                     </label>
                     <input
@@ -181,12 +181,12 @@ export const ContactPage: React.FC = () => {
                       placeholder="e.g. Anand Varma"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="glass-input w-full px-3.5 py-2.5 rounded-xl text-sm"
+                      className="w-full px-3 py-2 rounded-none text-xs border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#070C1E] text-slate-900 dark:text-white focus:outline-none focus:border-brand-500"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                    <label className="block text-[10px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
                       Contact Phone *
                     </label>
                     <input
@@ -195,14 +195,14 @@ export const ContactPage: React.FC = () => {
                       placeholder="10-digit mobile number"
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="glass-input w-full px-3.5 py-2.5 rounded-xl text-sm"
+                      className="w-full px-3 py-2 rounded-none text-xs border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#070C1E] text-slate-900 dark:text-white focus:outline-none focus:border-brand-500"
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                    <label className="block text-[10px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
                       Email Address
                     </label>
                     <input
@@ -210,18 +210,18 @@ export const ContactPage: React.FC = () => {
                       placeholder="name@company.com"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="glass-input w-full px-3.5 py-2.5 rounded-xl text-sm"
+                      className="w-full px-3 py-2 rounded-none text-xs border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#070C1E] text-slate-900 dark:text-white focus:outline-none focus:border-brand-500"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                    <label className="block text-[10px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
                       Subject
                     </label>
                     <select
                       value={formData.subject}
                       onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                      className="glass-input w-full px-3.5 py-2.5 rounded-xl text-sm"
+                      className="w-full px-3 py-2 rounded-none text-xs border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#070C1E] text-slate-900 dark:text-white focus:outline-none focus:border-brand-500"
                     >
                       <option value="Office Space Enquiry">Office Space Enquiry</option>
                       <option value="Warehouse / Logistics">Warehouse / Logistics</option>
@@ -233,7 +233,7 @@ export const ContactPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                  <label className="block text-[10px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
                     Your Requirements / Message
                   </label>
                   <textarea
@@ -243,19 +243,19 @@ export const ContactPage: React.FC = () => {
                     value={formData.message}
                     onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                     onPaste={(e) => handleOverviewPaste(e, (val) => setFormData({ ...formData, message: val }), formData.message)}
-                    className="glass-input overview-input w-full px-3.5 py-2.5 rounded-xl text-sm"
+                    className="overview-input w-full px-3 py-2 rounded-none text-xs border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#070C1E] text-slate-900 dark:text-white focus:outline-none focus:border-brand-500"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={loading}
-                  className="btn-glass-primary w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2"
+                  className="btn-glass-primary w-full py-2.5 rounded-none font-semibold text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   {loading ? <span>Sending...</span> : (
                     <>
-                      <Send className="w-4 h-4" />
-                      <span>Send Message</span>
+                      <Send className="w-3.5 h-3.5" />
+                      <span>Send Advisory Inquiry</span>
                     </>
                   )}
                 </button>

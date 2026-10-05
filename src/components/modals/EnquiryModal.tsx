@@ -144,33 +144,33 @@ export const EnquiryModal: React.FC<EnquiryModalProps> = ({
       />
 
       {/* Modal Container */}
-      <div className="relative w-full max-w-xl glass-card rounded-3xl p-6 sm:p-8 bg-white/95 dark:bg-[#0B132B]/95 border border-slate-200 dark:border-slate-800 shadow-2xl z-10 my-8">
+      <div className="relative w-full max-w-xl rounded-none p-6 sm:p-8 bg-white dark:bg-[#0B132B] border border-slate-200 dark:border-slate-800 shadow-2xl z-10 my-8">
         {/* Close Button */}
         <button
           onClick={handleResetAndClose}
-          className="absolute top-5 right-5 p-2 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          className="absolute top-5 right-5 p-2 rounded-none border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           aria-label="Close dialog"
         >
-          <X className="w-5 h-5" />
+          <X className="w-4 h-4" />
         </button>
 
         {submitted ? (
           /* Confirmation Message */
           <div className="text-center py-8 space-y-4">
-            <div className="w-16 h-16 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center mx-auto mb-4 border border-emerald-500/20">
-              <CheckCircle2 className="w-9 h-9" />
+            <div className="w-14 h-14 rounded-none bg-slate-100 dark:bg-slate-800 text-brand-600 dark:text-brand-400 flex items-center justify-center mx-auto mb-4 border border-slate-200 dark:border-slate-800">
+              <CheckCircle2 className="w-7 h-7" />
             </div>
-            <h3 className="text-2xl font-bold text-slate-900 dark:text-white font-['Outfit']">
+            <h3 className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white">
               Requirement Received
             </h3>
-            <p className="text-sm text-slate-600 dark:text-slate-300 max-w-md mx-auto leading-relaxed">
+            <p className="text-sm text-slate-600 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
               Thank you, <strong>{formData.name}</strong>. Your requirement is dispatched and WhatsApp has been opened with your pre-filled inquiry. If WhatsApp did not open automatically, click the button below.
             </p>
 
             <div className="pt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
               <button
                 onClick={handleResetAndClose}
-                className="btn-glass-primary w-full sm:w-auto px-6 py-2.5 rounded-xl text-sm font-semibold"
+                className="btn-glass-primary w-full sm:w-auto px-6 py-2.5 rounded-none text-xs font-semibold uppercase tracking-wider"
               >
                 Done
               </button>
@@ -186,7 +186,7 @@ export const EnquiryModal: React.FC<EnquiryModalProps> = ({
                 }
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn-whatsapp w-full sm:w-auto px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2"
+                className="btn-whatsapp w-full sm:w-auto px-5 py-2.5 rounded-none text-xs font-semibold flex items-center justify-center gap-2 uppercase tracking-wider"
               >
                 <WhatsAppIcon className="w-4 h-4" />
                 Connect on WhatsApp
@@ -197,16 +197,16 @@ export const EnquiryModal: React.FC<EnquiryModalProps> = ({
           /* Enquiry Form */
           <div>
             <div className="mb-6">
-              <div className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400 mb-1">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-600 dark:text-brand-400 mb-1">
                 Commercial Advisory Desk
               </div>
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white font-['Outfit'] tracking-tight">
+              <h2 className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white tracking-tight">
                 {property ? 'Enquire About Property' : 'Commercial Space Enquiry'}
               </h2>
 
               {/* Property / Building Context Pill */}
               {(property || buildingName) && (
-                <div className="mt-3 p-3 rounded-2xl bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 flex items-center gap-3 text-xs text-slate-700 dark:text-slate-200">
+                <div className="mt-3 p-3 rounded-none bg-slate-50 dark:bg-[#070C1E] border border-slate-200 dark:border-slate-800 flex items-center gap-3 text-xs text-slate-700 dark:text-slate-300">
                   <Building2 className="w-4 h-4 text-brand-500 shrink-0" />
                   <div className="truncate">
                     <span className="font-semibold">{property?.title || buildingName}</span>
@@ -217,7 +217,7 @@ export const EnquiryModal: React.FC<EnquiryModalProps> = ({
                     )}
                   </div>
                   {property?.reference_number && (
-                    <span className="ml-auto px-2 py-0.5 rounded bg-brand-500/10 text-brand-600 dark:text-brand-400 font-mono font-bold shrink-0">
+                    <span className="ml-auto px-2 py-0.5 rounded-none bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono font-bold shrink-0 border border-slate-200 dark:border-slate-700">
                       {property.reference_number}
                     </span>
                   )}
@@ -226,7 +226,7 @@ export const EnquiryModal: React.FC<EnquiryModalProps> = ({
             </div>
 
             {error && (
-              <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-medium">
+              <div className="mb-4 p-3 rounded-none bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-medium">
                 {error}
               </div>
             )}
@@ -235,7 +235,7 @@ export const EnquiryModal: React.FC<EnquiryModalProps> = ({
               {/* Name & Phone */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1 uppercase tracking-wider">
                     Full Name *
                   </label>
                   <div className="relative">
@@ -246,13 +246,13 @@ export const EnquiryModal: React.FC<EnquiryModalProps> = ({
                       placeholder="e.g. Rajesh Malhotra"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="glass-input w-full pl-9 pr-3 py-2.5 rounded-xl text-sm"
+                      className="w-full pl-9 pr-3 py-2.5 rounded-none text-xs border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#070C1E] text-slate-900 dark:text-white focus:outline-none focus:border-brand-500"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1 uppercase tracking-wider">
                     Mobile Number *
                   </label>
                   <div className="relative">
@@ -263,7 +263,7 @@ export const EnquiryModal: React.FC<EnquiryModalProps> = ({
                       placeholder="e.g. 8750098666"
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="glass-input w-full pl-9 pr-3 py-2.5 rounded-xl text-sm"
+                      className="w-full pl-9 pr-3 py-2.5 rounded-none text-xs border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#070C1E] text-slate-900 dark:text-white focus:outline-none focus:border-brand-500"
                     />
                   </div>
                 </div>
@@ -271,7 +271,7 @@ export const EnquiryModal: React.FC<EnquiryModalProps> = ({
 
               {/* Email */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1 uppercase tracking-wider">
                   Corporate / Business Email *
                 </label>
                 <div className="relative">
@@ -282,7 +282,7 @@ export const EnquiryModal: React.FC<EnquiryModalProps> = ({
                     placeholder="e.g. name@company.com"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="glass-input w-full pl-9 pr-3 py-2.5 rounded-xl text-sm"
+                    className="w-full pl-9 pr-3 py-2.5 rounded-none text-xs border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#070C1E] text-slate-900 dark:text-white focus:outline-none focus:border-brand-500"
                   />
                 </div>
               </div>
@@ -290,13 +290,13 @@ export const EnquiryModal: React.FC<EnquiryModalProps> = ({
               {/* Inquiry Type & Site Visit Preference */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1 uppercase tracking-wider">
                     Requirement
                   </label>
                   <select
                     value={formData.inquiryType}
                     onChange={(e) => setFormData({ ...formData, inquiryType: e.target.value })}
-                    className="glass-input w-full px-3 py-2.5 rounded-xl text-sm"
+                    className="w-full px-3 py-2.5 rounded-none text-xs border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#070C1E] text-slate-900 dark:text-white focus:outline-none focus:border-brand-500"
                   >
                     <option value="Rent">Rent / Lease</option>
                     <option value="Buy">Outright Purchase</option>
@@ -305,27 +305,27 @@ export const EnquiryModal: React.FC<EnquiryModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Preferred Visit Date
+                  <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1 uppercase tracking-wider">
+                    Preferred Date
                   </label>
                   <div className="relative">
                     <input
                       type="date"
                       value={formData.preferredDate}
                       onChange={(e) => setFormData({ ...formData, preferredDate: e.target.value })}
-                      className="glass-input w-full px-3 py-2.5 rounded-xl text-sm"
+                      className="w-full px-3 py-2.5 rounded-none text-xs border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#070C1E] text-slate-900 dark:text-white focus:outline-none focus:border-brand-500"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1 uppercase tracking-wider">
                     Preferred Time
                   </label>
                   <select
                     value={formData.preferredTime}
                     onChange={(e) => setFormData({ ...formData, preferredTime: e.target.value })}
-                    className="glass-input w-full px-3 py-2.5 rounded-xl text-sm"
+                    className="w-full px-3 py-2.5 rounded-none text-xs border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#070C1E] text-slate-900 dark:text-white focus:outline-none focus:border-brand-500"
                   >
                     <option value="">Anytime</option>
                     <option value="Morning (10 AM - 1 PM)">10 AM – 1 PM</option>
@@ -337,7 +337,7 @@ export const EnquiryModal: React.FC<EnquiryModalProps> = ({
 
               {/* Message */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1 uppercase tracking-wider">
                   Specific Requirements or Questions (Optional)
                 </label>
                 <textarea
@@ -346,7 +346,7 @@ export const EnquiryModal: React.FC<EnquiryModalProps> = ({
                   value={formData.message}
                   onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                   onPaste={(e) => handleOverviewPaste(e, (val) => setFormData({ ...formData, message: val }), formData.message)}
-                  className="glass-input overview-input w-full px-3 py-2 rounded-xl text-sm"
+                  className="w-full px-3 py-2 rounded-none text-xs border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#070C1E] text-slate-900 dark:text-white focus:outline-none focus:border-brand-500"
                 />
               </div>
 
@@ -357,7 +357,7 @@ export const EnquiryModal: React.FC<EnquiryModalProps> = ({
                   id="consent-check"
                   checked={formData.consent}
                   onChange={(e) => setFormData({ ...formData, consent: e.target.checked })}
-                  className="mt-0.5 rounded text-brand-600 focus:ring-brand-500"
+                  className="mt-0.5 rounded-none text-brand-600 border-slate-300 dark:border-slate-700 focus:ring-0"
                 />
                 <label htmlFor="consent-check" className="text-xs text-slate-500 dark:text-slate-400 leading-snug">
                   I consent to Shristi Estate commercial advisors contacting me via Call/WhatsApp/Email regarding this property requirement.
@@ -369,7 +369,7 @@ export const EnquiryModal: React.FC<EnquiryModalProps> = ({
                 <button
                   type="submit"
                   disabled={loading}
-                  className="btn-glass-primary flex-1 py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2"
+                  className="btn-glass-primary flex-1 py-3 rounded-none font-semibold text-xs flex items-center justify-center gap-2 uppercase tracking-wider"
                 >
                   {loading ? (
                     <span>Submitting...</span>

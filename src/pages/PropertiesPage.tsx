@@ -95,15 +95,15 @@ export const PropertiesPage: React.FC<PropertiesPageProps> = ({ onOpenEnquiry })
       />
 
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-6">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
         <div>
-          <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
+          <span className="text-[10px] sm:text-[11px] font-mono font-semibold uppercase tracking-widest text-brand-600 dark:text-brand-400">
             Real-Time Commercial Database
           </span>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white font-['Outfit'] mt-1">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-slate-900 dark:text-white tracking-tight mt-1">
             Commercial Properties for Lease & Sale
           </h1>
-          <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1">
             Browse verified offices, IT spaces, warehouses, industrial units, and commercial plots across Noida & NCR.
           </p>
         </div>
@@ -111,9 +111,9 @@ export const PropertiesPage: React.FC<PropertiesPageProps> = ({ onOpenEnquiry })
         {/* Mobile Filter Toggle */}
         <button
           onClick={() => setShowMobileFilter(!showMobileFilter)}
-          className="lg:hidden btn-glass-primary px-4 py-2.5 rounded-xl font-semibold text-xs flex items-center justify-center gap-2"
+          className="lg:hidden px-3.5 py-2 rounded-none border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B132B] text-slate-900 dark:text-white font-semibold text-xs flex items-center justify-center gap-2"
         >
-          <SlidersHorizontal className="w-4 h-4" />
+          <SlidersHorizontal className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
           <span>Filters ({filtered.length} Results)</span>
         </button>
       </div>
@@ -122,9 +122,9 @@ export const PropertiesPage: React.FC<PropertiesPageProps> = ({ onOpenEnquiry })
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Desktop Filter Sidebar (3 Cols) */}
         <div className="hidden lg:block lg:col-span-3 space-y-6 sticky top-24">
-          <div className="glass-card rounded-3xl p-6 border border-slate-200/90 dark:border-slate-800 bg-white/70 dark:bg-[#0B132B]/75 space-y-5">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white font-['Outfit']">
+          <div className="rounded-none p-6 border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B132B] space-y-5">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+              <span className="text-xs font-semibold uppercase tracking-[0.15em] text-slate-900 dark:text-white">
                 Filter Search
               </span>
               <button
@@ -137,7 +137,7 @@ export const PropertiesPage: React.FC<PropertiesPageProps> = ({ onOpenEnquiry })
 
             {/* Keyword Search */}
             <div>
-              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider text-[10px]">
                 Keyword / Building / ID
               </label>
               <div className="relative">
@@ -147,20 +147,20 @@ export const PropertiesPage: React.FC<PropertiesPageProps> = ({ onOpenEnquiry })
                   placeholder="e.g. I-Thum, SE-6201..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="glass-input w-full pl-9 pr-3 py-2 rounded-xl text-xs"
+                  className="w-full pl-9 pr-3 py-2 rounded-none text-xs border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#070C1E] text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-brand-500"
                 />
               </div>
             </div>
 
             {/* Listing Type */}
             <div>
-              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider text-[10px]">
                 Listing Type
               </label>
               <select
                 value={listingType}
                 onChange={(e) => setListingType(e.target.value)}
-                className="glass-input w-full px-3 py-2 rounded-xl text-xs font-medium"
+                className="w-full px-3 py-2 rounded-none text-xs font-medium border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#070C1E] text-slate-900 dark:text-white focus:outline-none focus:border-brand-500"
               >
                 <option value="">All (Rent / Sale / Lease)</option>
                 <option value="Rent">Rent</option>
@@ -171,13 +171,13 @@ export const PropertiesPage: React.FC<PropertiesPageProps> = ({ onOpenEnquiry })
 
             {/* Category */}
             <div>
-              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider text-[10px]">
                 Category
               </label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="glass-input w-full px-3 py-2 rounded-xl text-xs font-medium"
+                className="w-full px-3 py-2 rounded-none text-xs font-medium border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#070C1E] text-slate-900 dark:text-white focus:outline-none focus:border-brand-500"
               >
                 <option value="">All Categories</option>
                 <option value="office-space">Office Spaces</option>
@@ -191,13 +191,13 @@ export const PropertiesPage: React.FC<PropertiesPageProps> = ({ onOpenEnquiry })
 
             {/* Sector / Location */}
             <div>
-              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider text-[10px]">
                 Sector / Locality
               </label>
               <select
                 value={locationId}
                 onChange={(e) => setLocationId(e.target.value)}
-                className="glass-input w-full px-3 py-2 rounded-xl text-xs font-medium"
+                className="w-full px-3 py-2 rounded-none text-xs font-medium border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#070C1E] text-slate-900 dark:text-white focus:outline-none focus:border-brand-500"
               >
                 <option value="">All Locations</option>
                 {locations.map((loc) => (
@@ -210,13 +210,13 @@ export const PropertiesPage: React.FC<PropertiesPageProps> = ({ onOpenEnquiry })
 
             {/* Furnishing */}
             <div>
-              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider text-[10px]">
                 Furnishing
               </label>
               <select
                 value={furnishing}
                 onChange={(e) => setFurnishing(e.target.value)}
-                className="glass-input w-full px-3 py-2 rounded-xl text-xs font-medium"
+                className="w-full px-3 py-2 rounded-none text-xs font-medium border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#070C1E] text-slate-900 dark:text-white focus:outline-none focus:border-brand-500"
               >
                 <option value="">Any Furnishing</option>
                 <option value="Furnished">Furnished</option>
@@ -228,13 +228,13 @@ export const PropertiesPage: React.FC<PropertiesPageProps> = ({ onOpenEnquiry })
 
             {/* Minimum Area */}
             <div>
-              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider text-[10px]">
                 Minimum Area (sq.ft)
               </label>
               <select
                 value={minArea}
                 onChange={(e) => setMinArea(e.target.value)}
-                className="glass-input w-full px-3 py-2 rounded-xl text-xs font-medium"
+                className="w-full px-3 py-2 rounded-none text-xs font-medium border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#070C1E] text-slate-900 dark:text-white focus:outline-none focus:border-brand-500"
               >
                 <option value="">Any Size</option>
                 <option value="1000">1,000+ sq.ft</option>
@@ -249,9 +249,9 @@ export const PropertiesPage: React.FC<PropertiesPageProps> = ({ onOpenEnquiry })
         {/* Results Area (9 Cols) */}
         <div className="lg:col-span-9 space-y-6">
           {/* Top Sort & Count Bar */}
-          <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 px-1">
+          <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 px-1 border-b border-slate-200 dark:border-slate-800 pb-3">
             <div>
-              Showing <strong>{sorted.length}</strong> matching commercial properties
+              Showing <strong className="text-slate-900 dark:text-white">{sorted.length}</strong> matching commercial properties
             </div>
 
             <div className="flex items-center gap-2">
@@ -259,7 +259,7 @@ export const PropertiesPage: React.FC<PropertiesPageProps> = ({ onOpenEnquiry })
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
-                className="glass-input px-2.5 py-1.5 rounded-xl text-xs font-semibold"
+                className="px-2.5 py-1.5 rounded-none text-xs font-medium border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B132B] text-slate-900 dark:text-white focus:outline-none focus:border-brand-500"
               >
                 <option value="default">Featured First</option>
                 <option value="price-asc">Price: Low to High</option>
@@ -269,29 +269,29 @@ export const PropertiesPage: React.FC<PropertiesPageProps> = ({ onOpenEnquiry })
             </div>
           </div>
 
-          {/* NO RESULT EXPERIENCE (SECTION 51) */}
+          {/* NO RESULT EXPERIENCE */}
           {sorted.length === 0 ? (
-            <div className="py-16 text-center glass-card rounded-3xl p-8 sm:p-12 space-y-4 border border-slate-200 dark:border-slate-800">
-              <div className="w-14 h-14 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center mx-auto">
-                <Search className="w-7 h-7" />
+            <div className="py-16 text-center rounded-none p-8 sm:p-12 space-y-4 border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B132B]">
+              <div className="w-12 h-12 rounded-none border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 text-brand-600 dark:text-brand-400 flex items-center justify-center mx-auto">
+                <Search className="w-5 h-5 stroke-[1.5]" />
               </div>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white font-['Outfit']">
+              <h3 className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white">
                 We couldn't find an exact match.
               </h3>
-              <p className="text-sm text-slate-600 dark:text-slate-300 max-w-md mx-auto leading-relaxed">
+              <p className="text-sm text-slate-600 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
                 Try adjusting your filters, or tell us what property you need. Our team maintains extensive off-market commercial inventory across Sector 62, 63, and Expressway.
               </p>
 
               <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
                 <button
                   onClick={resetFilters}
-                  className="px-5 py-2.5 rounded-xl text-xs font-semibold border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  className="px-5 py-2.5 rounded-none text-xs font-semibold border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors uppercase tracking-wider"
                 >
                   Clear All Filters
                 </button>
                 <Link
                   to="/tell-us-requirement"
-                  className="btn-glass-primary px-6 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-1.5"
+                  className="btn-glass-primary px-6 py-2.5 rounded-none text-xs font-semibold flex items-center gap-1.5 uppercase tracking-wider"
                 >
                   <span>Tell Us What Property You Need</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -299,9 +299,9 @@ export const PropertiesPage: React.FC<PropertiesPageProps> = ({ onOpenEnquiry })
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {sorted.map((prop) => (
-                <PropertyCard key={prop.id} property={prop} onEnquire={onOpenEnquiry} />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0 border-t border-l border-slate-200 dark:border-slate-800">
+              {sorted.map((prop, idx) => (
+                <PropertyCard key={prop.id} property={prop} index={idx} onEnquire={onOpenEnquiry} />
               ))}
             </div>
           )}

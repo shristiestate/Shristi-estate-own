@@ -36,6 +36,39 @@ export const getSupabase = async (): Promise<SupabaseClient | null> => {
 };
 
 /**
+ * Universal Fluent Query Chain Proxy:
+ * Allows arbitrary method chaining on Supabase query builders (e.g. from(t).select().eq().order().limit().maybeSingle())
+ * while deferring the actual Supabase client evaluation until the promise is awaited.
+ */
+function createFluentChain(rootPromise: Promise<any>): any {
+  const handler: ProxyHandler<any> = {
+    get(_target, prop) {
+      if (prop === 'then') {
+        return (resolve: any, reject: any) => rootPromise.then(resolve, reject);
+      }
+      if (prop === 'catch') {
+        return (reject: any) => rootPromise.catch(reject);
+      }
+      if (prop === 'finally') {
+        return (callback: any) => rootPromise.finally(callback);
+      }
+      return (...args: any[]) => {
+        const nextPromise = rootPromise.then((target) => {
+          if (!target) return { data: null, error: new Error('Supabase client not initialized') };
+          const fn = target[prop];
+          if (typeof fn === 'function') {
+            return fn.apply(target, args);
+          }
+          return target[prop];
+        });
+        return createFluentChain(nextPromise);
+      };
+    }
+  };
+  return new Proxy({} as any, handler);
+}
+
+/**
  * Backward-compatible transparent proxy that resolves Supabase methods asynchronously,
  * ensuring zero main-thread blocking during initial page load.
  */
@@ -45,59 +78,21 @@ export const supabase: any = new Proxy({} as any, {
 
     if (prop === 'from') {
       return (table: string) => {
-        const queryBuilder = {
-          select: (...sArgs: any[]) => {
-            const p = getSupabase().then((client: any) => {
-              if (!client) return { data: null, error: new Error('Supabase not configured') };
-              const q = client.from(table);
-              return q.select.apply(q, sArgs);
-            });
-            (p as any).order = (...oArgs: any[]) => {
-              return getSupabase().then((client: any) => {
-                if (!client) return { data: null, error: new Error('Supabase not configured') };
-                const q = client.from(table);
-                const s = q.select.apply(q, sArgs);
-                return s.order.apply(s, oArgs);
-              });
-            };
-            return p;
-          },
-          upsert: (...uArgs: any[]) => {
-            return getSupabase().then((client: any) => {
-              if (!client) return { data: null, error: new Error('Supabase not configured') };
-              const q = client.from(table);
-              return q.upsert.apply(q, uArgs);
-            });
-          },
-          insert: (...iArgs: any[]) => {
-            return getSupabase().then((client: any) => {
-              if (!client) return { data: null, error: new Error('Supabase not configured') };
-              const q = client.from(table);
-              return q.insert.apply(q, iArgs);
-            });
-          },
-          update: (...upArgs: any[]) => ({
-            eq: (...eqArgs: any[]) => {
-              return getSupabase().then((client: any) => {
-                if (!client) return { data: null, error: new Error('Supabase not configured') };
-                const q = client.from(table);
-                const u = q.update.apply(q, upArgs);
-                return u.eq.apply(u, eqArgs);
-              });
-            },
-          }),
-          delete: () => ({
-            eq: (...eqArgs: any[]) => {
-              return getSupabase().then((client: any) => {
-                if (!client) return { data: null, error: new Error('Supabase not configured') };
-                const q = client.from(table);
-                const d = q.delete();
-                return d.eq.apply(d, eqArgs);
-              });
-            },
-          }),
-        };
-        return queryBuilder;
+        const targetPromise = getSupabase().then((client) => {
+          if (!client) throw new Error('Supabase not configured');
+          return client.from(table);
+        });
+        return createFluentChain(targetPromise);
+      };
+    }
+
+    if (prop === 'rpc') {
+      return (fnName: string, params?: any) => {
+        const targetPromise = getSupabase().then((client) => {
+          if (!client) throw new Error('Supabase not configured');
+          return client.rpc(fnName, params);
+        });
+        return createFluentChain(targetPromise);
       };
     }
 

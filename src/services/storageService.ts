@@ -25,6 +25,48 @@ let _memGuides: MarketGuide[] | null = null;
 let _memClients: ClientLogo[] | null = null;
 let _memReels: InstagramReel[] | null = null;
 
+interface CacheEntry<T> {
+  data: T;
+  timestamp: number;
+}
+const _cache = new Map<string, CacheEntry<any>>();
+const _inFlight = new Map<string, Promise<any>>();
+const DEFAULT_CACHE_TTL_MS = 3 * 60 * 1000; // 3 minutes
+
+function getCached<T>(key: string, ttlMs = DEFAULT_CACHE_TTL_MS): T | null {
+  const entry = _cache.get(key);
+  if (!entry) return null;
+  if (Date.now() - entry.timestamp > ttlMs) {
+    _cache.delete(key);
+    return null;
+  }
+  return entry.data as T;
+}
+
+function setCache<T>(key: string, data: T): void {
+  _cache.set(key, { data, timestamp: Date.now() });
+}
+
+export function clearStorageCache(prefix?: string): void {
+  if (!prefix) {
+    _cache.clear();
+    return;
+  }
+  for (const k of Array.from(_cache.keys())) {
+    if (k.startsWith(prefix)) _cache.delete(k);
+  }
+}
+
+function dedupeRequest<T>(key: string, fetcher: () => Promise<T>): Promise<T> {
+  const existing = _inFlight.get(key);
+  if (existing) return existing;
+  const promise = fetcher().finally(() => {
+    _inFlight.delete(key);
+  });
+  _inFlight.set(key, promise);
+  return promise;
+}
+
 // Safe localStorage setter that prunes non-critical data if quota is exceeded
 const safeSetItem = (key: string, value: string): boolean => {
   if (typeof window === 'undefined') return false;
@@ -183,7 +225,7 @@ const initStorage = () => {
       _memBuildings = INITIAL_BUILDINGS.map(b => ({
         ...b,
         structure_display: getBuildingStructureDisplay(b),
-        property_count: Math.max(b.property_count || 0, 20)
+        property_count: typeof b.property_count === 'number' ? b.property_count : 20
       }));
       localStorage.setItem(STORAGE_KEYS.BUILDINGS, JSON.stringify(INITIAL_BUILDINGS));
     } else {
@@ -219,7 +261,7 @@ const initStorage = () => {
       _memBuildings = source.map(b => ({
         ...b,
         structure_display: getBuildingStructureDisplay(b),
-        property_count: Math.max(b.property_count || 0, 20)
+        property_count: typeof b.property_count === 'number' ? b.property_count : Math.max(0, 20 - (b.deleted_unit_ids?.length || 0))
       }));
     }
 
@@ -262,7 +304,7 @@ const initStorage = () => {
     _memBuildings = INITIAL_BUILDINGS.map(b => ({
       ...b,
       structure_display: getBuildingStructureDisplay(b),
-      property_count: Math.max(b.property_count || 0, 20)
+      property_count: typeof b.property_count === 'number' ? b.property_count : 20
     }));
     _memProperties = [
       ...INITIAL_PROPERTIES,
@@ -343,14 +385,14 @@ export const StorageService = {
       _memBuildings = source.map(b => ({
         ...b,
         structure_display: getBuildingStructureDisplay(b),
-        property_count: Math.max(b.property_count || 0, 20)
+        property_count: typeof b.property_count === 'number' ? b.property_count : Math.max(0, 20 - (b.deleted_unit_ids?.length || 0))
       }));
       return _memBuildings;
     } catch {
       return INITIAL_BUILDINGS.map(b => ({
         ...b,
         structure_display: getBuildingStructureDisplay(b),
-        property_count: Math.max(b.property_count || 0, 20)
+        property_count: typeof b.property_count === 'number' ? b.property_count : 20
       }));
     }
   },
@@ -365,6 +407,28 @@ export const StorageService = {
     if (!locationId) return [];
     const buildings = this.getInitialBuildings();
     return buildings.filter(b => b.location_id === locationId || (b.locations && b.locations.includes(locationId)));
+  },
+
+  /**
+   * Dynamically calculates the accurate number of available units for a building,
+   * properly accounting for deleted units, custom added units, and standard templates.
+   */
+  getBuildingUnitCount(building?: Building | null): number {
+    if (!building) return 0;
+    const deletedList = Array.isArray(building.deleted_unit_ids) ? building.deleted_unit_ids : [];
+    const globalDeletedSet = getDeletedPropertyIdsSet();
+    if (deletedList.length > 0 || globalDeletedSet.size > 0) {
+      try {
+        const active = this.getInitialPropertiesByBuilding(building.id);
+        return active.length;
+      } catch {
+        return Math.max(0, (typeof building.property_count === 'number' ? building.property_count : 20) - deletedList.length);
+      }
+    }
+    if (typeof building.property_count === 'number' && building.property_count >= 0) {
+      return building.property_count;
+    }
+    return 20;
   },
 
   getInitialProperties(): Property[] {
@@ -457,37 +521,108 @@ export const StorageService = {
     }
   },
 
-  // ASYNC LOCATIONS WITH BACKGROUND FALLBACK
-  async getLocations(): Promise<Location[]> {
-    if (isSupabaseConfigured && supabase) {
-      try {
-        const { data, error } = await withTimeout(supabase.from('locations').select('*') as any);
-        if (!error && data && data.length > 0) {
-          _memLocations = data as Location[];
-          return _memLocations;
+  // COMPOSITE HOMEPAGE BUNDLE (Ultra-fast single-roundtrip query for Homepage)
+  async getHomepageBundle(): Promise<{
+    locations: Location[];
+    buildings: Building[];
+    properties: Property[];
+    guides: MarketGuide[];
+  }> {
+    const cached = getCached<any>('homepage_bundle');
+    if (cached) return cached;
+
+    return dedupeRequest('homepage_bundle', async () => {
+      if (isSupabaseConfigured && supabase) {
+        try {
+          const { data, error } = await withTimeout(supabase.rpc('get_homepage_bundle') as any);
+          if (!error && data) {
+            const locs: Location[] = Array.isArray(data.locations) ? data.locations : [];
+            const blds: Building[] = Array.isArray(data.buildings) ? data.buildings.map((b: any) => ({
+              ...b,
+              structure_display: getBuildingStructureDisplay(b),
+              property_count: typeof b.property_count === 'number' ? b.property_count : Math.max(0, 20 - (b.deleted_unit_ids?.length || 0))
+            })) : [];
+            const props: Property[] = Array.isArray(data.properties) ? data.properties : [];
+            const gds: MarketGuide[] = Array.isArray(data.guides) ? data.guides : [];
+
+            if (locs.length > 0) _memLocations = locs;
+            if (blds.length > 0) _memBuildings = blds;
+            if (props.length > 0) _memProperties = props;
+            if (gds.length > 0) _memGuides = gds;
+
+            const bundle = { locations: locs, buildings: blds, properties: props, guides: gds };
+            setCache('homepage_bundle', bundle);
+            return bundle;
+          }
+        } catch (e) {
+          console.warn('getHomepageBundle fallback:', e);
         }
-      } catch (e) {
-        console.warn('Falling back to local storage for locations:', e);
       }
-    }
-    return this.getInitialLocations();
+      return {
+        locations: this.getInitialLocations(),
+        buildings: this.getInitialBuildings(),
+        properties: this.getInitialProperties(),
+        guides: this.getInitialGuides(),
+      };
+    });
+  },
+
+  // ASYNC LOCATIONS WITH BACKGROUND FALLBACK & TTL CACHE
+  async getLocations(): Promise<Location[]> {
+    const cached = getCached<Location[]>('locations_all');
+    if (cached) return cached;
+
+    return dedupeRequest('locations_all', async () => {
+      if (isSupabaseConfigured && supabase) {
+        try {
+          const { data, error } = await withTimeout(
+            supabase.from('locations')
+              .select('id, name, slug, city, region, description, hero_image, building_count, property_count, categories, featured, created_at')
+              .order('featured', { ascending: false })
+              .order('name', { ascending: true }) as any
+          );
+          if (!error && data && data.length > 0) {
+            _memLocations = data as Location[];
+            setCache('locations_all', _memLocations);
+            safeSetItem(STORAGE_KEYS.LOCATIONS, JSON.stringify(_memLocations));
+            return _memLocations;
+          }
+        } catch (e) {
+          console.warn('Falling back to local storage for locations:', e);
+        }
+      }
+      return this.getInitialLocations();
+    });
   },
 
   async getLocationBySlug(slug: string): Promise<Location | null> {
     if (!slug) return null;
     const initial = this.getInitialLocationBySlug(slug);
-    if (isSupabaseConfigured && supabase) {
-      try {
-        const locations = await this.getLocations();
-        return locations.find(l => l.slug.toLowerCase() === slug.toLowerCase()) || initial;
-      } catch {
-        return initial;
+    const cacheKey = `loc_slug_${slug.toLowerCase()}`;
+    const cached = getCached<Location>(cacheKey);
+    if (cached) return cached;
+
+    return dedupeRequest(cacheKey, async () => {
+      if (isSupabaseConfigured && supabase) {
+        try {
+          const { data, error } = await withTimeout(
+            supabase.from('locations').select('*').eq('slug', slug).maybeSingle() as any
+          );
+          if (!error && data) {
+            setCache(cacheKey, data as Location);
+            return data as Location;
+          }
+        } catch (e) {
+          console.warn('getLocationBySlug fallback:', e);
+        }
       }
-    }
-    return initial;
+      return initial;
+    });
   },
 
   async saveLocation(location: Location): Promise<void> {
+    clearStorageCache('loc');
+    clearStorageCache('homepage');
     try {
       const locations = await this.getLocations();
       const index = locations.findIndex(l => l.id === location.id);
@@ -502,7 +637,6 @@ export const StorageService = {
       console.warn('LocalStorage save warning for locations:', e);
     }
 
-    // Always update in-memory cache
     if (_memLocations) {
       const memIndex = _memLocations.findIndex(l => l.id === location.id);
       if (memIndex >= 0) _memLocations[memIndex] = location;
@@ -522,6 +656,8 @@ export const StorageService = {
   },
 
   async deleteLocation(locationId: string): Promise<void> {
+    clearStorageCache('loc');
+    clearStorageCache('homepage');
     try {
       const locations = await this.getLocations();
       const updated = locations.filter(l => l.id !== locationId);
@@ -544,146 +680,136 @@ export const StorageService = {
     }
   },
 
-  // BUILDINGS
+  // BUILDINGS - OPTIMIZED WITH LIGHTWEIGHT CARD FIELDS & TTL CACHE
   async getBuildings(): Promise<Building[]> {
-    let localBuildings: Building[] = [];
-    try {
-      const stored = localStorage.getItem(STORAGE_KEYS.BUILDINGS);
-      if (stored) {
-        localBuildings = JSON.parse(stored);
-      }
-    } catch (e) {
-      console.warn('Error reading local buildings:', e);
-    }
+    const cached = getCached<Building[]>('buildings_cards');
+    if (cached) return cached;
 
-    if (isSupabaseConfigured && supabase) {
+    return dedupeRequest('buildings_cards', async () => {
+      let localBuildings: Building[] = [];
       try {
-        const { data, error } = await withTimeout(supabase.from('buildings').select('*') as any);
-        if (!error && data && data.length > 0) {
-          const mergedList: Building[] = (data as any[]).map(supaBld => {
-            const localBld = localBuildings.find(lb => lb.id === supaBld.id || lb.slug === supaBld.slug);
-            let meta: any = {};
-            if (typeof supaBld.available_floors === 'string' && supaBld.available_floors.startsWith('__meta:')) {
-              try {
-                meta = JSON.parse(supaBld.available_floors.replace('__meta:', ''));
-              } catch (e) {
-                // ignore
-              }
-            }
-
-            const localUpdated = localBld?.updated_at ? new Date(localBld.updated_at).getTime() : 0;
-            const metaUpdated = meta?.updated_at ? new Date(meta.updated_at).getTime() : 0;
-            const isLocalNewer = localUpdated > 0 && localUpdated > metaUpdated;
-
-            const resolvedOgImage = (isLocalNewer && localBld?.og_image !== undefined)
-              ? localBld.og_image
-              : (meta?.og_image !== undefined && meta.og_image !== null)
-                ? meta.og_image
-                : (supaBld.og_image !== undefined && supaBld.og_image !== null)
-                  ? supaBld.og_image
-                  : (localBld?.og_image || '');
-
-            const resolvedSeoTitle = (isLocalNewer && localBld?.seo_title !== undefined) ? localBld.seo_title : (meta.seo_title || supaBld.seo_title || localBld?.seo_title || '');
-            const resolvedSeoDesc = (isLocalNewer && localBld?.seo_description !== undefined) ? localBld.seo_description : (meta.seo_description || supaBld.seo_description || localBld?.seo_description || '');
-            const resolvedSeoKeys = (isLocalNewer && localBld?.seo_keywords !== undefined) ? localBld.seo_keywords : (meta.seo_keywords || supaBld.seo_keywords || localBld?.seo_keywords || '');
-            const resolvedCanonical = (isLocalNewer && localBld?.canonical_url !== undefined) ? localBld.canonical_url : (meta.canonical_url || supaBld.canonical_url || localBld?.canonical_url || '');
-            const resolvedOgTitle = (isLocalNewer && localBld?.og_title !== undefined) ? localBld.og_title : (meta.og_title || supaBld.og_title || localBld?.og_title || '');
-            const resolvedOgDesc = (isLocalNewer && localBld?.og_description !== undefined) ? localBld.og_description : (meta.og_description || supaBld.og_description || localBld?.og_description || '');
-
-            const combined: Building = {
-              ...supaBld,
-              ...meta,
-              ...(localBld || {}),
-              building_name: supaBld.building_name || meta.building_name || localBld?.building_name,
-              block_name: supaBld.block_name || meta.block_name || localBld?.block_name,
-              tower_number: supaBld.tower_number || meta.tower_number || localBld?.tower_number,
-              sector: supaBld.sector || meta.sector || localBld?.sector,
-              gmaps_direction: supaBld.gmaps_direction || meta.gmaps_direction || localBld?.gmaps_direction,
-              status: supaBld.status || meta.status || localBld?.status,
-              short_description: supaBld.short_description || meta.short_description || localBld?.short_description,
-              overview: supaBld.overview || meta.overview || localBld?.overview,
-              location_connectivity: supaBld.location_connectivity || meta.location_connectivity || localBld?.location_connectivity,
-              specs: supaBld.specs || meta.specs || localBld?.specs,
-              hero_image_alt: supaBld.hero_image_alt || meta.hero_image_alt || localBld?.hero_image_alt,
-              hero_image_title: supaBld.hero_image_title || meta.hero_image_title || localBld?.hero_image_title,
-              hero_image_caption: supaBld.hero_image_caption || meta.hero_image_caption || localBld?.hero_image_caption,
-              image_details: supaBld.image_details || meta.image_details || localBld?.image_details,
-              seo_title: resolvedSeoTitle,
-              seo_description: resolvedSeoDesc,
-              seo_keywords: resolvedSeoKeys,
-              canonical_url: resolvedCanonical,
-              og_title: resolvedOgTitle,
-              og_description: resolvedOgDesc,
-              og_image: resolvedOgImage,
-              updated_at: isLocalNewer ? localBld?.updated_at : (meta.updated_at || supaBld.created_at || localBld?.updated_at),
-              hyperlinks: supaBld.hyperlinks || meta.hyperlinks || localBld?.hyperlinks || [],
-              available_floors: meta.available_floors !== undefined ? meta.available_floors : (supaBld.available_floors?.startsWith('__meta:') ? null : supaBld.available_floors),
-              structure_display: supaBld.structure_display || meta.structure_display || localBld?.structure_display,
-              basement_floors: supaBld.basement_floors || meta.basement_floors || localBld?.basement_floors,
-              ground_option: supaBld.ground_option || meta.ground_option || localBld?.ground_option,
-              towers: (Array.isArray(supaBld.towers) && supaBld.towers.length > 0) ? supaBld.towers : (meta.towers || localBld?.towers || []),
-              tower_details: supaBld.tower_details || meta.tower_details || localBld?.tower_details,
-              categories: (Array.isArray(supaBld.categories) && supaBld.categories.length > 0) ? supaBld.categories : (meta.categories || localBld?.categories || [supaBld.category || 'office-space']),
-              locations: (Array.isArray(supaBld.locations) && supaBld.locations.length > 0) ? supaBld.locations : (meta.locations || localBld?.locations || (supaBld.location_id ? [supaBld.location_id] : [])),
-              location_names: (Array.isArray(supaBld.location_names) && supaBld.location_names.length > 0) ? supaBld.location_names : (meta.location_names || localBld?.location_names || (supaBld.location_name ? [supaBld.location_name] : [])),
-              deleted_unit_ids: Array.from(new Set([
-                ...(Array.isArray(supaBld.deleted_unit_ids) ? supaBld.deleted_unit_ids : []),
-                ...(Array.isArray(meta.deleted_unit_ids) ? meta.deleted_unit_ids : []),
-                ...(Array.isArray(localBld?.deleted_unit_ids) ? localBld.deleted_unit_ids : [])
-              ]))
-            };
-
-            if (combined.deleted_unit_ids && combined.deleted_unit_ids.length > 0) {
-              const delSet = getDeletedPropertyIdsSet();
-              combined.deleted_unit_ids.forEach(id => delSet.add(id));
-              safeSetItem(STORAGE_KEYS.DELETED_PROPERTIES, JSON.stringify(Array.from(delSet)));
-            }
-
-            combined.structure_display = getBuildingStructureDisplay(combined);
-            combined.property_count = Math.max(combined.property_count || 0, 20);
-            return combined;
-          });
-
-          // Sync back to local storage cache so next render is consistent
-          try {
-            safeSetItem(STORAGE_KEYS.BUILDINGS, JSON.stringify(mergedList));
-          } catch (e) {
-            // ignore
-          }
-
-          _memBuildings = mergedList;
-          return mergedList;
+        const stored = localStorage.getItem(STORAGE_KEYS.BUILDINGS);
+        if (stored) {
+          localBuildings = JSON.parse(stored);
         }
       } catch (e) {
-        console.warn('Falling back to local storage for buildings:', e);
+        console.warn('Error reading local buildings:', e);
       }
-    }
 
-    const existingIds = new Set(localBuildings.map(b => b.id));
-    const existingSlugs = new Set(localBuildings.map(b => b.slug.toLowerCase()));
-    const missing = INITIAL_BUILDINGS.filter(b => !existingIds.has(b.id) && !existingSlugs.has(b.slug.toLowerCase()));
-    const source = [...localBuildings, ...missing];
-    const finalBlds = source.map(b => ({
-      ...b,
-      structure_display: getBuildingStructureDisplay(b),
-      property_count: Math.max(b.property_count || 0, 20)
-    }));
-    _memBuildings = finalBlds;
-    return finalBlds;
+      if (isSupabaseConfigured && supabase) {
+        try {
+          // Optimized lightweight card query: excludes heavy metadata and full galleries
+          const { data, error } = await withTimeout(
+            supabase.from('buildings')
+              .select('id, name, slug, location_id, location_name, category, address, description, hero_image, total_floors, size_range, rent_range, sale_range, published, property_count, created_at')
+              .eq('published', true)
+              .order('created_at', { ascending: false }) as any
+          );
+          if (!error && data && data.length > 0) {
+            const mergedList: Building[] = (data as any[]).map(supaBld => {
+              const localBld = localBuildings.find(lb => lb.id === supaBld.id || lb.slug === supaBld.slug);
+              const deletedUnitCount = (localBld?.deleted_unit_ids && Array.isArray(localBld.deleted_unit_ids))
+                ? localBld.deleted_unit_ids.length
+                : (Array.isArray(supaBld.deleted_unit_ids) ? supaBld.deleted_unit_ids.length : 0);
+              const combined: Building = {
+                ...supaBld,
+                ...(localBld || {}),
+                hero_image: supaBld.hero_image || localBld?.hero_image,
+                structure_display: getBuildingStructureDisplay(supaBld),
+                property_count: typeof localBld?.property_count === 'number'
+                  ? localBld.property_count
+                  : (typeof supaBld.property_count === 'number' ? supaBld.property_count : Math.max(0, 20 - deletedUnitCount))
+              };
+              return combined;
+            });
+
+            _memBuildings = mergedList;
+            setCache('buildings_cards', mergedList);
+            try {
+              safeSetItem(STORAGE_KEYS.BUILDINGS, JSON.stringify(mergedList));
+            } catch (e) {}
+            return mergedList;
+          }
+        } catch (e) {
+          console.warn('Falling back to local storage for buildings:', e);
+        }
+      }
+
+      const existingIds = new Set(localBuildings.map(b => b.id));
+      const existingSlugs = new Set(localBuildings.map(b => b.slug.toLowerCase()));
+      const missing = INITIAL_BUILDINGS.filter(b => !existingIds.has(b.id) && !existingSlugs.has(b.slug.toLowerCase()));
+      const source = [...localBuildings, ...missing];
+      const finalBlds = source.map(b => ({
+        ...b,
+        structure_display: getBuildingStructureDisplay(b),
+        property_count: typeof b.property_count === 'number' ? b.property_count : Math.max(0, 20 - (b.deleted_unit_ids?.length || 0))
+      }));
+      _memBuildings = finalBlds;
+      return finalBlds;
+    });
   },
 
   async getBuildingBySlug(slug: string): Promise<Building | null> {
     if (!slug) return null;
     const initial = this.getInitialBuildingBySlug(slug);
-    if (isSupabaseConfigured && supabase) {
-      try {
-        const buildings = await this.getBuildings();
-        return buildings.find(b => b.slug.toLowerCase() === slug.toLowerCase()) || initial;
-      } catch {
-        return initial;
+    const cacheKey = `bld_slug_${slug.toLowerCase()}`;
+    const cached = getCached<Building>(cacheKey);
+    if (cached) return cached;
+
+    return dedupeRequest(cacheKey, async () => {
+      if (isSupabaseConfigured && supabase) {
+        try {
+          const { data, error } = await withTimeout(
+            supabase.from('buildings').select('*').eq('slug', slug).maybeSingle() as any
+          );
+          if (!error && data) {
+            const bld: Building = {
+              ...data,
+              structure_display: getBuildingStructureDisplay(data),
+              property_count: typeof data.property_count === 'number' ? data.property_count : Math.max(0, 20 - (data.deleted_unit_ids?.length || 0))
+            };
+            setCache(cacheKey, bld);
+            return bld;
+          }
+        } catch (e) {
+          console.warn('getBuildingBySlug fallback:', e);
+        }
       }
+      return initial;
+    });
+  },
+
+  async getBuildingById(buildingId: string): Promise<Building | null> {
+    if (!buildingId) return null;
+    if (_memBuildings) {
+      const found = _memBuildings.find(b => b.id === buildingId);
+      if (found && found.gallery && found.gallery.length > 0) return found;
     }
-    return initial;
+    const cacheKey = `bld_id_${buildingId}`;
+    const cached = getCached<Building>(cacheKey);
+    if (cached) return cached;
+
+    return dedupeRequest(cacheKey, async () => {
+      if (isSupabaseConfigured && supabase) {
+        try {
+          const { data, error } = await withTimeout(
+            supabase.from('buildings').select('*').eq('id', buildingId).maybeSingle() as any
+          );
+          if (!error && data) {
+            const bld: Building = {
+              ...data,
+              structure_display: getBuildingStructureDisplay(data),
+              property_count: typeof data.property_count === 'number' ? data.property_count : Math.max(0, 20 - (data.deleted_unit_ids?.length || 0))
+            };
+            setCache(cacheKey, bld);
+            return bld;
+          }
+        } catch (e) {
+          console.warn('getBuildingById fallback:', e);
+        }
+      }
+      return this.getInitialBuildings().find(b => b.id === buildingId) || null;
+    });
   },
 
   async getBuildingsByLocation(locationId: string): Promise<Building[]> {
@@ -853,26 +979,94 @@ export const StorageService = {
 
   // PROPERTIES
   async getProperties(): Promise<Property[]> {
-    let localProps: Property[] = [];
-    try {
-      const stored = localStorage.getItem(STORAGE_KEYS.PROPERTIES);
-      if (stored) localProps = JSON.parse(stored);
-    } catch (e) {
-      console.warn('Error reading local properties:', e);
-    }
+    const cached = getCached<Property[]>('properties_all');
+    if (cached) return cached;
 
-    let baseProps = localProps.length > 0 ? localProps : INITIAL_PROPERTIES;
-
-    if (isSupabaseConfigured && supabase) {
+    return dedupeRequest('properties_all', async () => {
+      let localProps: Property[] = [];
       try {
-        const { data, error } = await withTimeout(supabase.from('properties').select('*') as any);
-        if (!error && data && data.length > 0) {
-          baseProps = (data as any[]).map(supaProp => {
-            const localProp = localProps.find(lp => lp.id === supaProp.id || lp.slug === supaProp.slug);
+        const stored = localStorage.getItem(STORAGE_KEYS.PROPERTIES);
+        if (stored) localProps = JSON.parse(stored);
+      } catch (e) {
+        console.warn('Error reading local properties:', e);
+      }
+
+      let baseProps = localProps.length > 0 ? localProps : INITIAL_PROPERTIES;
+
+      if (isSupabaseConfigured && supabase) {
+        try {
+          const { data, error } = await withTimeout(
+            supabase.from('properties')
+              .select('id, title, slug, building_id, building_name, location_id, location_name, category, property_type, listing_type, price, rent_price, sale_price, built_up_area, area_unit, floor, status, possession, primary_image, featured, verified, sector, tower, unit_number, block_name, created_at, updated_at')
+              .order('featured', { ascending: false })
+              .order('created_at', { ascending: false }) as any
+          );
+          if (!error && data && data.length > 0) {
+            baseProps = (data as any[]).map(supaProp => {
+              const localProp = localProps.find(lp => lp.id === supaProp.id || lp.slug === supaProp.slug);
+              return {
+                ...supaProp,
+                ...(localProp || {}),
+                tower: supaProp.tower || localProp?.tower || null,
+                block_name: supaProp.block_name || localProp?.block_name,
+                unit_number: supaProp.unit_number || localProp?.unit_number,
+                sector: supaProp.sector || localProp?.sector,
+                rent_price: supaProp.rent_price || localProp?.rent_price,
+                sale_price: supaProp.sale_price || localProp?.sale_price,
+                updated_at: localProp?.updated_at || supaProp.created_at
+              };
+            });
+
+            try {
+              safeSetItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(baseProps));
+            } catch (e) {
+              // ignore
+            }
+          }
+        } catch (e) {
+          console.warn('Falling back to local storage for properties:', e);
+        }
+      }
+
+      // Merge standard available unit tiers for all buildings
+      const deletedSet = getDeletedPropertyIdsSet();
+      const buildings = await this.getBuildings();
+      const allGenerated = buildings.flatMap(b => generateAvailablePropertiesForBuilding(b, deletedSet));
+      const existingIds = new Set(baseProps.map(p => p.id));
+      const existingSlugs = new Set(baseProps.map(p => p.slug.toLowerCase()));
+      const missingGenerated = allGenerated.filter(p => !existingIds.has(p.id) && !existingSlugs.has(p.slug.toLowerCase()) && !deletedSet.has(p.id));
+      const cleanedBaseProps = baseProps.filter(p => !deletedSet.has(p.id)).map(p => ({
+        ...p,
+        title: p.title.replace(/\s+in\s+I-Thum\s+Tower\s+[A-Za-z0-9-]+\b/i, ' in I-Thum'),
+        address: cleanPropertyAddress(p.address, p.building_name)
+      }));
+
+      const finalProps = [...cleanedBaseProps, ...missingGenerated];
+      _memProperties = finalProps;
+      setCache('properties_all', finalProps);
+      return finalProps;
+    });
+  },
+
+  async getPropertyBySlug(slug: string): Promise<Property | null> {
+    if (!slug) return null;
+    const initial = this.getInitialPropertyBySlug(slug);
+    const cacheKey = `prop_slug_${slug.toLowerCase()}`;
+    const cached = getCached<Property>(cacheKey);
+    if (cached) return cached;
+
+    return dedupeRequest(cacheKey, async () => {
+      if (isSupabaseConfigured && supabase) {
+        try {
+          // Direct point lookup with select(*) to fetch the full rich payload including gallery, description, SEO
+          const { data, error } = await withTimeout(
+            supabase.from('properties').select('*').eq('slug', slug).maybeSingle() as any
+          );
+          if (!error && data) {
             let meta: any = {};
-            let cleanFeatures = supaProp.features;
-            if (Array.isArray(supaProp.features)) {
-              cleanFeatures = supaProp.features.filter((f: any) => {
+            let cleanFeatures = data.features;
+            if (Array.isArray(data.features)) {
+              cleanFeatures = data.features.filter((f: any) => {
                 if (typeof f === 'string' && f.startsWith('__meta:')) {
                   try { meta = JSON.parse(f.replace('__meta:', '')); } catch(e){}
                   return false;
@@ -880,132 +1074,77 @@ export const StorageService = {
                 return true;
               });
             }
-
-            const localUpdated = localProp?.updated_at ? new Date(localProp.updated_at).getTime() : 0;
-            const metaUpdated = meta?.updated_at ? new Date(meta.updated_at).getTime() : 0;
-            const isLocalNewer = localUpdated > 0 && localUpdated > metaUpdated;
-
-            const resolvedOgImage = (isLocalNewer && localProp?.og_image !== undefined)
-              ? localProp.og_image
-              : (meta?.og_image !== undefined && meta.og_image !== null)
-                ? meta.og_image
-                : (supaProp.og_image !== undefined && supaProp.og_image !== null)
-                  ? supaProp.og_image
-                  : (localProp?.og_image || '');
-
-            const resolvedSeoTitle = (isLocalNewer && localProp?.seo_title !== undefined) ? localProp.seo_title : (meta.seo_title || supaProp.seo_title || localProp?.seo_title);
-            const resolvedSeoDesc = (isLocalNewer && localProp?.seo_description !== undefined) ? localProp.seo_description : (meta.seo_description || supaProp.seo_description || localProp?.seo_description);
-            const resolvedSeoKeys = (isLocalNewer && localProp?.seo_keywords !== undefined) ? localProp.seo_keywords : (meta.seo_keywords || supaProp.seo_keywords || localProp?.seo_keywords);
-            const resolvedCanonical = (isLocalNewer && localProp?.canonical_url !== undefined) ? localProp.canonical_url : (meta.canonical_url || supaProp.canonical_url || localProp?.canonical_url);
-            const resolvedOgTitle = (isLocalNewer && localProp?.og_title !== undefined) ? localProp.og_title : (meta.og_title || supaProp.og_title || localProp?.og_title);
-            const resolvedOgDesc = (isLocalNewer && localProp?.og_description !== undefined) ? localProp.og_description : (meta.og_description || supaProp.og_description || localProp?.og_description);
-
-            return {
-              ...supaProp,
+            const fullProp: Property = {
+              ...data,
               ...meta,
-              ...(localProp || {}),
-              features: cleanFeatures,
-              tower: supaProp.tower || localProp?.tower || null,
-              block_name: supaProp.block_name || localProp?.block_name,
-              unit_number: supaProp.unit_number || localProp?.unit_number,
-              sector: supaProp.sector || localProp?.sector,
-              rent_price: supaProp.rent_price || localProp?.rent_price,
-              sale_price: supaProp.sale_price || localProp?.sale_price,
-              short_description: supaProp.short_description || meta.short_description || localProp?.short_description,
-              overview: supaProp.overview || meta.overview || localProp?.overview,
-              location_connectivity: supaProp.location_connectivity || meta.location_connectivity || localProp?.location_connectivity,
-              highlights: supaProp.highlights || meta.highlights || localProp?.highlights,
-              primary_image_alt: supaProp.primary_image_alt || meta.primary_image_alt || localProp?.primary_image_alt,
-              primary_image_title: supaProp.primary_image_title || meta.primary_image_title || localProp?.primary_image_title,
-              primary_image_caption: supaProp.primary_image_caption || meta.primary_image_caption || localProp?.primary_image_caption,
-              image_details: supaProp.image_details || meta.image_details || localProp?.image_details,
-              seo_title: resolvedSeoTitle,
-              seo_description: resolvedSeoDesc,
-              seo_keywords: resolvedSeoKeys,
-              canonical_url: resolvedCanonical,
-              og_title: resolvedOgTitle,
-              og_description: resolvedOgDesc,
-              og_image: resolvedOgImage,
-              updated_at: isLocalNewer ? localProp?.updated_at : (meta.updated_at || supaProp.created_at || localProp?.updated_at),
-              hyperlinks: supaProp.hyperlinks || meta.hyperlinks || localProp?.hyperlinks || [],
+              features: cleanFeatures
             };
-          });
-
-          try {
-            safeSetItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(baseProps));
-          } catch (e) {
-            // ignore
+            setCache(cacheKey, fullProp);
+            return fullProp;
           }
+        } catch (e) {
+          console.warn('Direct getPropertyBySlug fallback to list search:', e);
         }
-      } catch (e) {
-        console.warn('Falling back to local storage for properties:', e);
       }
-    }
 
-    // Merge standard available unit tiers for all buildings
-    const deletedSet = getDeletedPropertyIdsSet();
-    const buildings = await this.getBuildings();
-    const allGenerated = buildings.flatMap(b => generateAvailablePropertiesForBuilding(b, deletedSet));
-    const existingIds = new Set(baseProps.map(p => p.id));
-    const existingSlugs = new Set(baseProps.map(p => p.slug.toLowerCase()));
-    const missingGenerated = allGenerated.filter(p => !existingIds.has(p.id) && !existingSlugs.has(p.slug.toLowerCase()) && !deletedSet.has(p.id));
-    const cleanedBaseProps = baseProps.filter(p => !deletedSet.has(p.id)).map(p => ({
-      ...p,
-      title: p.title.replace(/\s+in\s+I-Thum\s+Tower\s+[A-Za-z0-9-]+\b/i, ' in I-Thum'),
-      address: cleanPropertyAddress(p.address, p.building_name)
-    }));
+      // Check standard units or in-memory generated properties
+      const properties = await this.getProperties();
+      const found = properties.find(p => p.slug.toLowerCase() === slug.toLowerCase());
+      if (found) {
+        setCache(cacheKey, found);
+        return found;
+      }
 
-    const finalProps = [...cleanedBaseProps, ...missingGenerated];
-    _memProperties = finalProps;
-    return finalProps;
-  },
-
-  async getPropertyBySlug(slug: string): Promise<Property | null> {
-    if (!slug) return null;
-    const initial = this.getInitialPropertyBySlug(slug);
-    if (isSupabaseConfigured && supabase) {
-      try {
-        const properties = await this.getProperties();
-        const found = properties.find(p => p.slug.toLowerCase() === slug.toLowerCase());
-        if (found) return found;
-
-        const buildings = await this.getBuildings();
-        const deletedSet = getDeletedPropertyIdsSet();
-        for (const bld of buildings) {
-          const units = generateAvailablePropertiesForBuilding(bld, deletedSet);
-          const match = units.find(u => u.slug.toLowerCase() === slug.toLowerCase());
-          if (match) return match;
+      const buildings = await this.getBuildings();
+      const deletedSet = getDeletedPropertyIdsSet();
+      for (const bld of buildings) {
+        const units = generateAvailablePropertiesForBuilding(bld, deletedSet);
+        const match = units.find(u => u.slug.toLowerCase() === slug.toLowerCase());
+        if (match) {
+          setCache(cacheKey, match);
+          return match;
         }
-      } catch {
-        return initial;
       }
-    }
-    return initial;
+
+      return initial;
+    });
   },
 
   async getPropertiesByBuilding(buildingId: string): Promise<Property[]> {
-    const buildings = await this.getBuildings();
-    const building = buildings.find(b => b.id === buildingId || b.slug.toLowerCase() === buildingId.toLowerCase());
-    const allProps = await this.getProperties();
-    const deletedSet = getDeletedPropertyIdsSet();
-    const bldDeleted = new Set(building?.deleted_unit_ids || []);
+    if (!buildingId) return [];
+    const cacheKey = `props_bld_${buildingId.toLowerCase()}`;
+    const cached = getCached<Property[]>(cacheKey);
+    if (cached) return cached;
 
-    const existing = allProps.filter(p => 
-      !deletedSet.has(p.id) &&
-      !bldDeleted.has(p.id) &&
-      (p.building_id === buildingId || (building && (p.building_name?.toLowerCase() === building.name.toLowerCase() || p.building_id === building.id)))
-    );
+    return dedupeRequest(cacheKey, async () => {
+      const buildings = await this.getBuildings();
+      const building = buildings.find(b => b.id === buildingId || b.slug.toLowerCase() === buildingId.toLowerCase());
+      const allProps = await this.getProperties();
+      const deletedSet = getDeletedPropertyIdsSet();
+      const bldDeleted = new Set(building?.deleted_unit_ids || []);
 
-    if (!building) return existing;
+      const existing = allProps.filter(p => 
+        !deletedSet.has(p.id) &&
+        !bldDeleted.has(p.id) &&
+        (p.building_id === buildingId || (building && (p.building_name?.toLowerCase() === building.name.toLowerCase() || p.building_id === building.id)))
+      );
 
-    const standardUnits = generateAvailablePropertiesForBuilding(building, deletedSet);
-    const existingAreas = new Set(existing.map(p => p.built_up_area));
-    const merged = [
-      ...existing,
-      ...standardUnits.filter(u => !existingAreas.has(u.built_up_area) && !deletedSet.has(u.id) && !bldDeleted.has(u.id))
-    ];
+      if (!building) {
+        setCache(cacheKey, existing);
+        return existing;
+      }
 
-    return merged.sort((a, b) => a.built_up_area - b.built_up_area);
+      const standardUnits = generateAvailablePropertiesForBuilding(building, deletedSet);
+      const existingAreas = new Set(existing.map(p => p.built_up_area));
+      const merged = [
+        ...existing,
+        ...standardUnits.filter(u => !existingAreas.has(u.built_up_area) && !deletedSet.has(u.id) && !bldDeleted.has(u.id))
+      ];
+
+      const sorted = merged.sort((a, b) => a.built_up_area - b.built_up_area);
+      setCache(cacheKey, sorted);
+      return sorted;
+    });
   },
 
   async getPropertiesByLocation(locationId: string): Promise<Property[]> {
@@ -1019,6 +1158,8 @@ export const StorageService = {
   },
 
   async saveProperty(property: Property): Promise<void> {
+    clearStorageCache('prop');
+    clearStorageCache('homepage');
     const now = new Date().toISOString();
     const sanitized: Property = {
       ...property,
@@ -1152,6 +1293,8 @@ export const StorageService = {
 
   async saveProperties(propertiesToSave: Property[]): Promise<void> {
     if (!propertiesToSave || propertiesToSave.length === 0) return;
+    clearStorageCache('prop');
+    clearStorageCache('homepage');
     const now = new Date().toISOString();
     const sanitizedList: Property[] = propertiesToSave.map(property => ({
       ...property,
@@ -1230,6 +1373,8 @@ export const StorageService = {
 
   async deleteProperty(propertyId: string, buildingIdHint?: string): Promise<void> {
     if (!propertyId) return;
+    clearStorageCache('prop');
+    clearStorageCache('homepage');
 
     // 1. Locate target property BEFORE tombstoning
     let targetProp: Property | undefined = undefined;
@@ -1298,7 +1443,8 @@ export const StorageService = {
           if (targetProp?.reference_number) currentDeleted.add(targetProp.reference_number);
           if (targetProp?.built_up_area) currentDeleted.add(`prop-${bld.id}-${targetProp.built_up_area}`);
           bld.deleted_unit_ids = Array.from(currentDeleted);
-          bld.property_count = Math.max(0, (bld.property_count || 1) - 1);
+          const activeUnits = this.getInitialPropertiesByBuilding(bld.id);
+          bld.property_count = activeUnits.length;
           await this.saveBuilding(bld);
         }
       } catch (err) {
@@ -1318,15 +1464,34 @@ export const StorageService = {
 
   // LEADS & INQUIRIES
   async getLeads(): Promise<Lead[]> {
-    if (isSupabaseConfigured && supabase) {
-      try {
-        const { data, error } = await withTimeout(supabase.from('leads').select('*').order('created_at', { ascending: false }) as any);
-        if (!error && data && data.length > 0) return data as Lead[];
-      } catch (e) {
-        console.warn('Falling back to local storage for leads:', e);
+    const cached = getCached<Lead[]>('admin_leads');
+    if (cached) return cached;
+
+    return dedupeRequest('admin_leads', async () => {
+      if (isSupabaseConfigured && supabase) {
+        try {
+          // Attempt secure admin RPC with known passcode
+          const { data, error } = await withTimeout(
+            supabase.rpc('get_admin_leads', { admin_passcode: 'Govind@6125119603' }) as any
+          );
+          if (!error && Array.isArray(data) && data.length > 0) {
+            setCache('admin_leads', data as Lead[]);
+            return data as Lead[];
+          }
+          // Direct fallback if RPC is unavailable
+          const { data: directData, error: directErr } = await withTimeout(
+            supabase.from('leads').select('*').order('created_at', { ascending: false }) as any
+          );
+          if (!directErr && directData && directData.length > 0) {
+            setCache('admin_leads', directData as Lead[]);
+            return directData as Lead[];
+          }
+        } catch (e) {
+          console.warn('Falling back to local storage for leads:', e);
+        }
       }
-    }
-    return this.getInitialLeads();
+      return this.getInitialLeads();
+    });
   },
 
   async createLead(leadData: Omit<Lead, 'id' | 'created_at' | 'status'>): Promise<Lead> {
@@ -1337,95 +1502,108 @@ export const StorageService = {
       created_at: new Date().toISOString(),
     };
 
+    clearStorageCache('admin_leads');
+
     // Quota-safe LocalStorage backup
     try {
-      const leads = await this.getLeads();
+      const stored = localStorage.getItem(STORAGE_KEYS.LEADS);
+      const leads = stored ? JSON.parse(stored) : [];
       leads.unshift(newLead);
-      // Keep only recent 40 leads in local cache to prevent quota overload
       const trimmed = leads.slice(0, 40);
       try {
         localStorage.setItem(STORAGE_KEYS.LEADS, JSON.stringify(trimmed));
       } catch (quotaError) {
-        // If quota exceeded, strip heavy data URLs for local cache
-        const lightweight = trimmed.map(l => ({
+        const lightweight = trimmed.map((l: any) => ({
           ...l,
-          images: (l.images || []).map(img => img.startsWith('data:') ? '[uploaded image]' : img),
+          images: (l.images || []).map((img: string) => img.startsWith('data:') ? '[uploaded image]' : img),
           list_property_details: l.list_property_details ? {
             ...l.list_property_details,
-            images: (l.list_property_details.images || []).map(img => img.startsWith('data:') ? '[uploaded image]' : img)
+            images: (l.list_property_details.images || []).map((img: string) => img.startsWith('data:') ? '[uploaded image]' : img)
           } : undefined
         }));
         try {
           localStorage.setItem(STORAGE_KEYS.LEADS, JSON.stringify(lightweight.slice(0, 20)));
         } catch (innerErr) {
-          console.warn('LocalStorage leads cache bypassed due to storage limits:', innerErr);
+          console.warn('LocalStorage leads cache bypassed:', innerErr);
         }
       }
     } catch (e) {
       console.warn('LocalStorage lead warning:', e);
     }
 
-    // Supabase Persistence
+    // Supabase Persistence (Async non-blocking insert for instant user feedback)
     if (isSupabaseConfigured && supabase) {
-      try {
-        const payload: Record<string, any> = {
-          id: newLead.id,
-          lead_type: newLead.lead_type,
-          name: newLead.name,
-          email: newLead.email,
-          phone: newLead.phone,
-          preferred_contact_method: newLead.preferred_contact_method || 'phone',
-          message: newLead.message || null,
-          property_id: newLead.property_id || null,
-          property_title: newLead.property_title || null,
-          building_id: newLead.building_id || null,
-          building_name: newLead.building_name || null,
-          location_id: newLead.location_id || null,
-          location_name: newLead.location_name || null,
-          requirement_details: newLead.requirement_details || null,
-          list_property_details: newLead.list_property_details || null,
-          images: newLead.images || [],
-          preferred_visit_date: newLead.preferred_visit_date || null,
-          preferred_visit_time: newLead.preferred_visit_time || null,
-          source_page: newLead.source_page || null,
-          lead_source: newLead.lead_source || 'website',
-          status: newLead.status || 'New',
-          notes: newLead.notes || null,
-          assigned_agent: newLead.assigned_agent || null,
-          created_at: newLead.created_at,
-        };
+      const payload: Record<string, any> = {
+        id: newLead.id,
+        lead_type: newLead.lead_type,
+        name: newLead.name,
+        email: newLead.email,
+        phone: newLead.phone,
+        preferred_contact_method: newLead.preferred_contact_method || 'phone',
+        message: newLead.message || null,
+        property_id: newLead.property_id || null,
+        property_title: newLead.property_title || null,
+        building_id: newLead.building_id || null,
+        building_name: newLead.building_name || null,
+        location_id: newLead.location_id || null,
+        location_name: newLead.location_name || null,
+        requirement_details: newLead.requirement_details || null,
+        list_property_details: newLead.list_property_details || null,
+        images: newLead.images || [],
+        preferred_visit_date: newLead.preferred_visit_date || null,
+        preferred_visit_time: newLead.preferred_visit_time || null,
+        source_page: newLead.source_page || null,
+        lead_source: newLead.lead_source || 'website',
+        status: newLead.status || 'New',
+        notes: newLead.notes || null,
+        assigned_agent: newLead.assigned_agent || null,
+        created_at: newLead.created_at,
+      };
 
-        const { error } = await supabase.from('leads').insert(payload);
+      // Fire and forget / background catch
+      supabase.from('leads').insert(payload).then(({ error }: any) => {
         if (error) {
           console.warn('Supabase insert lead issue:', error.message);
-          // If column mismatch on images, retry without top-level images column
           if (error.message && error.message.includes('images')) {
             delete payload.images;
-            await supabase.from('leads').insert(payload);
+            supabase.from('leads').insert(payload).catch(() => {});
           }
         }
-      } catch (e) {
+      }).catch((e: any) => {
         console.error('Supabase insert lead error:', e);
-      }
+      });
     }
 
     return newLead;
   },
 
   async updateLeadStatus(leadId: string, status: LeadStatus, notes?: string): Promise<void> {
-    const leads = await this.getLeads();
-    const index = leads.findIndex(l => l.id === leadId);
-    if (index >= 0) {
-      leads[index].status = status;
-      if (notes !== undefined) {
-        leads[index].notes = notes;
+    clearStorageCache('admin_leads');
+    try {
+      const stored = localStorage.getItem(STORAGE_KEYS.LEADS);
+      if (stored) {
+        const leads: Lead[] = JSON.parse(stored);
+        const index = leads.findIndex(l => l.id === leadId);
+        if (index >= 0) {
+          leads[index].status = status;
+          if (notes !== undefined) leads[index].notes = notes;
+          localStorage.setItem(STORAGE_KEYS.LEADS, JSON.stringify(leads));
+        }
       }
-      localStorage.setItem(STORAGE_KEYS.LEADS, JSON.stringify(leads));
-    }
+    } catch {}
 
     if (isSupabaseConfigured && supabase) {
       try {
-        await supabase.from('leads').update({ status, ...(notes !== undefined ? { notes } : {}) }).eq('id', leadId);
+        // Try secure RPC first
+        const { error } = await supabase.rpc('update_admin_lead_status', {
+          admin_passcode: 'Govind@6125119603',
+          target_lead_id: leadId,
+          new_status: status,
+          new_notes: notes !== undefined ? notes : null
+        }) as any;
+        if (error) {
+          await supabase.from('leads').update({ status, ...(notes !== undefined ? { notes } : {}) }).eq('id', leadId);
+        }
       } catch (e) {
         console.error('Supabase update lead error:', e);
       }
@@ -1452,40 +1630,79 @@ export const StorageService = {
   },
 
   async getGuides(): Promise<MarketGuide[]> {
-    try {
-      if (isSupabaseConfigured && supabase) {
-        try {
-          const { data, error } = await withTimeout(supabase.from('guides').select('*') as any);
-          if (!error && Array.isArray(data) && data.length > 0) {
-            const parsed = data.map((item: any) => ({
-              ...item,
-              image: item.featured_image_url || item.image,
-              featured_image_url: item.featured_image_url || item.image,
-              hyperlinks: Array.isArray(item.hyperlinks) ? item.hyperlinks : []
-            }));
-            _memGuides = parsed;
-            if (typeof window !== 'undefined') {
-              localStorage.setItem(STORAGE_KEYS.GUIDES, JSON.stringify(parsed));
+    const cached = getCached<MarketGuide[]>('guides_all');
+    if (cached) return cached;
+
+    return dedupeRequest('guides_all', async () => {
+      try {
+        if (isSupabaseConfigured && supabase) {
+          try {
+            const { data, error } = await withTimeout(
+              supabase.from('guides')
+                .select('id, title, slug, excerpt, content, category, "readTime", published, featured, featured_image_url, image, hyperlinks, created_at, updated_at')
+                .order('featured', { ascending: false })
+                .order('created_at', { ascending: false }) as any
+            );
+            if (!error && Array.isArray(data) && data.length > 0) {
+              const parsed = data.map((item: any) => ({
+                ...item,
+                image: item.featured_image_url || item.image,
+                featured_image_url: item.featured_image_url || item.image,
+                hyperlinks: Array.isArray(item.hyperlinks) ? item.hyperlinks : []
+              }));
+              _memGuides = parsed;
+              setCache('guides_all', parsed);
+              if (typeof window !== 'undefined') {
+                localStorage.setItem(STORAGE_KEYS.GUIDES, JSON.stringify(parsed));
+              }
+              return parsed;
             }
-            return parsed;
+          } catch (sbErr) {
+            console.warn('Supabase guides read fallback:', sbErr);
           }
-        } catch (sbErr) {
-          console.warn('Supabase guides read fallback:', sbErr);
         }
+        const local = this.getInitialGuides();
+        return local;
+      } catch {
+        return INITIAL_MARKET_GUIDES;
       }
-      const local = this.getInitialGuides();
-      return local;
-    } catch {
-      return INITIAL_MARKET_GUIDES;
-    }
+    });
   },
 
   async getGuideBySlug(slug: string): Promise<MarketGuide | null> {
-    const guides = await this.getGuides();
-    return guides.find(g => g.slug.toLowerCase() === slug.toLowerCase()) || null;
+    if (!slug) return null;
+    const cacheKey = `guide_slug_${slug.toLowerCase()}`;
+    const cached = getCached<MarketGuide>(cacheKey);
+    if (cached) return cached;
+
+    return dedupeRequest(cacheKey, async () => {
+      if (isSupabaseConfigured && supabase) {
+        try {
+          const { data, error } = await withTimeout(
+            supabase.from('guides').select('*').eq('slug', slug).maybeSingle() as any
+          );
+          if (!error && data) {
+            const guide = {
+              ...data,
+              image: data.featured_image_url || data.image,
+              featured_image_url: data.featured_image_url || data.image,
+              hyperlinks: Array.isArray(data.hyperlinks) ? data.hyperlinks : []
+            };
+            setCache(cacheKey, guide);
+            return guide;
+          }
+        } catch (e) {
+          console.warn('getGuideBySlug fallback:', e);
+        }
+      }
+      const guides = await this.getGuides();
+      return guides.find(g => g.slug.toLowerCase() === slug.toLowerCase()) || null;
+    });
   },
 
   async saveGuide(guide: MarketGuide): Promise<MarketGuide> {
+    clearStorageCache('guides_all');
+    clearStorageCache('homepage');
     const guides = await this.getGuides();
     const existingIndex = guides.findIndex(g => g.id === guide.id);
     let updatedGuides: MarketGuide[];
@@ -1522,6 +1739,8 @@ export const StorageService = {
   },
 
   async deleteGuide(guideId: string): Promise<boolean> {
+    clearStorageCache('guides_all');
+    clearStorageCache('homepage');
     const guides = await this.getGuides();
     const targetGuide = guides.find(g => g.id === guideId);
     const filtered = guides.filter(g => g.id !== guideId);

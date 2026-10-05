@@ -30,15 +30,15 @@ export const LocationsDirectoryPage: React.FC = () => {
         ]}
       />
 
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-6">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
         <div>
-          <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
+          <span className="text-[10px] sm:text-[11px] font-mono font-semibold uppercase tracking-widest text-brand-600 dark:text-brand-400">
             Geographic Coverage
           </span>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white font-['Outfit'] mt-1">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-slate-900 dark:text-white tracking-tight mt-1">
             Commercial Locations in Noida & NCR
           </h1>
-          <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1">
             Select a commercial sector to explore buildings, IT parks, and verified office/warehouse inventory.
           </p>
         </div>
@@ -49,10 +49,10 @@ export const LocationsDirectoryPage: React.FC = () => {
             <button
               key={c}
               onClick={() => setCityFilter(c)}
-              className={`px-4 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+              className={`px-3 py-1 rounded-none text-xs font-mono uppercase tracking-wider transition-all border ${
                 cityFilter === c
-                  ? 'bg-brand-600 text-white shadow-md'
-                  : 'glass-card hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
+                  ? 'bg-brand-600 text-white border-brand-600 font-semibold'
+                  : 'bg-white dark:bg-[#0B132B] border-slate-200 dark:border-slate-800 hover:border-brand-500 text-slate-700 dark:text-slate-300'
               }`}
             >
               {c}
@@ -61,9 +61,9 @@ export const LocationsDirectoryPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredLocations.map((loc) => (
-          <LocationCard key={loc.id} location={loc} />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0 border-t border-l border-slate-200 dark:border-slate-800">
+        {filteredLocations.map((loc, idx) => (
+          <LocationCard key={loc.id} location={loc} index={idx} />
         ))}
       </div>
     </div>

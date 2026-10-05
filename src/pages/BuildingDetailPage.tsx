@@ -121,7 +121,7 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Gallery / Image Showcase (7 Cols) */}
         <div className="lg:col-span-7 space-y-4">
-          <div className="relative aspect-[16/10] rounded-3xl overflow-hidden glass-card border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 shadow-xl">
+          <div className="relative aspect-[16/10] rounded-none overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-[#070C1E] shadow-none">
             <img
               src={activeImage || building.hero_image || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80'}
               alt={getTowerImageAlt(building, activeImage === building.hero_image ? building.hero_image_alt : undefined)}
@@ -134,7 +134,7 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
               }}
             />
             <div className="absolute top-4 left-4">
-              <span className="px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider bg-brand-600 text-white shadow-lg">
+              <span className="px-3 py-1.5 rounded-none text-[10px] font-semibold uppercase tracking-wider bg-stone-900 text-white border border-stone-800">
                 Grade-A Commercial Project
               </span>
             </div>
@@ -142,7 +142,7 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
 
           {/* Image Caption */}
           {building.hero_image_caption && (
-            <p className="text-xs text-slate-500 dark:text-slate-400 italic px-2">
+            <p className="text-xs text-stone-500 dark:text-stone-400 italic px-1">
               {building.hero_image_caption}
             </p>
           )}
@@ -151,20 +151,19 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
           {(() => {
             const rawGallery = Array.isArray(building.gallery) ? building.gallery : [];
             const displayHero = building.hero_image;
-            // Filter out empty items and any duplicates of hero image
             const cleanGallery = rawGallery.filter(img => img && img !== displayHero);
             const allThumbnails = [displayHero, ...cleanGallery].filter(Boolean);
 
             if (allThumbnails.length <= 1) return null;
 
             return (
-              <div className="flex items-center gap-3 overflow-x-auto pb-2">
+              <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto pb-2">
                 {allThumbnails.map((img, idx) => (
                   <button
                     key={idx}
                     onClick={() => setActiveImage(img)}
-                    className={`relative w-20 h-16 rounded-xl overflow-hidden border-2 shrink-0 transition-all cursor-pointer ${
-                      activeImage === img ? 'border-brand-500 scale-105 shadow-md' : 'border-transparent opacity-70 hover:opacity-100'
+                    className={`relative w-20 h-16 rounded-none overflow-hidden border shrink-0 transition-all cursor-pointer ${
+                      activeImage === img ? 'border-slate-900 dark:border-white scale-[1.02]' : 'border-slate-200 dark:border-slate-800 opacity-70 hover:opacity-100'
                     }`}
                   >
                     <img 
@@ -182,40 +181,40 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
 
         {/* Building Title & Quick Commercial Specs (5 Cols) */}
         <div className="lg:col-span-5 space-y-6">
-          <div className="glass-card rounded-3xl p-6 sm:p-7 border border-slate-200/90 dark:border-slate-800 bg-white/70 dark:bg-[#0B132B]/75 space-y-5">
+          <div className="rounded-none p-6 sm:p-7 border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B132B] space-y-5">
             <div>
               <div className="flex flex-wrap items-center gap-1.5 mb-2">
                 {building.categories && building.categories.length > 0 ? (
                   building.categories.map((cat, idx) => (
                     <span
                       key={idx}
-                      className="px-2.5 py-0.5 rounded-lg text-[11px] font-bold bg-brand-50 dark:bg-brand-950/80 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800 uppercase tracking-wider"
+                      className="px-2.5 py-0.5 rounded-none text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 uppercase tracking-wider"
                     >
                       {cat.replace(/-/g, ' ')}
                     </span>
                   ))
                 ) : (
-                  <div className="flex items-center gap-2 text-xs font-semibold text-brand-600 dark:text-brand-400 uppercase tracking-wider">
-                    <Building2 className="w-4 h-4" />
+                  <div className="flex items-center gap-2 text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    <Building2 className="w-4 h-4 text-brand-600 dark:text-brand-400" />
                     <span>{building.category?.replace(/-/g, ' ') || 'Commercial Tower'}</span>
                   </div>
                 )}
                 {building.towers && building.towers.length > 1 && (
-                  <span className="px-2.5 py-0.5 rounded-lg text-[11px] font-bold bg-cyan-50 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800">
+                  <span className="px-2.5 py-0.5 rounded-none text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700">
                     {building.towers.length} Towers / Blocks
                   </span>
                 )}
               </div>
-              <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white font-['Outfit'] tracking-tight">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-slate-900 dark:text-white tracking-tight">
                 {building.name}
               </h1>
-              <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-1.5">
+              <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-1 font-sans">
                 <div className="flex items-center gap-1">
-                  <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
+                  <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                   <span>{building.address}</span>
                 </div>
                 {building.locations && building.locations.length > 1 && (
-                  <div className="flex items-center gap-1 text-[11px] text-brand-600 dark:text-brand-400 font-semibold">
+                  <div className="flex items-center gap-1 text-[11px] text-slate-600 dark:text-slate-400 font-medium">
                     <span>• Serving Sectors:</span>
                     <span>{building.location_names?.join(', ') || building.location_name}</span>
                   </div>
@@ -224,28 +223,28 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
             </div>
 
             {/* Quick Metrics */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 py-4 border-y border-slate-100 dark:border-slate-800 text-xs">
-              <div>
-                <span className="text-slate-400 block font-medium">Available Units</span>
-                <span className="text-base font-bold text-slate-900 dark:text-white mt-0.5 block">
-                  {properties.length} Available
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 py-4 border-y border-slate-200 dark:border-slate-800 text-xs">
+              <div className="p-2.5 rounded-none bg-slate-50 dark:bg-[#070C1E] border border-slate-200 dark:border-slate-800">
+                <span className="text-slate-400 block text-[10px] uppercase tracking-wider font-semibold">Available</span>
+                <span className="text-sm font-semibold text-slate-900 dark:text-white mt-0.5 block">
+                  {properties.length} Units
                 </span>
               </div>
-              <div>
-                <span className="text-slate-400 block font-medium">Structure</span>
-                <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white mt-0.5 block truncate" title={getBuildingStructureDisplay(building)}>
+              <div className="p-2.5 rounded-none bg-slate-50 dark:bg-[#070C1E] border border-slate-200 dark:border-slate-800">
+                <span className="text-slate-400 block text-[10px] uppercase tracking-wider font-semibold">Structure</span>
+                <span className="text-xs font-semibold text-slate-900 dark:text-white mt-0.5 block truncate" title={getBuildingStructureDisplay(building)}>
                   {getBuildingStructureDisplay(building)}
                 </span>
               </div>
-              <div>
-                <span className="text-slate-400 block font-medium">Towers / Blocks</span>
-                <span className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 mt-0.5 block truncate" title={building.tower_details || 'Single Tower'}>
+              <div className="p-2.5 rounded-none bg-slate-50 dark:bg-[#070C1E] border border-slate-200 dark:border-slate-800">
+                <span className="text-slate-400 block text-[10px] uppercase tracking-wider font-semibold">Towers</span>
+                <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 mt-0.5 block truncate" title={building.tower_details || 'Single Tower'}>
                   {building.tower_details || (building.towers && building.towers.length > 1 ? `${building.towers.length} Towers` : 'Single Tower')}
                 </span>
               </div>
-              <div>
-                <span className="text-slate-400 block font-medium">Rent Guidance</span>
-                <span className="text-xs sm:text-sm font-semibold text-brand-600 dark:text-brand-400 mt-0.5 block">
+              <div className="p-2.5 rounded-none bg-slate-50 dark:bg-[#070C1E] border border-slate-200 dark:border-slate-800">
+                <span className="text-slate-400 block text-[10px] uppercase tracking-wider font-semibold">Guidance</span>
+                <span className="text-xs font-semibold text-slate-900 dark:text-white mt-0.5 block">
                   {building.rent_range || 'On Request'}
                 </span>
               </div>
@@ -255,7 +254,7 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
             <div className="space-y-2.5 pt-2">
               <button
                 onClick={() => onOpenEnquiry(properties[0] || null)}
-                className="btn-glass-primary w-full py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2"
+                className="btn-glass-primary w-full py-3 rounded-none font-semibold text-xs flex items-center justify-center gap-2 uppercase tracking-wider"
               >
                 <Calendar className="w-4 h-4" />
                 <span>Schedule Building Site Visit</span>
@@ -265,7 +264,7 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
                 href={waLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn-whatsapp w-full py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2"
+                className="btn-whatsapp w-full py-3 rounded-none font-semibold text-xs flex items-center justify-center gap-2 uppercase tracking-wider"
               >
                 <WhatsAppIcon className="w-4 h-4" />
                 <span>Enquire via WhatsApp</span>
@@ -273,9 +272,9 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
 
               <a
                 href="tel:+918750098666"
-                className="w-full py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 font-semibold text-sm flex items-center justify-center gap-2 transition-colors"
+                className="w-full py-2.5 rounded-none border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#0B132B] hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 font-semibold text-xs flex items-center justify-center gap-2 transition-colors uppercase tracking-wider"
               >
-                <PhoneCall className="w-4 h-4 text-brand-500" />
+                <PhoneCall className="w-4 h-4 text-brand-600 dark:text-brand-400" />
                 <span>Call Commercial Specialist (+91 87500 98666)</span>
               </a>
             </div>
@@ -283,11 +282,11 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
         </div>
       </div>
 
-      {/* Building Overview & Technical Specifications (Section 10) */}
+      {/* Building Overview & Technical Specifications */}
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 glass-card rounded-3xl p-6 sm:p-8 bg-white/70 dark:bg-[#0B132B]/75 border border-slate-200/90 dark:border-slate-800 space-y-6">
+        <div className="lg:col-span-2 rounded-none p-6 sm:p-8 bg-white dark:bg-[#0B132B] border border-slate-200 dark:border-slate-800 space-y-6">
           <div>
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white font-['Outfit']">
+            <h2 className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white">
               Building Overview & Specifications
             </h2>
             {building.short_description && (
@@ -296,7 +295,7 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
               </p>
             )}
             <div 
-              className="overview-text text-sm text-slate-600 dark:text-slate-300 mt-3 leading-relaxed space-y-3 prose dark:prose-invert max-w-none"
+              className="overview-text text-sm text-slate-600 dark:text-slate-400 mt-3 leading-relaxed space-y-3 prose dark:prose-invert max-w-none font-sans"
               dangerouslySetInnerHTML={{
                 __html: applyHyperlinksToContent(
                   (building.overview || building.description || '').replace(/\n/g, '<br/>'),
@@ -307,12 +306,12 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
           </div>
 
           {building.location_connectivity && (
-            <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400 mb-2">
+            <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
+              <h3 className="text-xs font-semibold uppercase tracking-[0.15em] text-slate-500 dark:text-slate-400 mb-2">
                 Location & Connectivity
               </h3>
               <div 
-                className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed prose dark:prose-invert max-w-none"
+                className="text-sm text-stone-600 dark:text-stone-400 leading-relaxed prose dark:prose-invert max-w-none font-sans"
                 dangerouslySetInnerHTML={{
                   __html: applyHyperlinksToContent(
                     building.location_connectivity.replace(/\n/g, '<br/>'),
@@ -323,14 +322,14 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
             </div>
           )}
 
-          <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
+          <div className="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+            <h3 className="text-xs font-semibold uppercase tracking-[0.15em] text-slate-500 dark:text-slate-400">
               Technical Infrastructure & Structure
             </h3>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800">
-                <span className="text-slate-400 block font-medium">Floor Structure</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              <div className="p-3 rounded-none bg-slate-50 dark:bg-[#070C1E] border border-slate-200 dark:border-slate-800">
+                <span className="text-slate-400 block font-medium uppercase tracking-wider text-[10px]">Floor Structure</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200 mt-1 block">
                   {getBuildingStructureDisplay(building)}
                 </span>
@@ -340,26 +339,26 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
                   </span>
                 )}
               </div>
-              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800">
-                <span className="text-slate-400 block font-medium">Towers & Wings</span>
+              <div className="p-3 rounded-none bg-slate-50 dark:bg-[#070C1E] border border-slate-200 dark:border-slate-800">
+                <span className="text-slate-400 block font-medium uppercase tracking-wider text-[10px]">Towers & Wings</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200 mt-1 block">
                   {building.tower_details || (building.towers && building.towers.length > 0 ? building.towers.join(', ') : 'Single Standalone Tower')}
                 </span>
               </div>
-              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800">
-                <span className="text-slate-400 block font-medium">Power Backup</span>
+              <div className="p-3 rounded-none bg-slate-50 dark:bg-[#070C1E] border border-slate-200 dark:border-slate-800">
+                <span className="text-slate-400 block font-medium uppercase tracking-wider text-[10px]">Power Backup</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200 mt-1 block">{building.power_backup}</span>
               </div>
-              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800">
-                <span className="text-slate-400 block font-medium">Elevator Capacity</span>
+              <div className="p-3 rounded-none bg-slate-50 dark:bg-[#070C1E] border border-slate-200 dark:border-slate-800">
+                <span className="text-slate-400 block font-medium uppercase tracking-wider text-[10px]">Elevator Capacity</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200 mt-1 block">{building.lifts}</span>
               </div>
-              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800">
-                <span className="text-slate-400 block font-medium">Car & Vehicle Parking</span>
+              <div className="p-3 rounded-none bg-slate-50 dark:bg-[#070C1E] border border-slate-200 dark:border-slate-800">
+                <span className="text-slate-400 block font-medium uppercase tracking-wider text-[10px]">Car & Vehicle Parking</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200 mt-1 block">{building.parking}</span>
               </div>
-              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800">
-                <span className="text-slate-400 block font-medium">Security Infrastructure</span>
+              <div className="p-3 rounded-none bg-slate-50 dark:bg-[#070C1E] border border-slate-200 dark:border-slate-800">
+                <span className="text-slate-400 block font-medium uppercase tracking-wider text-[10px]">Security Infrastructure</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200 mt-1 block">{building.security}</span>
               </div>
             </div>
@@ -367,17 +366,17 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
 
           {/* Amenities */}
           {building.amenities && building.amenities.length > 0 && (
-            <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400 mb-3">
+            <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
+              <h3 className="text-xs font-semibold uppercase tracking-[0.15em] text-slate-500 dark:text-slate-400 mb-3">
                 Building Features & Campus Amenities
               </h3>
               <div className="flex flex-wrap gap-2">
                 {building.amenities.map((item, i) => (
                   <span
                     key={i}
-                    className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 flex items-center gap-1.5"
+                    className="px-3 py-1.5 rounded-none text-xs font-medium bg-slate-50 dark:bg-[#070C1E] text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800 flex items-center gap-1.5"
                   >
-                    <CheckCircle2 className="w-3.5 h-3.5 text-accent-teal" />
+                    <CheckCircle2 className="w-3.5 h-3.5 text-slate-500" />
                     {item}
                   </span>
                 ))}
@@ -387,26 +386,26 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
         </div>
 
         {/* Transit & Landmarks */}
-        <div className="glass-card rounded-3xl p-6 sm:p-8 bg-white/70 dark:bg-[#0B132B]/75 border border-slate-200/90 dark:border-slate-800 space-y-6">
-          <h2 className="text-lg font-bold text-slate-900 dark:text-white font-['Outfit']">
+        <div className="rounded-none p-6 sm:p-8 bg-white dark:bg-[#0B132B] border border-slate-200 dark:border-slate-800 space-y-6">
+          <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
             Transit & Surroundings
           </h2>
 
-          <div className="space-y-4 text-xs">
+          <div className="space-y-4 text-xs font-sans">
             <div>
-              <span className="text-slate-400 block font-medium mb-1">Public Transit / Metro:</span>
+              <span className="text-slate-400 block font-medium uppercase tracking-wider text-[10px] mb-1">Public Transit / Metro:</span>
               <p className="text-slate-700 dark:text-slate-300 leading-relaxed font-semibold">
                 {building.nearby_transport}
               </p>
             </div>
 
             {building.nearby_landmarks && building.nearby_landmarks.length > 0 && (
-              <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
-                <span className="text-slate-400 block font-medium mb-2">Key Landmarks:</span>
+              <div className="pt-3 border-t border-slate-200 dark:border-slate-800">
+                <span className="text-slate-400 block font-medium uppercase tracking-wider text-[10px] mb-2">Key Landmarks:</span>
                 <ul className="space-y-2">
                   {building.nearby_landmarks.map((landmark, idx) => (
                     <li key={idx} className="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-medium">
-                      <Compass className="w-3.5 h-3.5 text-brand-500 shrink-0" />
+                      <Compass className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400 shrink-0" />
                       <span>{landmark}</span>
                     </li>
                   ))}
@@ -417,25 +416,25 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
         </div>
       </section>
 
-      {/* MANDATORY HIERARCHY: AVAILABLE PROPERTIES IN THIS BUILDING (SECTION 11) */}
+      {/* MANDATORY HIERARCHY: AVAILABLE PROPERTIES IN THIS BUILDING */}
       <section className="space-y-6" id="building-inventory">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-brand-600 dark:text-brand-400">
                 Immediate Verified Inventory
               </span>
             </div>
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white font-['Outfit'] mt-0.5">
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-slate-900 dark:text-white tracking-tight mt-0.5">
               Available Properties in {building.name} ({properties.length})
             </h2>
           </div>
 
-          {/* Category Tabs: All, Compact & Mid-Size, Enterprise Floors */}
-          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs self-start md:self-auto flex-wrap">
+          {/* Category Tabs */}
+          <div className="flex items-center gap-1 p-1 rounded-none bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-xs self-start md:self-auto flex-wrap">
             <button
               onClick={() => { setUnitFilter('all'); setSelectedArea(null); }}
-              className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
+              className={`px-3 py-1.5 rounded-none font-semibold transition-all uppercase tracking-wider text-[11px] ${
                 unitFilter === 'all' && selectedArea === null
                   ? 'bg-brand-600 text-white shadow-sm'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -445,30 +444,30 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
             </button>
             <button
               onClick={() => { setUnitFilter('compact'); setSelectedArea(null); }}
-              className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
+              className={`px-3 py-1.5 rounded-none font-semibold transition-all uppercase tracking-wider text-[11px] ${
                 unitFilter === 'compact' && selectedArea === null
                   ? 'bg-brand-600 text-white shadow-sm'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              Compact & Mid-Size (600 - 2.6K sq.ft)
+              Compact & Mid-Size
             </button>
             <button
               onClick={() => { setUnitFilter('enterprise'); setSelectedArea(null); }}
-              className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
+              className={`px-3 py-1.5 rounded-none font-semibold transition-all uppercase tracking-wider text-[11px] ${
                 unitFilter === 'enterprise' && selectedArea === null
                   ? 'bg-brand-600 text-white shadow-sm'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              Enterprise Floors (20K - 100K+ sq.ft)
+              Enterprise Floors
             </button>
           </div>
         </div>
 
         {/* Quick Size Pills */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none text-xs">
-          <span className="text-slate-400 shrink-0 font-medium mr-1">Quick Size Filter:</span>
+          <span className="text-slate-400 shrink-0 font-medium mr-1 uppercase tracking-wider text-[10px]">Filter Size:</span>
           {[
             { label: 'All', value: null },
             { label: '600 sq.ft', value: 600 },
@@ -498,10 +497,10 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
                 setSelectedArea(pill.value);
                 if (pill.value === null) setUnitFilter('all');
               }}
-              className={`px-2.5 py-1 rounded-lg shrink-0 font-semibold transition-all border ${
+              className={`px-2.5 py-1 rounded-none shrink-0 font-semibold transition-all border text-[11px] ${
                 selectedArea === pill.value
-                  ? 'bg-brand-500 text-white border-brand-500 shadow-sm'
-                  : 'bg-white/60 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-brand-400'
+                  ? 'bg-brand-600 text-white border-brand-600'
+                  : 'bg-white dark:bg-[#0B132B] border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-brand-500'
               }`}
             >
               {pill.label}
@@ -519,14 +518,14 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
 
           if (filtered.length === 0) {
             return (
-              <div className="py-12 text-center glass-card rounded-3xl p-8 space-y-3">
-                <p className="text-base font-semibold text-slate-700 dark:text-slate-300">
+              <div className="py-12 text-center rounded-none p-8 space-y-3 border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B132B]">
+                <p className="text-base font-semibold text-slate-900 dark:text-white">
                   No matching units found for selected size filter.
                 </p>
                 <div className="flex items-center justify-center gap-3 pt-2">
                   <button
                     onClick={() => { setUnitFilter('all'); setSelectedArea(null); }}
-                    className="btn-glass-primary px-5 py-2.5 rounded-xl text-xs font-semibold"
+                    className="btn-glass-primary px-5 py-2.5 rounded-none text-xs font-semibold uppercase tracking-wider"
                   >
                     View All {properties.length} Available Units
                   </button>
@@ -536,9 +535,9 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
           }
 
           return (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filtered.map((prop) => (
-                <PropertyCard key={prop.id} property={prop} onEnquire={onOpenEnquiry} />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0 border-t border-l border-slate-200 dark:border-slate-800">
+              {filtered.map((prop, idx) => (
+                <PropertyCard key={prop.id} property={prop} index={idx} onEnquire={onOpenEnquiry} />
               ))}
             </div>
           );

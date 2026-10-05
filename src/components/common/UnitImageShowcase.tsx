@@ -127,7 +127,7 @@ export const UnitImageShowcase: React.FC<UnitImageShowcaseProps> = ({
             type="button"
             onClick={handlePrev}
             aria-label="Previous unit photo"
-            className="w-7 h-7 rounded-full bg-black/50 hover:bg-black/80 text-white backdrop-blur-md flex items-center justify-center pointer-events-auto transition-transform active:scale-95 shadow-md cursor-pointer"
+            className="w-7 h-7 rounded-none bg-black/70 hover:bg-black text-white flex items-center justify-center pointer-events-auto transition-transform active:scale-95 cursor-pointer border border-white/20"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -135,7 +135,7 @@ export const UnitImageShowcase: React.FC<UnitImageShowcaseProps> = ({
             type="button"
             onClick={handleNext}
             aria-label="Next unit photo"
-            className="w-7 h-7 rounded-full bg-black/50 hover:bg-black/80 text-white backdrop-blur-md flex items-center justify-center pointer-events-auto transition-transform active:scale-95 shadow-md cursor-pointer"
+            className="w-7 h-7 rounded-none bg-black/70 hover:bg-black text-white flex items-center justify-center pointer-events-auto transition-transform active:scale-95 cursor-pointer border border-white/20"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
@@ -146,7 +146,7 @@ export const UnitImageShowcase: React.FC<UnitImageShowcaseProps> = ({
       <div className="relative z-20 h-full flex flex-col justify-between pointer-events-none">
         {children}
 
-        {/* Animated Segmented Progress / Pagination Dots */}
+        {/* Animated Segmented Progress Bars (Sharp 0px) */}
         {images.length > 1 && (
           <div className="absolute bottom-1.5 inset-x-0 flex items-center justify-center gap-1.5 pointer-events-auto z-20 py-1">
             {images.map((_, idx) => (
@@ -155,10 +155,10 @@ export const UnitImageShowcase: React.FC<UnitImageShowcaseProps> = ({
                 type="button"
                 onClick={(e) => handleDotClick(e, idx)}
                 aria-label={`Go to photo ${idx + 1}`}
-                className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                className={`h-[2px] rounded-none transition-all duration-300 cursor-pointer ${
                   idx === currentIndex
-                    ? 'w-5 bg-white shadow-sm'
-                    : 'w-1.5 bg-white/40 hover:bg-white/70'
+                    ? 'w-6 bg-white'
+                    : 'w-2 bg-white/40 hover:bg-white/70'
                 }`}
               />
             ))}

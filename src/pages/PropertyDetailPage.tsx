@@ -64,7 +64,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
         const validImages = [prop.primary_image, ...(prop.gallery || [])].filter(Boolean);
         setActiveImage((prev) => (prev && validImages.includes(prev) ? prev : prop.primary_image));
         if (prop.building_id) {
-          const bld = await StorageService.getBuildings().then(blds => blds.find(b => b.id === prop.building_id));
+          const bld = await StorageService.getBuildingById(prop.building_id);
           if (isMounted && bld) {
             setBuilding(bld);
             const related = await StorageService.getPropertiesByBuilding(bld.id);
@@ -149,7 +149,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
         <div className="lg:col-span-8 space-y-6 sm:space-y-8">
           {/* Gallery Showcase */}
           <div className="space-y-3 sm:space-y-4">
-            <div className="relative aspect-[16/10] rounded-2xl sm:rounded-3xl overflow-hidden glass-card border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 shadow-xl">
+            <div className="relative aspect-[16/10] rounded-none overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-[#070C1E] shadow-none">
               <img
                 src={activeImage || property.primary_image || 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1000&q=80'}
                 alt={getPropertyImageAlt(property, activeImage === property.primary_image ? property.primary_image_alt : undefined)}
@@ -164,17 +164,17 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
 
               {/* Status & ID Badge */}
               <div className="absolute top-2.5 left-2.5 sm:top-4 sm:left-4 flex items-center gap-1.5 sm:gap-2">
-                <span className="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold uppercase tracking-wider bg-brand-600 text-white shadow-md">
+                <span className="px-2.5 py-1 sm:px-3 sm:py-1 rounded-none text-[10px] sm:text-xs font-semibold uppercase tracking-wider bg-stone-900 text-white border border-stone-800">
                   For {property.listing_type}
                 </span>
-                <span className="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-semibold backdrop-blur-md bg-slate-900/80 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="px-2.5 py-1 sm:px-3 sm:py-1 rounded-none text-[10px] sm:text-xs font-semibold backdrop-blur-md bg-stone-900/90 text-stone-200 border border-stone-700 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-none bg-emerald-400" />
                   {property.status}
                 </span>
               </div>
 
               <div className="absolute top-2.5 right-2.5 sm:top-4 sm:right-4">
-                <span className="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-mono font-bold bg-black/70 text-white backdrop-blur-md border border-white/10">
+                <span className="px-2.5 py-1 sm:px-3 sm:py-1 rounded-none text-[10px] sm:text-xs font-mono font-bold bg-stone-900/90 text-white backdrop-blur-md border border-stone-700">
                   ID: {property.reference_number}
                 </span>
               </div>
@@ -182,7 +182,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
 
             {/* Property Image Caption */}
             {property.primary_image_caption && (
-              <p className="text-xs text-slate-500 dark:text-slate-400 italic px-2">
+              <p className="text-xs text-stone-500 dark:text-stone-400 italic px-1">
                 {property.primary_image_caption}
               </p>
             )}
@@ -194,8 +194,8 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
                   <button
                     key={idx}
                     onClick={() => setActiveImage(img)}
-                    className={`relative w-20 h-14 sm:w-24 sm:h-16 rounded-lg sm:rounded-xl overflow-hidden border-2 shrink-0 transition-all ${
-                      activeImage === img ? 'border-brand-500 scale-105 shadow-md' : 'border-transparent opacity-75'
+                    className={`relative w-20 h-14 sm:w-24 sm:h-16 rounded-none overflow-hidden border shrink-0 transition-all ${
+                      activeImage === img ? 'border-slate-900 dark:border-white scale-[1.02]' : 'border-slate-200 dark:border-slate-800 opacity-70 hover:opacity-100'
                     }`}
                   >
                     <img 
@@ -215,94 +215,94 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
           {/* Property Title & Header Meta */}
           <div className="space-y-2 sm:space-y-3">
             <div className="flex flex-wrap items-center gap-2 text-xs font-semibold">
-              <span className="px-2.5 py-1 rounded-lg bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 font-bold uppercase tracking-wider border border-brand-200/60 dark:border-brand-800/60">
+              <span className="px-2.5 py-1 rounded-none bg-stone-100 dark:bg-stone-800 text-stone-800 dark:text-stone-200 font-semibold uppercase tracking-wider border border-stone-300 dark:border-stone-700 text-[10px]">
                 {property.property_type}
               </span>
               {property.building_name && (
                 <Link 
                   to={`/buildings/${building?.slug || ''}`} 
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 hover:bg-brand-50 dark:hover:bg-brand-950/60 text-slate-700 dark:text-slate-200 hover:text-brand-600 dark:hover:text-brand-300 border border-slate-200/80 dark:border-slate-700/80 font-bold transition-all"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-none bg-stone-100 dark:bg-stone-800 text-stone-800 dark:text-stone-200 hover:text-stone-900 dark:hover:text-white border border-stone-300 dark:border-stone-700 text-[10px] font-semibold transition-all"
                 >
-                  <Building2 className="w-3.5 h-3.5 text-brand-500" />
+                  <Building2 className="w-3.5 h-3.5 text-stone-500" />
                   <span>{property.building_name}</span>
                 </Link>
               )}
             </div>
 
-            <h1 className="text-xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 dark:text-white font-['Outfit'] tracking-tight leading-tight">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-slate-900 dark:text-white tracking-tight leading-tight">
               {property.title}
             </h1>
 
-            <div className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400">
-              <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
+            <div className="flex items-center gap-1 text-xs sm:text-sm text-stone-500 dark:text-stone-400">
+              <MapPin className="w-3.5 h-3.5 text-stone-400 shrink-0" />
               <span>{cleanPropertyAddress(property.address, property.building_name)}</span>
             </div>
           </div>
 
           {/* Quick Specifications Grid */}
-          <div className="glass-card rounded-3xl p-6 border border-slate-200/90 dark:border-slate-800 bg-white/70 dark:bg-[#0B132B]/75">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4">
+          <div className="rounded-none p-6 border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B132B]">
+            <h3 className="text-xs font-semibold uppercase tracking-[0.15em] text-slate-500 dark:text-slate-400 mb-4">
               Property Specifications
             </h3>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs sm:text-sm">
-              <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800/80">
-                <span className="text-slate-400 text-xs block">Built-Up Area</span>
-                <span className="font-bold text-slate-900 dark:text-white mt-1 block">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs sm:text-sm">
+              <div className="p-3 rounded-none bg-slate-50 dark:bg-[#070C1E] border border-slate-200 dark:border-slate-800">
+                <span className="text-slate-400 text-[11px] block uppercase tracking-wider">Built-Up Area</span>
+                <span className="font-semibold text-slate-900 dark:text-white mt-1 block">
                   {property.built_up_area.toLocaleString()} {property.area_unit}
                 </span>
               </div>
 
               {property.land_area ? (
-                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800/80">
-                  <span className="text-slate-400 text-xs block">Plot / Land Area</span>
-                  <span className="font-bold text-slate-900 dark:text-white mt-1 block">
+                <div className="p-3 rounded-none bg-slate-50 dark:bg-[#070C1E] border border-slate-200 dark:border-slate-800">
+                  <span className="text-slate-400 text-[11px] block uppercase tracking-wider">Plot / Land Area</span>
+                  <span className="font-semibold text-slate-900 dark:text-white mt-1 block">
                     {property.land_area.toLocaleString()} {property.area_unit}
                   </span>
                 </div>
               ) : null}
 
-              <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800/80">
-                <span className="text-slate-400 text-xs block">Carpet Area</span>
-                <span className="font-bold text-slate-900 dark:text-white mt-1 block">
+              <div className="p-3 rounded-none bg-slate-50 dark:bg-[#070C1E] border border-slate-200 dark:border-slate-800">
+                <span className="text-slate-400 text-[11px] block uppercase tracking-wider">Carpet Area</span>
+                <span className="font-semibold text-slate-900 dark:text-white mt-1 block">
                   {property.carpet_area ? `${property.carpet_area.toLocaleString()} sq.ft` : 'Available on request'}
                 </span>
               </div>
 
-              <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800/80">
-                <span className="text-slate-400 text-xs block">Furnishing State</span>
-                <span className="font-bold text-slate-900 dark:text-white mt-1 block">
+              <div className="p-3 rounded-none bg-slate-50 dark:bg-[#070C1E] border border-slate-200 dark:border-slate-800">
+                <span className="text-slate-400 text-[11px] block uppercase tracking-wider">Furnishing State</span>
+                <span className="font-semibold text-slate-900 dark:text-white mt-1 block">
                   {property.furnishing}
                 </span>
               </div>
 
-              <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800/80">
-                <span className="text-slate-400 text-xs block">Possession</span>
-                <span className="font-bold text-slate-900 dark:text-white mt-1 block">
+              <div className="p-3 rounded-none bg-slate-50 dark:bg-[#070C1E] border border-slate-200 dark:border-slate-800">
+                <span className="text-slate-400 text-[11px] block uppercase tracking-wider">Possession</span>
+                <span className="font-semibold text-slate-900 dark:text-white mt-1 block">
                   {property.possession}
                 </span>
               </div>
 
-              <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800/80">
-                <span className="text-slate-400 text-xs block">Parking Allotment</span>
-                <span className="font-bold text-slate-900 dark:text-white mt-1 block">
+              <div className="p-3 rounded-none bg-slate-50 dark:bg-[#070C1E] border border-slate-200 dark:border-slate-800">
+                <span className="text-slate-400 text-[11px] block uppercase tracking-wider">Parking Allotment</span>
+                <span className="font-semibold text-slate-900 dark:text-white mt-1 block">
                   {property.parking}
                 </span>
               </div>
 
               {property.power_load && (
-                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800/80">
-                  <span className="text-slate-400 text-xs block">Power / Load</span>
-                  <span className="font-bold text-slate-900 dark:text-white mt-1 block">
+                <div className="p-3 rounded-none bg-slate-50 dark:bg-[#070C1E] border border-slate-200 dark:border-slate-800">
+                  <span className="text-slate-400 text-[11px] block uppercase tracking-wider">Power / Load</span>
+                  <span className="font-semibold text-slate-900 dark:text-white mt-1 block">
                     {property.power_load}
                   </span>
                 </div>
               )}
 
               {property.road_width && (
-                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800/80">
-                  <span className="text-slate-400 text-xs block">Road Width / Frontage</span>
-                  <span className="font-bold text-slate-900 dark:text-white mt-1 block">
+                <div className="p-3 rounded-none bg-slate-50 dark:bg-[#070C1E] border border-slate-200 dark:border-slate-800">
+                  <span className="text-slate-400 text-[11px] block uppercase tracking-wider">Road Width / Frontage</span>
+                  <span className="font-semibold text-slate-900 dark:text-white mt-1 block">
                     {property.road_width}
                   </span>
                 </div>
@@ -311,8 +311,8 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
           </div>
 
           {/* Description */}
-          <div className="glass-card rounded-3xl p-6 sm:p-8 bg-white/70 dark:bg-[#0B132B]/75 border border-slate-200/90 dark:border-slate-800 space-y-4">
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white font-['Outfit']">
+          <div className="rounded-none p-6 sm:p-8 bg-white dark:bg-[#0B132B] border border-slate-200 dark:border-slate-800 space-y-4">
+            <h2 className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white">
               Commercial Overview & Highlights
             </h2>
             {property.short_description && (
@@ -365,47 +365,47 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
             )}
           </div>
 
-          {/* Building Association Layer (Section 8) */}
+          {/* Building Association Layer */}
           {building && (
-            <div className="glass-card rounded-3xl p-6 sm:p-8 bg-brand-50/40 dark:bg-brand-950/20 border border-brand-200 dark:border-brand-800/60 space-y-4">
+            <div className="rounded-none p-6 sm:p-8 bg-white dark:bg-[#0B132B] border border-slate-200 dark:border-slate-800 space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-brand-600 dark:text-brand-400">
                     Located Inside Commercial Project
                   </span>
-                  <h3 className="text-xl font-bold text-slate-900 dark:text-white font-['Outfit'] mt-1">
+                  <h3 className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white mt-1">
                     {building.name}
                   </h3>
                 </div>
                 <Link
                   to={`/buildings/${building.slug}`}
-                  className="btn-glass-primary px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5"
+                  className="btn-glass-primary px-4 py-2 rounded-none text-xs font-semibold flex items-center gap-1.5 uppercase tracking-wider"
                 >
                   <span>View Building</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
 
-              <div className="overview-text text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+              <div className="overview-text text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-sans">
                 {building.description}
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs pt-2">
-                <div>
-                  <span className="text-slate-400 block font-medium">Structure</span>
-                  <span className="font-semibold text-slate-800 dark:text-slate-200">{getBuildingStructureDisplay(building)}</span>
+                <div className="p-2.5 rounded-none bg-slate-50 dark:bg-[#070C1E] border border-slate-200 dark:border-slate-800">
+                  <span className="text-slate-400 block text-[10px] uppercase tracking-wider font-semibold">Structure</span>
+                  <span className="font-semibold text-slate-900 dark:text-white mt-0.5 block">{getBuildingStructureDisplay(building)}</span>
                 </div>
-                <div>
-                  <span className="text-slate-400 block font-medium">Lifts</span>
-                  <span className="font-semibold text-slate-800 dark:text-slate-200">{building.lifts}</span>
+                <div className="p-2.5 rounded-none bg-slate-50 dark:bg-[#070C1E] border border-slate-200 dark:border-slate-800">
+                  <span className="text-slate-400 block text-[10px] uppercase tracking-wider font-semibold">Lifts</span>
+                  <span className="font-semibold text-slate-900 dark:text-white mt-0.5 block">{building.lifts}</span>
                 </div>
-                <div>
-                  <span className="text-slate-400 block font-medium">Power</span>
-                  <span className="font-semibold text-slate-800 dark:text-slate-200">{building.power_backup}</span>
+                <div className="p-2.5 rounded-none bg-slate-50 dark:bg-[#070C1E] border border-slate-200 dark:border-slate-800">
+                  <span className="text-slate-400 block text-[10px] uppercase tracking-wider font-semibold">Power</span>
+                  <span className="font-semibold text-slate-900 dark:text-white mt-0.5 block">{building.power_backup}</span>
                 </div>
-                <div>
-                  <span className="text-slate-400 block font-medium">Parking</span>
-                  <span className="font-semibold text-slate-800 dark:text-slate-200">{building.parking}</span>
+                <div className="p-2.5 rounded-none bg-slate-50 dark:bg-[#070C1E] border border-slate-200 dark:border-slate-800">
+                  <span className="text-slate-400 block text-[10px] uppercase tracking-wider font-semibold">Parking</span>
+                  <span className="font-semibold text-slate-900 dark:text-white mt-0.5 block">{building.parking}</span>
                 </div>
               </div>
             </div>
@@ -414,17 +414,17 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
 
         {/* Right Sticky Action Panel (4 Cols) */}
         <div className="lg:col-span-4 lg:sticky lg:top-24 space-y-6">
-          <div className="glass-card rounded-3xl p-6 sm:p-7 border border-slate-200/90 dark:border-slate-800 bg-white/80 dark:bg-[#0B132B]/85 shadow-2xl space-y-6">
+          <div className="rounded-none p-6 sm:p-7 border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B132B] shadow-none space-y-6">
             {/* Pricing Section */}
             <div>
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">
+              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em] block mb-1">
                 Commercial Lease / Outright Tariff
               </span>
-              <div className="text-3xl font-extrabold text-slate-900 dark:text-white font-['Outfit'] tracking-tight">
+              <div className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
                 {property.price_display}
               </div>
               {property.rate_per_sqft && (
-                <div className="text-xs font-semibold text-brand-600 dark:text-brand-400 mt-1">
+                <div className="text-xs font-semibold text-slate-600 dark:text-slate-400 mt-1">
                   Effective Rate: {property.rate_per_sqft}
                 </div>
               )}
@@ -434,7 +434,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
             <div className="space-y-3 pt-2">
               <button
                 onClick={() => onOpenEnquiry(property)}
-                className="btn-glass-primary w-full py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2"
+                className="btn-glass-primary w-full py-3.5 rounded-none font-semibold text-xs flex items-center justify-center gap-2 uppercase tracking-wider"
               >
                 <Calendar className="w-4 h-4" />
                 <span>Schedule Verified Site Visit</span>
@@ -444,7 +444,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
                 href={waLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn-whatsapp w-full py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2"
+                className="btn-whatsapp w-full py-3.5 rounded-none font-semibold text-xs flex items-center justify-center gap-2 uppercase tracking-wider"
               >
                 <WhatsAppIcon className="w-4 h-4" />
                 <span>Instant WhatsApp Enquiry</span>
@@ -452,15 +452,15 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
 
               <a
                 href="tel:+918750098666"
-                className="w-full py-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 font-semibold text-sm flex items-center justify-center gap-2 transition-colors"
+                className="w-full py-3 rounded-none border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#0B132B] hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 font-semibold text-xs flex items-center justify-center gap-2 transition-colors uppercase tracking-wider"
               >
-                <PhoneCall className="w-4 h-4 text-brand-500" />
+                <PhoneCall className="w-4 h-4 text-stone-500" />
                 <span>Call +91 87500 98666</span>
               </a>
 
               <button
                 onClick={handleShare}
-                className="w-full py-2.5 rounded-xl text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 flex items-center justify-center gap-1.5 transition-colors"
+                className="w-full py-2.5 rounded-none text-xs font-medium text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200 flex items-center justify-center gap-1.5 transition-colors uppercase tracking-wider"
               >
                 {copied ? (
                   <>
@@ -477,17 +477,17 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
             </div>
 
             {/* Trust Assurance Pill */}
-            <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-2 text-xs text-slate-500 dark:text-slate-400">
+            <div className="pt-4 border-t border-slate-200 dark:border-slate-800 space-y-2 text-xs text-slate-500 dark:text-slate-400 font-sans">
               <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-accent-emerald shrink-0" />
+                <ShieldCheck className="w-4 h-4 text-stone-400 shrink-0" />
                 <span>Direct Site Visit Coordination</span>
               </div>
               <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-accent-emerald shrink-0" />
+                <ShieldCheck className="w-4 h-4 text-stone-400 shrink-0" />
                 <span>Title & Lease Deed Verification Support</span>
               </div>
               <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-accent-emerald shrink-0" />
+                <ShieldCheck className="w-4 h-4 text-stone-400 shrink-0" />
                 <span>Zero Advance Fees for Site Inspections</span>
               </div>
             </div>
@@ -495,55 +495,55 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
         </div>
       </div>
 
-      {/* RELATED PROPERTIES IN THIS TOWER (Req 16 & 17) */}
+      {/* RELATED PROPERTIES IN THIS TOWER */}
       {property.tower && buildingProperties.some(p => p.tower === property.tower) && (
         <section className="space-y-4 pt-6 border-t border-slate-200 dark:border-slate-800">
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-brand-600 dark:text-brand-400">
                 Tower Inventory
               </span>
-              <h3 className="text-xl sm:text-2xl font-bold font-['Outfit']">
+              <h3 className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white mt-1">
                 Other Properties in {property.tower}
               </h3>
             </div>
             {building && (
-              <Link to={`/buildings/${building.slug}`} className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1">
+              <Link to={`/buildings/${building.slug}`} className="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1 uppercase tracking-wider">
                 <span>View {property.tower} Overview</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             )}
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {buildingProperties.filter(p => p.tower === property.tower).slice(0, 3).map(relProp => (
-              <PropertyCard key={relProp.id} property={relProp} onEnquire={onOpenEnquiry} />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0 border-t border-l border-slate-200 dark:border-slate-800">
+            {buildingProperties.filter(p => p.tower === property.tower).slice(0, 3).map((relProp, idx) => (
+              <PropertyCard key={relProp.id} property={relProp} index={idx} onEnquire={onOpenEnquiry} />
             ))}
           </div>
         </section>
       )}
 
-      {/* MORE PROPERTIES IN THIS BUILDING (Req 16 & 17) */}
+      {/* MORE PROPERTIES IN THIS BUILDING */}
       {buildingProperties.length > 0 && (
         <section className="space-y-4 pt-6 border-t border-slate-200 dark:border-slate-800">
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-brand-600 dark:text-brand-400">
                 Building Portfolio
               </span>
-              <h3 className="text-xl sm:text-2xl font-bold font-['Outfit']">
+              <h3 className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white mt-1">
                 More Properties in {property.building_name || building?.name || 'this Building'}
               </h3>
             </div>
             {building && (
-              <Link to={`/buildings/${building.slug}`} className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1">
+              <Link to={`/buildings/${building.slug}`} className="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1 uppercase tracking-wider">
                 <span>All Units in {building.name}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             )}
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {buildingProperties.slice(0, 3).map(relProp => (
-              <PropertyCard key={relProp.id} property={relProp} onEnquire={onOpenEnquiry} />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0 border-t border-l border-slate-200 dark:border-slate-800">
+            {buildingProperties.slice(0, 3).map((relProp, idx) => (
+              <PropertyCard key={relProp.id} property={relProp} index={idx} onEnquire={onOpenEnquiry} />
             ))}
           </div>
         </section>

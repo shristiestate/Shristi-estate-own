@@ -109,26 +109,26 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
       />
 
       {/* Category Hero */}
-      <div className="relative rounded-3xl overflow-hidden glass-card p-8 sm:p-12 border border-slate-200 dark:border-slate-800 bg-slate-900 text-white shadow-xl">
+      <div className="relative rounded-none overflow-hidden p-6 sm:p-10 border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B132B] text-slate-900 dark:text-white">
         <img
           src={meta.image}
           alt={meta.title}
-          className="absolute inset-0 w-full h-full object-cover opacity-25"
+          className="absolute inset-0 w-full h-full object-cover opacity-15 dark:opacity-20"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/80 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-transparent dark:from-[#0B132B] dark:via-[#0B132B]/90 pointer-events-none" />
 
         <div className="relative z-10 max-w-2xl space-y-3">
-          <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-brand-500/20 text-brand-300 border border-brand-500/30">
+          <span className="inline-block px-3 py-1 rounded-none text-[10px] sm:text-[11px] font-mono font-semibold uppercase tracking-widest bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700">
             Commercial Asset Class
           </span>
-          <h1 className="text-3xl sm:text-5xl font-extrabold font-['Outfit'] tracking-tight">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-slate-900 dark:text-white tracking-tight">
             {meta.title}
           </h1>
-          <div className="overview-text text-base sm:text-lg text-slate-300 leading-relaxed">
+          <div className="overview-text text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-sans">
             {meta.description}
           </div>
 
-          <div className="pt-2 flex items-center gap-4 text-xs sm:text-sm text-slate-300">
+          <div className="pt-1 flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
             <span><strong>{properties.length}</strong> Available Spaces</span>
             <span>•</span>
             <span><strong>{buildings.length}</strong> Commercial Towers / Hubs</span>
@@ -143,10 +143,10 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
         <section className="space-y-6" id="locations-section">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-4">
             <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-600 dark:text-brand-400">
                 Step 1: Select Your Strategic Sector
               </span>
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white font-['Outfit']">
+              <h2 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-slate-900 dark:text-white tracking-tight mt-1">
                 {meta.title} by Location {visibleLocationsCount < locations.length ? `(${Math.min(visibleLocationsCount, locations.length)} of ${locations.length})` : `(${locations.length})`}
               </h2>
             </div>
@@ -160,24 +160,24 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {locations.slice(0, visibleLocationsCount).map((loc) => (
-              <LocationCard key={loc.id} location={loc} />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border-t border-l border-slate-200 dark:border-slate-800">
+            {locations.slice(0, visibleLocationsCount).map((loc, idx) => (
+              <LocationCard key={loc.id} location={loc} index={idx} />
             ))}
           </div>
 
           {locations.length > visibleLocationsCount && (
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4 border-t border-slate-200/80 dark:border-slate-800/80">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
               <button
                 onClick={() => setVisibleLocationsCount((prev) => Math.min(prev + 3, locations.length))}
-                className="btn-glass-primary px-6 py-3 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2 shadow-sm"
+                className="btn-glass-primary px-6 py-3 rounded-none text-xs sm:text-sm font-semibold flex items-center gap-2 uppercase tracking-wider"
               >
                 <span>Load More Sectors ({locations.length - visibleLocationsCount} more)</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setVisibleLocationsCount(locations.length)}
-                className="px-5 py-3 rounded-2xl text-xs sm:text-sm font-semibold border border-slate-200 dark:border-slate-700 bg-white/60 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors"
+                className="px-5 py-3 rounded-none text-xs sm:text-sm font-semibold border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#0B132B] hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 transition-colors uppercase tracking-wider"
               >
                 View All Sectors ({locations.length})
               </button>
@@ -185,13 +185,13 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
           )}
 
           {visibleLocationsCount >= locations.length && locations.length > INITIAL_VISIBLE_LOCATIONS && (
-            <div className="flex items-center justify-center pt-4 border-t border-slate-200/80 dark:border-slate-800/80">
+            <div className="flex items-center justify-center pt-4 border-t border-slate-200 dark:border-slate-800">
               <button
                 onClick={() => {
                   setVisibleLocationsCount(INITIAL_VISIBLE_LOCATIONS);
                   document.getElementById('locations-section')?.scrollIntoView({ behavior: 'smooth' });
                 }}
-                className="px-5 py-2.5 rounded-2xl text-xs font-semibold border border-slate-200 dark:border-slate-700 bg-white/60 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors"
+                className="px-5 py-2.5 rounded-none text-xs font-semibold border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#0B132B] hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 transition-colors uppercase tracking-wider"
               >
                 Show Fewer (Top {INITIAL_VISIBLE_LOCATIONS})
               </button>
@@ -205,10 +205,10 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
         <section className="space-y-6" id="commercial-projects-section">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-4">
             <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-600 dark:text-brand-400">
                 Step 2: Commercial Buildings & Projects
               </span>
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white font-['Outfit']">
+              <h2 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-slate-900 dark:text-white tracking-tight mt-1">
                 Commercial Projects for {meta.title} {visibleBuildingsCount < buildings.length ? `(${Math.min(visibleBuildingsCount, buildings.length)} of ${buildings.length})` : `(${buildings.length})`}
               </h2>
             </div>
@@ -222,24 +222,24 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
             )}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {buildings.slice(0, visibleBuildingsCount).map((b) => (
-              <BuildingCard key={b.id} building={b} />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border-t border-l border-slate-200 dark:border-slate-800">
+            {buildings.slice(0, visibleBuildingsCount).map((b, idx) => (
+              <BuildingCard key={b.id} building={b} index={idx} />
             ))}
           </div>
 
           {buildings.length > visibleBuildingsCount && (
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4 border-t border-slate-200/80 dark:border-slate-800/80">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
               <button
-                onClick={() => setVisibleBuildingsCount((prev) => Math.min(prev + 4, buildings.length))}
-                className="btn-glass-primary px-6 py-3 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2 shadow-sm"
+                onClick={() => setVisibleBuildingsCount((prev) => Math.min(prev + 3, buildings.length))}
+                className="btn-glass-primary px-6 py-3 rounded-none text-xs sm:text-sm font-semibold flex items-center gap-2 uppercase tracking-wider"
               >
                 <span>Load More Projects ({buildings.length - visibleBuildingsCount} more)</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setVisibleBuildingsCount(buildings.length)}
-                className="px-5 py-3 rounded-2xl text-xs sm:text-sm font-semibold border border-slate-200 dark:border-slate-700 bg-white/60 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors"
+                className="px-5 py-3 rounded-none text-xs sm:text-sm font-semibold border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#0B132B] hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 transition-colors uppercase tracking-wider"
               >
                 View All Projects ({buildings.length})
               </button>
@@ -247,13 +247,13 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
           )}
 
           {visibleBuildingsCount >= buildings.length && buildings.length > INITIAL_VISIBLE_BUILDINGS && (
-            <div className="flex items-center justify-center pt-4 border-t border-slate-200/80 dark:border-slate-800/80">
+            <div className="flex items-center justify-center pt-4 border-t border-slate-200 dark:border-slate-800">
               <button
                 onClick={() => {
                   setVisibleBuildingsCount(INITIAL_VISIBLE_BUILDINGS);
                   document.getElementById('commercial-projects-section')?.scrollIntoView({ behavior: 'smooth' });
                 }}
-                className="px-5 py-2.5 rounded-2xl text-xs font-semibold border border-slate-200 dark:border-slate-700 bg-white/60 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors"
+                className="px-5 py-2.5 rounded-none text-xs font-semibold border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#0B132B] hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 transition-colors uppercase tracking-wider"
               >
                 Show Fewer (Top {INITIAL_VISIBLE_BUILDINGS})
               </button>
@@ -266,10 +266,10 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
       <section className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4" id="available-inventory-section">
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-600 dark:text-brand-400">
               Step 3: Direct Verified Inventory
             </span>
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white font-['Outfit']">
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-slate-900 dark:text-white tracking-tight mt-1">
               Available {meta.title} {visibleCount < filteredProperties.length ? `(${Math.min(visibleCount, filteredProperties.length)} of ${filteredProperties.length})` : `(${filteredProperties.length})`}
             </h2>
           </div>
@@ -279,7 +279,7 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
             <select
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value)}
-              className="glass-input px-3 py-1.5 rounded-xl text-xs font-semibold"
+              className="px-3 py-1.5 rounded-none text-xs font-medium border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B132B] text-slate-900 dark:text-white focus:outline-none focus:border-brand-500"
             >
               <option value="All">All Types (Rent / Sale / Lease)</option>
               <option value="Rent">Rent Only</option>
@@ -290,7 +290,7 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
             <select
               value={selectedFurnishing}
               onChange={(e) => setSelectedFurnishing(e.target.value)}
-              className="glass-input px-3 py-1.5 rounded-xl text-xs font-semibold"
+              className="px-3 py-1.5 rounded-none text-xs font-medium border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B132B] text-slate-900 dark:text-white focus:outline-none focus:border-brand-500"
             >
               <option value="All">All Furnishing</option>
               <option value="Furnished">Furnished</option>
@@ -302,16 +302,16 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
         </div>
 
         {filteredProperties.length === 0 ? (
-          <div className="py-16 text-center glass-card rounded-3xl p-8 space-y-3">
-            <p className="text-base font-semibold text-slate-700 dark:text-slate-300">
+          <div className="py-16 text-center rounded-none p-8 sm:p-12 space-y-3 border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B132B]">
+            <p className="text-base font-semibold text-slate-900 dark:text-white">
               No exact matches found for your selected filters in this category.
             </p>
-            <p className="text-xs text-slate-500 max-w-md mx-auto">
+            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
               Our advisory desk can source unlisted units matching your exact size and budget parameters.
             </p>
             <Link
               to="/tell-us-requirement"
-              className="btn-glass-primary inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold mt-2"
+              className="btn-glass-primary inline-flex items-center gap-2 px-5 py-2.5 rounded-none text-xs font-semibold mt-2 uppercase tracking-wider"
             >
               <span>Submit Custom Requirement</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -319,24 +319,24 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
           </div>
         ) : (
           <div className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredProperties.slice(0, visibleCount).map((prop) => (
-                <PropertyCard key={prop.id} property={prop} onEnquire={onOpenEnquiry} />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0 border-t border-l border-slate-200 dark:border-slate-800">
+              {filteredProperties.slice(0, visibleCount).map((prop, idx) => (
+                <PropertyCard key={prop.id} property={prop} index={idx} onEnquire={onOpenEnquiry} />
               ))}
             </div>
 
             {filteredProperties.length > visibleCount && (
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4 border-t border-slate-200/80 dark:border-slate-800/80">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
                 <button
                   onClick={() => setVisibleCount((prev) => Math.min(prev + 6, filteredProperties.length))}
-                  className="btn-glass-primary px-6 py-3 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2 shadow-sm"
+                  className="btn-glass-primary px-6 py-3 rounded-none text-xs sm:text-sm font-semibold flex items-center gap-2 uppercase tracking-wider"
                 >
                   <span>Load More Spaces ({filteredProperties.length - visibleCount} more)</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setVisibleCount(filteredProperties.length)}
-                  className="px-5 py-3 rounded-2xl text-xs sm:text-sm font-semibold border border-slate-200 dark:border-slate-700 bg-white/60 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors"
+                  className="px-5 py-3 rounded-none text-xs sm:text-sm font-semibold border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#0B132B] hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 transition-colors uppercase tracking-wider"
                 >
                   View All ({filteredProperties.length})
                 </button>
@@ -344,13 +344,13 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
             )}
 
             {visibleCount >= filteredProperties.length && filteredProperties.length > INITIAL_VISIBLE_COUNT && (
-              <div className="flex items-center justify-center pt-4 border-t border-slate-200/80 dark:border-slate-800/80">
+              <div className="flex items-center justify-center pt-4 border-t border-slate-200 dark:border-slate-800">
                 <button
                   onClick={() => {
                     setVisibleCount(INITIAL_VISIBLE_COUNT);
                     document.getElementById('available-inventory-section')?.scrollIntoView({ behavior: 'smooth' });
                   }}
-                  className="px-5 py-2.5 rounded-2xl text-xs font-semibold border border-slate-200 dark:border-slate-700 bg-white/60 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors"
+                  className="px-5 py-2.5 rounded-none text-xs font-semibold border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#0B132B] hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 transition-colors uppercase tracking-wider"
                 >
                   Show Fewer (Top {INITIAL_VISIBLE_COUNT})
                 </button>
@@ -361,9 +361,9 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
       </section>
 
       {/* Requirement Callout */}
-      <div className="glass-card rounded-3xl p-6 sm:p-8 bg-brand-50/50 dark:bg-brand-950/20 border border-brand-200 dark:border-brand-800/60 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="rounded-none p-6 sm:p-8 bg-white dark:bg-[#0B132B] border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div>
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white font-['Outfit']">
+          <h3 className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-white">
             Need a Specific Space Configuration?
           </h3>
           <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1">
@@ -372,7 +372,7 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
         </div>
         <Link
           to="/tell-us-requirement"
-          className="btn-glass-primary px-5 py-2.5 rounded-xl font-semibold text-xs sm:text-sm shrink-0"
+          className="btn-glass-primary px-5 py-2.5 rounded-none font-semibold text-xs sm:text-sm shrink-0 uppercase tracking-wider"
         >
           Post Your Requirement
         </Link>

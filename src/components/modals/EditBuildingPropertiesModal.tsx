@@ -372,6 +372,16 @@ export const EditBuildingPropertiesModal: React.FC<EditBuildingPropertiesModalPr
 
     try {
       await StorageService.deleteProperty(id, building.id);
+      // Immediately update and persist parent building unit count and deleted IDs
+      const updatedBuilding: Building = {
+        ...building,
+        property_count: updated.length,
+        deleted_unit_ids: Array.from(new Set([...(building.deleted_unit_ids || []), id]))
+      };
+      await StorageService.saveBuilding(updatedBuilding);
+      if (onPropertiesUpdated) {
+        onPropertiesUpdated(updated);
+      }
       setFeedbackToast({ type: 'success', message: `${unitName} deleted successfully` });
       setTimeout(() => setFeedbackToast(null), 3000);
     } catch (err) {

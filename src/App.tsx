@@ -44,31 +44,31 @@ const ScrollToTop: React.FC = () => {
   return null;
 };
 
-// Professional 404 Error Page (Section 76)
+// Professional 404 Error Page
 const NotFoundPage: React.FC = () => {
   return (
     <div className="min-h-[65vh] flex items-center justify-center px-4 py-16">
-      <div className="glass-card rounded-3xl p-8 sm:p-12 max-w-lg text-center space-y-4 border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-[#0B132B]/75 shadow-2xl">
-        <span className="text-4xl font-extrabold text-brand-600 dark:text-brand-400 font-['Outfit']">404</span>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white font-['Outfit']">
+      <div className="rounded-none p-8 sm:p-12 max-w-lg text-center space-y-4 border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B132B] shadow-none">
+        <span className="text-4xl text-brand-600 dark:text-brand-400 font-bold">404</span>
+        <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">
           We couldn't find that property or page.
         </h1>
-        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-sans">
           The commercial unit or building you requested may have been leased, moved, or temporarily updated.
         </p>
 
         <div className="pt-4 flex flex-wrap items-center justify-center gap-2.5">
-          <Link to="/properties" className="btn-glass-primary px-4 py-2 rounded-xl text-xs font-semibold">
+          <Link to="/properties" className="btn-glass-primary px-4 py-2 rounded-none text-xs font-semibold uppercase tracking-wider">
             Search Properties
           </Link>
-          <Link to="/locations" className="px-4 py-2 rounded-xl text-xs font-semibold glass-card border border-slate-200 dark:border-slate-700">
+          <Link to="/locations" className="px-4 py-2 rounded-none text-xs font-semibold border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#0B132B] hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 uppercase tracking-wider">
             Browse Locations
           </Link>
-          <Link to="/" className="px-4 py-2 rounded-xl text-xs font-semibold glass-card border border-slate-200 dark:border-slate-700">
+          <Link to="/" className="px-4 py-2 rounded-none text-xs font-semibold border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#0B132B] hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 uppercase tracking-wider">
             Go Home
           </Link>
-          <Link to="/contact" className="px-4 py-2 rounded-xl text-xs font-semibold glass-card border border-slate-200 dark:border-slate-700">
-            Contact Shristi Estate
+          <Link to="/contact" className="px-4 py-2 rounded-none text-xs font-semibold border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#0B132B] hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 uppercase tracking-wider">
+            Contact
           </Link>
         </div>
       </div>
@@ -158,13 +158,13 @@ export const AppContent: React.FC = () => {
       {/* Footer */}
       <Footer />
 
-      {/* STICKY BOTTOM ACTION BAR FOR MOBILE (SECTION 82) */}
-      <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 p-2.5 glass-nav border-t border-slate-200/90 dark:border-slate-800/90 shadow-2xl flex items-center gap-2">
+      {/* STICKY BOTTOM ACTION BAR FOR MOBILE */}
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 p-2.5 bg-white/95 dark:bg-[#0B132B]/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 shadow-lg flex items-center gap-2">
         <a
           href="tel:+918750098666"
-          className="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-xs font-semibold flex items-center justify-center gap-1.5 border border-slate-200 dark:border-slate-700"
+          className="flex-1 py-2.5 rounded-none bg-slate-50 dark:bg-[#070C1E] text-slate-900 dark:text-white text-xs font-semibold flex items-center justify-center gap-1.5 border border-slate-200 dark:border-slate-800 uppercase tracking-wider"
         >
-          <Phone className="w-3.5 h-3.5 text-brand-500" />
+          <Phone className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
           <span>Call</span>
         </a>
 
@@ -172,7 +172,7 @@ export const AppContent: React.FC = () => {
           href={generateGeneralEnquiryWhatsAppLink({ propertyName: 'Commercial Property Options' })}
           target="_blank"
           rel="noopener noreferrer"
-          className="btn-whatsapp flex-1 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5"
+          className="btn-whatsapp flex-1 py-2.5 rounded-none text-xs font-semibold flex items-center justify-center gap-1.5 uppercase tracking-wider"
         >
           <WhatsAppIcon className="w-3.5 h-3.5" />
           <span>WhatsApp</span>
@@ -180,7 +180,7 @@ export const AppContent: React.FC = () => {
 
         <button
           onClick={() => handleOpenEnquiry()}
-          className="btn-glass-primary flex-1 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5"
+          className="btn-glass-primary flex-1 py-2.5 rounded-none text-xs font-semibold flex items-center justify-center gap-1.5 uppercase tracking-wider"
         >
           <Calendar className="w-3.5 h-3.5" />
           <span>Enquire</span>

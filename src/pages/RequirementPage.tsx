@@ -85,27 +85,27 @@ export const RequirementPage: React.FC = () => {
         ]}
       />
 
-      <div className="glass-card rounded-3xl p-6 sm:p-10 border border-slate-200/90 dark:border-slate-800 bg-white/80 dark:bg-[#0B132B]/85 shadow-2xl">
+      <div className="rounded-none p-6 sm:p-8 border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B132B]">
         {submitted ? (
-          <div className="text-center py-12 space-y-4">
-            <div className="w-16 h-16 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center mx-auto mb-4 border border-emerald-500/20">
-              <CheckCircle2 className="w-9 h-9" />
+          <div className="text-center py-10 space-y-3">
+            <div className="w-12 h-12 rounded-none bg-emerald-500/10 text-emerald-500 flex items-center justify-center mx-auto mb-3 border border-emerald-500/20">
+              <CheckCircle2 className="w-7 h-7" />
             </div>
-            <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white font-['Outfit']">
+            <h2 className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white">
               Requirement Dossier Logged
             </h2>
-            <p className="text-sm text-slate-600 dark:text-slate-300 max-w-lg mx-auto leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-lg mx-auto leading-relaxed font-sans">
               Thank you, <strong>{formData.name}</strong>. Your commercial space requirement has been dispatched to our senior leasing desk. A consultant will review matching floor plans and contact you shortly.
             </p>
-            <div className="pt-6 flex flex-wrap items-center justify-center gap-3">
-              <Link to="/properties" className="btn-glass-primary px-6 py-2.5 rounded-xl text-sm font-semibold">
+            <div className="pt-4 flex flex-wrap items-center justify-center gap-3">
+              <Link to="/properties" className="btn-glass-primary px-5 py-2.5 rounded-none text-xs font-semibold uppercase tracking-wider">
                 Explore Public Listings
               </Link>
               <a
                 href={generateRequirementWhatsAppLink(formData)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn-whatsapp px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2"
+                className="btn-whatsapp px-5 py-2.5 rounded-none text-xs font-semibold flex items-center gap-2 uppercase tracking-wider"
               >
                 <MessageSquare className="w-4 h-4" />
                 Connect on WhatsApp
@@ -114,14 +114,14 @@ export const RequirementPage: React.FC = () => {
           </div>
         ) : (
           <div>
-            <div className="mb-8">
-              <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
+            <div className="mb-6">
+              <span className="text-[10px] sm:text-[11px] font-mono font-semibold uppercase tracking-widest text-brand-600 dark:text-brand-400">
                 Custom Space Acquisition
               </span>
-              <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white font-['Outfit'] mt-1">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-slate-900 dark:text-white tracking-tight mt-1">
                 Tell Us What Property You Need
               </h1>
-              <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1 font-sans">
                 Our team will search verified offline inventory across all major IT parks, logistics parks, and industrial corridors in Noida & NCR.
               </p>
             </div>

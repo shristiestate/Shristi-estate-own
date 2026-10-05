@@ -7,7 +7,22 @@ export default {
   darkMode: 'class',
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['"Space Grotesk"', 'system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
+        display: ['"Space Grotesk"', 'system-ui', '-apple-system', 'sans-serif'],
+        serif: ['"Space Grotesk"', 'Georgia', 'serif'],
+        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
+      },
       colors: {
+        editorial: {
+          bg: '#FAFAF7',
+          hover: '#F2F2EC',
+          border: '#E5E5DF',
+          muted: '#8A8A82',
+          darkBg: '#0D0E12',
+          darkHover: '#14161C',
+          darkBorder: '#22252F',
+        },
         brand: {
           50: '#f0f9ff',
           100: '#e0f2fe',
@@ -48,6 +63,7 @@ export default {
         'glow-teal': '0 0 24px -4px rgba(13, 148, 136, 0.35)',
       },
       borderRadius: {
+        'none': '0px',
         '2xl': '1rem',
         '3xl': '1.5rem',
         '4xl': '2rem',

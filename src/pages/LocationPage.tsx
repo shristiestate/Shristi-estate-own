@@ -74,7 +74,7 @@ export const LocationPage: React.FC<LocationPageProps> = ({ onOpenEnquiry }) => 
       />
 
       {/* Location Hero */}
-      <div className="relative rounded-3xl overflow-hidden glass-card p-8 sm:p-12 border border-slate-200 dark:border-slate-800 bg-slate-900 text-white shadow-xl">
+      <div className="relative rounded-none overflow-hidden p-6 sm:p-10 border border-slate-200 dark:border-slate-800 bg-slate-900 text-white">
         <img
           src={location.hero_image}
           alt={location.name}
@@ -83,18 +83,18 @@ export const LocationPage: React.FC<LocationPageProps> = ({ onOpenEnquiry }) => 
         <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/80 to-transparent pointer-events-none" />
 
         <div className="relative z-10 max-w-2xl space-y-3">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-brand-500/20 text-brand-300 border border-brand-500/30">
-            <MapPin className="w-3.5 h-3.5" />
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-none text-[10px] sm:text-[11px] font-mono uppercase tracking-widest bg-brand-500/20 text-brand-300 border border-brand-500/30">
+            <MapPin className="w-3 h-3" />
             {location.city}, {location.region}
           </div>
-          <h1 className="text-3xl sm:text-5xl font-extrabold font-['Outfit'] tracking-tight">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold tracking-tight text-white">
             Commercial Property in {location.name}
           </h1>
-          <div className="overview-text text-base sm:text-lg text-slate-300 leading-relaxed">
+          <div className="overview-text text-xs sm:text-sm text-slate-300 leading-relaxed font-sans">
             {location.description}
           </div>
 
-          <div className="pt-2 flex items-center gap-4 text-xs sm:text-sm text-slate-300">
+          <div className="pt-1 flex items-center gap-3 text-xs text-slate-300">
             <span><strong>{buildings.length}</strong> Commercial Towers / Projects</span>
             {location.building_count && (
               <>
@@ -110,10 +110,10 @@ export const LocationPage: React.FC<LocationPageProps> = ({ onOpenEnquiry }) => 
       <section className="space-y-6" id="location-buildings-section">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-4">
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
+            <span className="text-[10px] sm:text-[11px] font-mono font-semibold uppercase tracking-widest text-brand-600 dark:text-brand-400">
               Commercial Infrastructure
             </span>
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white font-['Outfit']">
+            <h2 className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-white tracking-tight mt-0.5">
               Buildings & Projects in {location.name} {visibleBuildingsCount < buildings.length ? `(${Math.min(visibleBuildingsCount, buildings.length)} of ${buildings.length})` : `(${buildings.length})`}
             </h2>
           </div>
@@ -128,12 +128,12 @@ export const LocationPage: React.FC<LocationPageProps> = ({ onOpenEnquiry }) => 
         </div>
 
         {buildings.length === 0 ? (
-          <div className="glass-card rounded-2xl p-6 text-center text-xs text-slate-500">
+          <div className="rounded-none p-6 text-center text-xs text-slate-500 border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B132B]">
             No independent multi-story buildings registered yet in this sector.
           </div>
         ) : (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-0 border-t border-l border-slate-200 dark:border-slate-800">
               {buildings.slice(0, visibleBuildingsCount).map((b) => (
                 <BuildingCard key={b.id} building={b} />
               ))}
@@ -143,14 +143,14 @@ export const LocationPage: React.FC<LocationPageProps> = ({ onOpenEnquiry }) => 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4 border-t border-slate-200/80 dark:border-slate-800/80">
                 <button
                   onClick={() => setVisibleBuildingsCount((prev) => Math.min(prev + 4, buildings.length))}
-                  className="btn-glass-primary px-6 py-3 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2 shadow-sm"
+                  className="btn-glass-primary px-5 py-2.5 rounded-none text-xs font-semibold uppercase tracking-wider flex items-center gap-2"
                 >
                   <span>Load More Projects ({buildings.length - visibleBuildingsCount} more)</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-3.5 h-3.5" />
                 </button>
                 <button
                   onClick={() => setVisibleBuildingsCount(buildings.length)}
-                  className="px-5 py-3 rounded-2xl text-xs sm:text-sm font-semibold border border-slate-200 dark:border-slate-700 bg-white/60 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors"
+                  className="px-5 py-2.5 rounded-none text-xs font-semibold border border-slate-200 dark:border-slate-700 bg-white/60 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors uppercase tracking-wider"
                 >
                   View All Projects ({buildings.length})
                 </button>
@@ -164,7 +164,7 @@ export const LocationPage: React.FC<LocationPageProps> = ({ onOpenEnquiry }) => 
                     setVisibleBuildingsCount(INITIAL_VISIBLE_BUILDINGS);
                     document.getElementById('location-buildings-section')?.scrollIntoView({ behavior: 'smooth' });
                   }}
-                  className="px-5 py-2.5 rounded-2xl text-xs font-semibold border border-slate-200 dark:border-slate-700 bg-white/60 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors"
+                  className="px-4 py-2 rounded-none text-xs font-semibold border border-slate-200 dark:border-slate-700 bg-white/60 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors uppercase tracking-wider"
                 >
                   Show Fewer (Top {INITIAL_VISIBLE_BUILDINGS})
                 </button>
@@ -175,40 +175,40 @@ export const LocationPage: React.FC<LocationPageProps> = ({ onOpenEnquiry }) => 
       </section>
 
       {/* LOCATION OVERVIEW & WHY INVEST/LEASE HERE */}
-      <section className="glass-card rounded-3xl p-8 bg-white/70 dark:bg-[#0B132B]/75 border border-slate-200/90 dark:border-slate-800 space-y-6">
+      <section className="rounded-none p-6 sm:p-8 bg-white dark:bg-[#0B132B] border border-slate-200 dark:border-slate-800 space-y-5">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-white font-['Outfit']">
+          <h2 className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-white tracking-tight">
             Commercial Advantages of {location.name}
           </h2>
-          <div className="overview-text text-sm text-slate-600 dark:text-slate-300 mt-2 leading-relaxed">
+          <div className="overview-text text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-1.5 leading-relaxed font-sans">
             {location.name} stands as one of the most prominent commercial micro-markets within {location.city}. Benefiting from comprehensive arterial road networks, reliable industrial power grids, and close proximity to public rapid transit hubs.
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800">
-            <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-1">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
+          <div className="p-4 rounded-none bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
+            <h4 className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white mb-1">
               Metro & Arterial Connectivity
             </h4>
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-sans">
               Direct access to metro stations, signal-free expressway stretches, and quick connectivity to New Delhi.
             </p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800">
-            <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-1">
+          <div className="p-4 rounded-none bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
+            <h4 className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white mb-1">
               Talent Pool Access
             </h4>
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-sans">
               High density of IT engineering, corporate management, and skilled workforce residing within a 15-minute commute radius.
             </p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800">
-            <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-1">
+          <div className="p-4 rounded-none bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
+            <h4 className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white mb-1">
               Commercial Infrastructure
             </h4>
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-sans">
               Equipped with Grade-A building management systems, multi-tier car parking, and round-the-clock security infrastructure.
             </p>
           </div>
@@ -216,12 +216,12 @@ export const LocationPage: React.FC<LocationPageProps> = ({ onOpenEnquiry }) => 
 
         {/* CTA Bar */}
         <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+          <div className="text-xs text-slate-600 dark:text-slate-400 font-sans">
             Looking for an off-market or custom office footprint in {location.name}?
           </div>
           <button
             onClick={() => onOpenEnquiry()}
-            className="btn-glass-primary px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold"
+            className="btn-glass-primary px-4 py-2 rounded-none text-xs font-semibold uppercase tracking-wider"
           >
             Enquire for {location.name}
           </button>

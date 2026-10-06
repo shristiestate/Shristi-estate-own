@@ -715,28 +715,68 @@ export const StorageService = {
     }
   },
 
+  async getLocationCascadeCounts(locationId: string): Promise<{ buildingCount: number; unitCount: number }> {
+    const buildings = await this.getBuildings();
+    const relBuildings = buildings.filter(b => 
+      b.location_id === locationId || (b.locations && b.locations.includes(locationId))
+    );
+    const relBuildingIds = new Set(relBuildings.map(b => b.id));
+    const properties = await this.getProperties();
+    const relUnits = properties.filter(p => 
+      p.location_id === locationId || (p.building_id && relBuildingIds.has(p.building_id))
+    );
+    return {
+      buildingCount: relBuildings.length,
+      unitCount: relUnits.length
+    };
+  },
+
   async deleteLocation(locationId: string): Promise<void> {
-    clearStorageCache('loc');
-    clearStorageCache('homepage');
-    try {
-      const locations = await this.getLocations();
-      const updated = locations.filter(l => l.id !== locationId);
-      safeSetItem(STORAGE_KEYS.LOCATIONS, JSON.stringify(updated));
-      _memLocations = updated;
-    } catch (e) {
-      console.warn('LocalStorage delete warning for locations:', e);
-    }
+    clearStorageCache();
 
-    if (_memLocations) {
-      _memLocations = _memLocations.filter(l => l.id !== locationId);
-    }
-
+    // 1. Database-level cascade delete: single atomic transaction via foreign key constraints
     if (isSupabaseConfigured && supabase) {
       try {
-        await supabase.from('locations').delete().eq('id', locationId);
-      } catch (e) {
-        console.warn('Supabase delete location warning:', e);
+        const { error } = await supabase.from('locations').delete().eq('id', locationId);
+        if (error) {
+          console.error('Supabase cascade delete location error:', error);
+          throw new Error(error.message || 'Database error deleting location');
+        }
+      } catch (err: any) {
+        console.error('Supabase delete location transaction failed:', err);
+        throw err;
       }
+    }
+
+    // 2. Synchronize local cache & storage to reflect the cascaded removal of Location, Buildings, and Units
+    try {
+      const buildings = await this.getBuildings();
+      const deletedBuildingIds = new Set(
+        buildings
+          .filter(b => b.location_id === locationId || (b.locations && b.locations.includes(locationId)))
+          .map(b => b.id)
+      );
+
+      // Update locations
+      const locations = await this.getLocations();
+      const updatedLocations = locations.filter(l => l.id !== locationId);
+      safeSetItem(STORAGE_KEYS.LOCATIONS, JSON.stringify(updatedLocations));
+      _memLocations = updatedLocations;
+
+      // Update buildings (cascaded from location)
+      const updatedBuildings = buildings.filter(b => !deletedBuildingIds.has(b.id));
+      safeSetItem(STORAGE_KEYS.BUILDINGS, JSON.stringify(updatedBuildings));
+      _memBuildings = updatedBuildings;
+
+      // Update properties / units (cascaded from location and buildings)
+      const properties = await this.getProperties();
+      const updatedProperties = properties.filter(p => 
+        p.location_id !== locationId && (!p.building_id || !deletedBuildingIds.has(p.building_id))
+      );
+      safeSetItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(updatedProperties));
+      _memProperties = updatedProperties;
+    } catch (e) {
+      console.warn('LocalStorage cascade sync warning for locations:', e);
     }
   },
 
@@ -1014,26 +1054,44 @@ export const StorageService = {
     }
   },
 
+  async getBuildingCascadeCounts(buildingId: string): Promise<{ unitCount: number }> {
+    const properties = await this.getProperties();
+    const relUnits = properties.filter(p => p.building_id === buildingId);
+    return {
+      unitCount: relUnits.length
+    };
+  },
+
   async deleteBuilding(buildingId: string): Promise<void> {
-    try {
-      const buildings = await this.getBuildings();
-      const updated = buildings.filter(b => b.id !== buildingId);
-      safeSetItem(STORAGE_KEYS.BUILDINGS, JSON.stringify(updated));
-      _memBuildings = updated;
-    } catch (e) {
-      console.warn('LocalStorage delete warning for buildings:', e);
-    }
+    clearStorageCache();
 
-    if (_memBuildings) {
-      _memBuildings = _memBuildings.filter(b => b.id !== buildingId);
-    }
-
+    // 1. Database-level cascade delete: single atomic transaction via foreign key constraint
     if (isSupabaseConfigured && supabase) {
       try {
-        await supabase.from('buildings').delete().eq('id', buildingId);
-      } catch (e) {
-        console.warn('Supabase delete building warning:', e);
+        const { error } = await supabase.from('buildings').delete().eq('id', buildingId);
+        if (error) {
+          console.error('Supabase cascade delete building error:', error);
+          throw new Error(error.message || 'Database error deleting building');
+        }
+      } catch (err: any) {
+        console.error('Supabase delete building transaction failed:', err);
+        throw err;
       }
+    }
+
+    // 2. Synchronize local cache & storage to reflect the cascaded removal of Building and its Units
+    try {
+      const buildings = await this.getBuildings();
+      const updatedBuildings = buildings.filter(b => b.id !== buildingId);
+      safeSetItem(STORAGE_KEYS.BUILDINGS, JSON.stringify(updatedBuildings));
+      _memBuildings = updatedBuildings;
+
+      const properties = await this.getProperties();
+      const updatedProperties = properties.filter(p => p.building_id !== buildingId);
+      safeSetItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(updatedProperties));
+      _memProperties = updatedProperties;
+    } catch (e) {
+      console.warn('LocalStorage cascade sync warning for buildings:', e);
     }
   },
 

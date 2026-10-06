@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS buildings (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   slug TEXT UNIQUE NOT NULL,
-  location_id TEXT REFERENCES locations(id) ON DELETE SET NULL,
+  location_id TEXT REFERENCES locations(id) ON DELETE CASCADE,
   location_name TEXT NOT NULL,
   category TEXT NOT NULL,
   address TEXT NOT NULL,
@@ -61,9 +61,9 @@ CREATE TABLE IF NOT EXISTS properties (
   price_display TEXT NOT NULL,
   rate_per_sqft TEXT,
   rent_frequency TEXT,
-  location_id TEXT REFERENCES locations(id) ON DELETE SET NULL,
+  location_id TEXT REFERENCES locations(id) ON DELETE CASCADE,
   location_name TEXT NOT NULL,
-  building_id TEXT REFERENCES buildings(id) ON DELETE SET NULL,
+  building_id TEXT REFERENCES buildings(id) ON DELETE CASCADE,
   building_name TEXT,
   address TEXT NOT NULL,
   city TEXT NOT NULL,
@@ -181,5 +181,31 @@ USING (bucket_id = 'blog-images');
 CREATE POLICY "Public insert/update blog images" 
 ON storage.objects FOR INSERT 
 WITH CHECK (bucket_id = 'blog-images');
+
+-- 7. CASCADE DELETE FOREIGN KEY CONSTRAINTS & PERFORMANCE INDEXES
+-- Ensures: Location -> Buildings -> Units (Properties)
+-- Deleting a Location automatically deletes all its Buildings and Units in a single transaction.
+-- Deleting a Building automatically deletes all its Units.
+
+ALTER TABLE buildings 
+  DROP CONSTRAINT IF EXISTS buildings_location_id_fkey,
+  ADD CONSTRAINT buildings_location_id_fkey 
+    FOREIGN KEY (location_id) REFERENCES locations(id) ON DELETE CASCADE;
+
+ALTER TABLE properties 
+  DROP CONSTRAINT IF EXISTS properties_building_id_fkey,
+  ADD CONSTRAINT properties_building_id_fkey 
+    FOREIGN KEY (building_id) REFERENCES buildings(id) ON DELETE CASCADE;
+
+ALTER TABLE properties 
+  DROP CONSTRAINT IF EXISTS properties_location_id_fkey,
+  ADD CONSTRAINT properties_location_id_fkey 
+    FOREIGN KEY (location_id) REFERENCES locations(id) ON DELETE CASCADE;
+
+-- High-performance foreign key indexes for rapid cascade deletes and filtering
+CREATE INDEX IF NOT EXISTS idx_buildings_location_id ON buildings(location_id);
+CREATE INDEX IF NOT EXISTS idx_properties_building_id ON properties(building_id);
+CREATE INDEX IF NOT EXISTS idx_properties_location_id ON properties(location_id);
+
 
 

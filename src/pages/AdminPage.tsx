@@ -68,6 +68,7 @@ import { AdminSeoPreviewSection } from '../components/common/AdminSeoPreviewSect
 import { AdminMediaManager } from '../components/common/AdminMediaManager';
 import { compressImageFile } from '../utils/imageCompression';
 import { AdminHyperlinksManager } from '../components/common/AdminHyperlinksManager';
+import { CascadeDeleteConfirmationModal, CascadeDeleteTarget } from '../components/modals/CascadeDeleteConfirmationModal';
 import { 
   computeSeoStatus, 
   getTowerImageAlt, 
@@ -269,6 +270,8 @@ export const AdminPage: React.FC = () => {
   const [clients, setClients] = useState<ClientLogo[]>(() => StorageService.getInitialClients());
   const [reels, setReels] = useState<InstagramReel[]>(() => StorageService.getInitialInstagramReels());
   const [globalHyperlinks, setGlobalHyperlinks] = useState<HyperlinkConfig[]>(() => StorageService.getInitialGlobalHyperlinks());
+  const [cascadeDeleteTarget, setCascadeDeleteTarget] = useState<CascadeDeleteTarget | null>(null);
+  const [isDeletingCascade, setIsDeletingCascade] = useState(false);
 
   // Market Guides Admin State
   const [guideSearch, setGuideSearch] = useState('');
@@ -1555,10 +1558,24 @@ export const AdminPage: React.FC = () => {
     setShowBuildingModal(true);
   };
 
+  const handlePromptDeleteBuilding = (bld: Building) => {
+    const relUnits = properties.filter(p => p.building_id === bld.id);
+    setCascadeDeleteTarget({
+      type: 'building',
+      id: bld.id,
+      name: bld.name,
+      unitCount: relUnits.length
+    });
+  };
+
   const handleDeleteBuilding = async (buildingId: string) => {
-    if (window.confirm('Are you sure you want to delete this commercial building?')) {
+    const bld = buildings.find(b => b.id === buildingId);
+    if (bld) {
+      handlePromptDeleteBuilding(bld);
+    } else {
       await StorageService.deleteBuilding(buildingId);
       setBuildings(prev => prev.filter(b => b.id !== buildingId));
+      setProperties(prev => prev.filter(p => p.building_id !== buildingId));
     }
   };
 
@@ -1725,10 +1742,67 @@ export const AdminPage: React.FC = () => {
     setShowLocationModal(true);
   };
 
+  const handlePromptDeleteLocation = (loc: Location) => {
+    const relBuildings = buildings.filter(b => 
+      b.location_id === loc.id || (b.locations && b.locations.includes(loc.id))
+    );
+    const relBuildingIds = new Set(relBuildings.map(b => b.id));
+    const relUnits = properties.filter(p => 
+      p.location_id === loc.id || (p.building_id && relBuildingIds.has(p.building_id))
+    );
+
+    setCascadeDeleteTarget({
+      type: 'location',
+      id: loc.id,
+      name: loc.name,
+      buildingCount: relBuildings.length,
+      unitCount: relUnits.length
+    });
+  };
+
   const handleDeleteLocation = async (locationId: string) => {
-    if (window.confirm('Are you sure you want to delete this commercial location?')) {
+    const loc = locations.find(l => l.id === locationId);
+    if (loc) {
+      handlePromptDeleteLocation(loc);
+    } else {
       await StorageService.deleteLocation(locationId);
       setLocations(prev => prev.filter(l => l.id !== locationId));
+    }
+  };
+
+  const handleConfirmCascadeDelete = async () => {
+    if (!cascadeDeleteTarget) return;
+    setIsDeletingCascade(true);
+    try {
+      if (cascadeDeleteTarget.type === 'location') {
+        const locId = cascadeDeleteTarget.id;
+        const relBuildings = buildings.filter(b => 
+          b.location_id === locId || (b.locations && b.locations.includes(locId))
+        );
+        const relBuildingIds = new Set(relBuildings.map(b => b.id));
+
+        // Atomic database cascade delete via ON DELETE CASCADE foreign key
+        await StorageService.deleteLocation(locId);
+
+        // Update local React UI states in AdminPage
+        setLocations(prev => prev.filter(l => l.id !== locId));
+        setBuildings(prev => prev.filter(b => !relBuildingIds.has(b.id)));
+        setProperties(prev => prev.filter(p => 
+          p.location_id !== locId && (!p.building_id || !relBuildingIds.has(p.building_id))
+        ));
+      } else {
+        const bldId = cascadeDeleteTarget.id;
+        // Atomic database cascade delete via ON DELETE CASCADE foreign key
+        await StorageService.deleteBuilding(bldId);
+
+        setBuildings(prev => prev.filter(b => b.id !== bldId));
+        setProperties(prev => prev.filter(p => p.building_id !== bldId));
+      }
+      setCascadeDeleteTarget(null);
+    } catch (err: any) {
+      alert(`Cascade delete failed: ${err?.message || 'Database error'}`);
+    } finally {
+      setIsDeletingCascade(false);
     }
   };
 
@@ -2808,7 +2882,7 @@ export const AdminPage: React.FC = () => {
                     {/* Compact Delete Button */}
                     <button
                       type="button"
-                      onClick={() => handleDeleteBuilding(bld.id)}
+                      onClick={() => handlePromptDeleteBuilding(bld)}
                       className="p-1.5 rounded-xl bg-slate-950/60 hover:bg-rose-600 text-white/90 hover:text-white shadow-md backdrop-blur-md transition-all active:scale-95 cursor-pointer shrink-0"
                       title="Delete Commercial Building"
                     >
@@ -3260,7 +3334,7 @@ export const AdminPage: React.FC = () => {
                       <span className="hidden sm:inline">Update</span>
                     </button>
                     <button
-                      onClick={() => handleDeleteLocation(loc.id)}
+                      onClick={() => handlePromptDeleteLocation(loc)}
                       className="p-2 rounded-xl bg-white/90 dark:bg-slate-900/90 text-rose-500 shadow-md backdrop-blur-md hover:scale-105 transition-all"
                       title="Delete Sector"
                     >
@@ -7344,6 +7418,15 @@ export const AdminPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Database Cascade Delete Confirmation Modal */}
+      <CascadeDeleteConfirmationModal
+        isOpen={Boolean(cascadeDeleteTarget)}
+        target={cascadeDeleteTarget}
+        isDeleting={isDeletingCascade}
+        onConfirm={handleConfirmCascadeDelete}
+        onCancel={() => setCascadeDeleteTarget(null)}
+      />
     </div>
   );
 };

@@ -436,7 +436,7 @@ export const InstagramReelsShowcase: React.FC = () => {
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-none bg-brand-50 dark:bg-brand-950/70 border border-brand-200 dark:border-brand-800/80 text-brand-700 dark:text-brand-300 text-xs font-mono uppercase tracking-wider font-semibold mb-2">
             <InstagramBrandIcon className="w-4 h-4" />
-            <span>Curved Ring Video Tours • Live Previews</span>
+            <span>Immersive Video Walkthroughs • Live Previews</span>
           </div>
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white font-['Space_Grotesk'] mt-1">
             Explore Spaces on Instagram Reels

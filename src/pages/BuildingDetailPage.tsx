@@ -30,6 +30,7 @@ import {
   generateTowerStructuredData 
 } from '../utils/seoHelpers';
 import { applyHyperlinksToContent } from '../utils/hyperlinks';
+import { HyperlinkedText } from '../components/common/HyperlinkedText';
 
 interface BuildingDetailPageProps {
   onOpenEnquiry: (property?: Property) => void;
@@ -291,9 +292,13 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
               Building Overview & Specifications
             </h2>
             {building.short_description && (
-              <p className="text-sm font-semibold text-brand-700 dark:text-brand-300 mt-2">
-                {building.short_description}
-              </p>
+              <HyperlinkedText
+                as="p"
+                inline
+                hyperlinks={building.hyperlinks}
+                className="text-sm font-semibold text-brand-700 dark:text-brand-300 mt-2"
+                text={building.short_description}
+              />
             )}
             <div 
               className="overview-text text-sm text-slate-600 dark:text-slate-400 mt-3 leading-relaxed space-y-3 prose dark:prose-invert max-w-none font-sans"

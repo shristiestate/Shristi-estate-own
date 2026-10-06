@@ -6,6 +6,7 @@ import { StorageService } from '../services/storageService';
 import { MarketGuide } from '../types';
 import { getBlogFeaturedImage, getBlogImageAlt, DEFAULT_BLOG_PLACEHOLDER_IMAGE } from '../utils/blogConstants';
 import { updatePageSeo } from '../utils/seo';
+import { HyperlinkedText } from '../components/common/HyperlinkedText';
 
 export const BlogPage: React.FC = () => {
   const [guides, setGuides] = useState<MarketGuide[]>(() => 
@@ -75,9 +76,12 @@ export const BlogPage: React.FC = () => {
         <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-slate-900 dark:text-white tracking-tight">
           Commercial Real Estate Insights & Guides
         </h1>
-        <p className="text-xs sm:text-[13px] text-slate-600 dark:text-slate-400 leading-relaxed font-sans max-w-2xl mx-auto">
-          Comprehensive market research, institutional leasing guidelines, rental benchmarks, and micro-market intelligence across Noida, Greater Noida, and Delhi NCR.
-        </p>
+        <HyperlinkedText
+          as="p"
+          inline
+          className="text-xs sm:text-[13px] text-slate-600 dark:text-slate-400 leading-relaxed font-sans max-w-2xl mx-auto"
+          text="Comprehensive market research, institutional leasing guidelines, rental benchmarks, and micro-market intelligence across Noida, Greater Noida, and Delhi NCR."
+        />
       </div>
 
       {/* Filter & Search Bar */}
@@ -195,9 +199,13 @@ export const BlogPage: React.FC = () => {
                   </h2>
 
                   {/* Excerpt */}
-                  <p className="text-[11px] sm:text-[11.5px] text-slate-600 dark:text-slate-300 leading-relaxed line-clamp-2 font-sans">
-                    {post.excerpt}
-                  </p>
+                  <HyperlinkedText
+                    as="p"
+                    inline
+                    hyperlinks={post.hyperlinks}
+                    className="text-[11px] sm:text-[11.5px] text-slate-600 dark:text-slate-300 leading-relaxed line-clamp-2 font-sans"
+                    text={post.excerpt}
+                  />
 
                   {/* Optional Author */}
                   {post.author && (

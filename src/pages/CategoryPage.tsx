@@ -8,6 +8,7 @@ import { PropertyCard } from '../components/common/PropertyCard';
 import { BuildingCard } from '../components/common/BuildingCard';
 import { LocationCard } from '../components/common/LocationCard';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
+import { HyperlinkedText } from '../components/common/HyperlinkedText';
 
 interface CategoryPageProps {
   categorySlug?: string;
@@ -125,7 +126,7 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
             {meta.title}
           </h1>
           <div className="overview-text text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-sans">
-            {meta.description}
+            <HyperlinkedText text={meta.description} inline />
           </div>
 
           <div className="pt-1 flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">

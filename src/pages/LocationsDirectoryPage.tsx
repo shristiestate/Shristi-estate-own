@@ -3,6 +3,7 @@ import { StorageService } from '../services/storageService';
 import { Location } from '../types';
 import { LocationCard } from '../components/common/LocationCard';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
+import { HyperlinkedText } from '../components/common/HyperlinkedText';
 
 export const LocationsDirectoryPage: React.FC = () => {
   const [locations, setLocations] = useState<Location[]>(() => StorageService.getInitialLocations());
@@ -38,9 +39,12 @@ export const LocationsDirectoryPage: React.FC = () => {
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-slate-900 dark:text-white tracking-tight mt-1">
             Commercial Locations in Noida & NCR
           </h1>
-          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1">
-            Select a commercial sector to explore buildings, IT parks, and verified office/warehouse inventory.
-          </p>
+          <HyperlinkedText
+            as="p"
+            inline
+            className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1"
+            text="Select a commercial sector to explore buildings, IT parks, and verified office/warehouse inventory."
+          />
         </div>
 
         {/* City Filter Pills */}

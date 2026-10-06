@@ -5,6 +5,7 @@ import { StorageService } from '../services/storageService';
 import { Property, Location } from '../types';
 import { PropertyCard } from '../components/common/PropertyCard';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
+import { HyperlinkedText } from '../components/common/HyperlinkedText';
 
 interface PropertiesPageProps {
   onOpenEnquiry: (property?: Property) => void;
@@ -103,9 +104,12 @@ export const PropertiesPage: React.FC<PropertiesPageProps> = ({ onOpenEnquiry })
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-slate-900 dark:text-white tracking-tight mt-1">
             Commercial Properties for Lease & Sale
           </h1>
-          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1">
-            Browse verified offices, IT spaces, warehouses, industrial units, and commercial plots across Noida & NCR.
-          </p>
+          <HyperlinkedText
+            as="p"
+            inline
+            className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1"
+            text="Browse verified offices, IT spaces, warehouses, industrial units, and commercial plots across Noida & NCR."
+          />
         </div>
 
         {/* Mobile Filter Toggle */}

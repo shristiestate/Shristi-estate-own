@@ -1,9 +1,10 @@
-import { Location, Building, Property, Lead, LeadStatus, MarketGuide, ClientLogo, InstagramReel } from '../types';
+import { Location, Building, Property, Lead, LeadStatus, MarketGuide, ClientLogo, InstagramReel, HyperlinkConfig } from '../types';
 import { INITIAL_LOCATIONS, INITIAL_BUILDINGS, INITIAL_PROPERTIES, INITIAL_LEADS, INITIAL_MARKET_GUIDES, INITIAL_CLIENTS, INITIAL_INSTAGRAM_REELS } from '../data/mockData';
 import { supabase, isSupabaseConfigured } from './supabaseClient';
 import { getBuildingStructureDisplay } from '../utils/textFormat';
 import { generateAvailablePropertiesForBuilding } from '../utils/buildingUnits';
 import { cleanPropertyAddress } from '../utils/propertyLocation';
+import { DEFAULT_GLOBAL_HYPERLINKS, GLOBAL_HYPERLINKS_STORAGE_KEY } from '../utils/hyperlinks';
 
 const STORAGE_KEYS = {
   LOCATIONS: 'shristi_locations_v1',
@@ -14,6 +15,7 @@ const STORAGE_KEYS = {
   GUIDES: 'shristi_guides_v1',
   CLIENTS: 'shristi_clients_v1',
   REELS: 'shristi_reels_v1',
+  HYPERLINKS: GLOBAL_HYPERLINKS_STORAGE_KEY,
 };
 
 let _memLocations: Location[] | null = null;
@@ -24,6 +26,7 @@ let _memLeads: Lead[] | null = null;
 let _memGuides: MarketGuide[] | null = null;
 let _memClients: ClientLogo[] | null = null;
 let _memReels: InstagramReel[] | null = null;
+let _memGlobalHyperlinks: HyperlinkConfig[] | null = null;
 
 interface CacheEntry<T> {
   data: T;
@@ -439,6 +442,30 @@ export const StorageService = {
     if (!locationId) return [];
     const buildings = this.getInitialBuildings();
     return buildings.filter(b => b.location_id === locationId || (b.locations && b.locations.includes(locationId)));
+  },
+
+  getInitialGlobalHyperlinks(): HyperlinkConfig[] {
+    if (_memGlobalHyperlinks && _memGlobalHyperlinks.length > 0) return _memGlobalHyperlinks;
+    try {
+      const stored = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.HYPERLINKS) : null;
+      if (stored) {
+        _memGlobalHyperlinks = JSON.parse(stored);
+        return _memGlobalHyperlinks!;
+      }
+    } catch (e) {
+      console.warn('Error reading stored global hyperlinks:', e);
+    }
+    _memGlobalHyperlinks = DEFAULT_GLOBAL_HYPERLINKS;
+    return DEFAULT_GLOBAL_HYPERLINKS;
+  },
+
+  async getGlobalHyperlinks(): Promise<HyperlinkConfig[]> {
+    return this.getInitialGlobalHyperlinks();
+  },
+
+  async saveGlobalHyperlinks(hyperlinks: HyperlinkConfig[]): Promise<void> {
+    _memGlobalHyperlinks = hyperlinks;
+    safeSetItem(STORAGE_KEYS.HYPERLINKS, JSON.stringify(hyperlinks));
   },
 
   /**

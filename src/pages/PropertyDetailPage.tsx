@@ -34,6 +34,7 @@ import {
   generatePropertyStructuredData 
 } from '../utils/seoHelpers';
 import { applyHyperlinksToContent } from '../utils/hyperlinks';
+import { HyperlinkedText } from '../components/common/HyperlinkedText';
 
 interface PropertyDetailPageProps {
   onOpenEnquiry: (property: Property) => void;
@@ -316,9 +317,13 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
               Commercial Overview & Highlights
             </h2>
             {property.short_description && (
-              <p className="text-sm font-semibold text-brand-700 dark:text-brand-300">
-                {property.short_description}
-              </p>
+              <HyperlinkedText
+                as="p"
+                inline
+                hyperlinks={property.hyperlinks}
+                className="text-sm font-semibold text-brand-700 dark:text-brand-300"
+                text={property.short_description}
+              />
             )}
             <div 
               className="overview-text text-sm text-slate-600 dark:text-slate-300 leading-relaxed space-y-3 prose dark:prose-invert max-w-none"

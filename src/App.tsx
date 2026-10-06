@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, useLocation, Link } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation, Link, useNavigate } from 'react-router-dom';
 import { Phone, MessageSquare, Calendar, Home, Search as SearchIcon } from 'lucide-react';
 import { WhatsAppIcon } from './components/common/SocialIcons';
 import { generateGeneralEnquiryWhatsAppLink } from './utils/whatsapp';
@@ -80,6 +80,27 @@ export const AppContent: React.FC = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isEnquiryOpen, setIsEnquiryOpen] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Intercept clicks on internal hyperlink anchors for instant, smooth client-side routing
+    const handleGlobalLinkClick = (e: MouseEvent) => {
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.defaultPrevented) return;
+      const target = (e.target as HTMLElement)?.closest('a');
+      if (!target) return;
+      const href = target.getAttribute('href');
+      if (href && href.startsWith('/') && !href.startsWith('//') && target.target !== '_blank') {
+        e.preventDefault();
+        navigate(href);
+        window.scrollTo(0, 0);
+      }
+    };
+
+    document.addEventListener('click', handleGlobalLinkClick);
+    return () => {
+      document.removeEventListener('click', handleGlobalLinkClick);
+    };
+  }, [navigate]);
 
   const handleOpenEnquiry = (property?: Property) => {
     setSelectedProperty(property || null);

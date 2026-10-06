@@ -5,6 +5,7 @@ import { StorageService } from '../services/storageService';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
 import { generateRequirementWhatsAppLink } from '../utils/whatsapp';
 import { handleOverviewPaste } from '../utils/textFormat';
+import { HyperlinkedText } from '../components/common/HyperlinkedText';
 
 export const RequirementPage: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -121,9 +122,12 @@ export const RequirementPage: React.FC = () => {
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-slate-900 dark:text-white tracking-tight mt-1">
                 Tell Us What Property You Need
               </h1>
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1 font-sans">
-                Our team will search verified offline inventory across all major IT parks, logistics parks, and industrial corridors in Noida & NCR.
-              </p>
+              <HyperlinkedText
+                as="p"
+                inline
+                className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1 font-sans"
+                text="Our team will search verified offline inventory across all major IT parks, logistics parks, and industrial corridors in Noida & NCR."
+              />
             </div>
 
             {error && (

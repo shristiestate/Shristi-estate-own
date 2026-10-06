@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { ShieldCheck, Building2, Users, Target, CheckCircle2, ArrowRight } from 'lucide-react';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
+import { HyperlinkedText } from '../components/common/HyperlinkedText';
 
 export const AboutPage: React.FC = () => {
   return (
@@ -21,9 +22,12 @@ export const AboutPage: React.FC = () => {
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold tracking-tight text-white">
             Specialized Commercial Advisory for Noida & Delhi NCR
           </h1>
-          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-sans">
-            Shristi Estate is committed to transparent, structured, and friction-free commercial real estate discovery. We specialize exclusively in corporate office spaces, IT business parks, industrial units, and logistics infrastructure.
-          </p>
+          <HyperlinkedText
+            as="p"
+            inline
+            className="text-xs sm:text-sm text-slate-300 leading-relaxed font-sans"
+            text="Shristi Estate is committed to transparent, structured, and friction-free commercial real estate discovery. We specialize exclusively in corporate office spaces, IT business parks, industrial units, and logistics infrastructure."
+          />
         </div>
       </div>
 
@@ -72,9 +76,13 @@ export const AboutPage: React.FC = () => {
           <h2 className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-white tracking-tight">
             Primary Commercial Territories
           </h2>
-          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed mt-1 font-sans">
-            Our senior advisory desk operates from our corporate office located in <strong>I-Thum Tower, Sector 62, Noida</strong>. We maintain active leasing and sales representation across:
-          </p>
+          <div className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed mt-1 font-sans">
+            <HyperlinkedText
+              as="span"
+              inline
+              text="Our senior advisory desk operates from our corporate office located in I-Thum Tower, Sector 62, Noida. We maintain active leasing and sales representation across:"
+            />
+          </div>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">

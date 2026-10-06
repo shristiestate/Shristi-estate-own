@@ -5,6 +5,7 @@ import { StorageService } from '../services/storageService';
 import { Location, Building, Property } from '../types';
 import { BuildingCard } from '../components/common/BuildingCard';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
+import { HyperlinkedText } from '../components/common/HyperlinkedText';
 
 interface LocationPageProps {
   onOpenEnquiry: (property?: Property) => void;
@@ -105,9 +106,10 @@ export const LocationPage: React.FC<LocationPageProps> = ({ onOpenEnquiry }) => 
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold tracking-tight text-white">
             Commercial Property in {location.name}
           </h1>
-          <div className="overview-text text-xs sm:text-sm text-slate-300 leading-relaxed font-sans">
-            {location.description}
-          </div>
+          <HyperlinkedText
+            text={location.description}
+            className="overview-text text-xs sm:text-sm text-slate-300 leading-relaxed font-sans"
+          />
 
           <div className="pt-1 flex items-center gap-3 text-xs text-slate-300">
             <span><strong>{buildings.length}</strong> Commercial Towers / Projects</span>

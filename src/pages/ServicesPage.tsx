@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Building2, Key, Handshake, Search, CalendarCheck, FileText, ArrowRight } from 'lucide-react';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
+import { HyperlinkedText } from '../components/common/HyperlinkedText';
 
 export const ServicesPage: React.FC = () => {
   const services = [
@@ -58,9 +59,12 @@ export const ServicesPage: React.FC = () => {
         <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-slate-900 dark:text-white tracking-tight">
           Commercial Real Estate Services
         </h1>
-        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-sans max-w-2xl mx-auto">
-          Tailored property solutions for business tenants, institutional buyers, and commercial property owners across Noida, Greater Noida, and Delhi-NCR.
-        </p>
+        <HyperlinkedText
+          as="p"
+          inline
+          className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-sans max-w-2xl mx-auto"
+          text="Tailored property solutions for business tenants, institutional buyers, and commercial property owners across Noida, Greater Noida, and Delhi-NCR."
+        />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0 border-t border-l border-slate-200 dark:border-slate-800 [&>*]:border-r [&>*]:border-b [&>*]:border-slate-200 dark:[&>*]:border-slate-800">
@@ -78,9 +82,12 @@ export const ServicesPage: React.FC = () => {
                 <h3 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white">
                   {svc.title}
                 </h3>
-                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-sans">
-                  {svc.desc}
-                </p>
+                <HyperlinkedText
+                  as="p"
+                  inline
+                  className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-sans"
+                  text={svc.desc}
+                />
 
                 <div className="pt-1 space-y-1.5">
                   <span className="text-[10px] font-mono font-semibold text-slate-400 uppercase tracking-wider">Key Benefits:</span>

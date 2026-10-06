@@ -5,6 +5,7 @@ import { Breadcrumbs } from '../components/common/Breadcrumbs';
 import { WhatsAppIcon } from '../components/common/SocialIcons';
 import { generateGeneralEnquiryWhatsAppLink } from '../utils/whatsapp';
 import { handleOverviewPaste } from '../utils/textFormat';
+import { HyperlinkedText } from '../components/common/HyperlinkedText';
 
 export const ContactPage: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -66,9 +67,12 @@ export const ContactPage: React.FC = () => {
         <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-slate-900 dark:text-white tracking-tight">
           Contact Shristi Estate
         </h1>
-        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-sans">
-          Visit our corporate office at I-Thum Tower, Sector 62, Noida, or connect directly with our commercial specialists.
-        </p>
+        <HyperlinkedText
+          as="p"
+          inline
+          className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-sans"
+          text="Visit our corporate office at I-Thum Tower, Sector 62, Noida, or connect directly with our commercial specialists."
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -86,9 +90,12 @@ export const ContactPage: React.FC = () => {
                 </div>
                 <div>
                   <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block">Registered Address</span>
-                  <p className="text-slate-800 dark:text-slate-200 font-medium leading-snug mt-0.5">
-                    Unit No. 1035, 10th Floor, Tower-B, iThum Tower, Plot No. A-40, Sector-62, Noida, Uttar Pradesh 201309
-                  </p>
+                  <HyperlinkedText
+                    as="p"
+                    inline
+                    className="text-slate-800 dark:text-slate-200 font-medium leading-snug mt-0.5"
+                    text="Unit No. 1035, 10th Floor, Tower-B, iThum Tower, Plot No. A-40, Sector-62, Noida, Uttar Pradesh 201309"
+                  />
                 </div>
               </div>
 

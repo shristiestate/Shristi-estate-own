@@ -22,6 +22,7 @@ import {
 import { StorageService } from '../services/storageService';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
 import { handleOverviewPaste } from '../utils/textFormat';
+import { HyperlinkedText } from '../components/common/HyperlinkedText';
 
 // Client-side image compressor: scales down high-res photos to prevent memory lag & storage quota issues
 const compressImage = (file: File, maxWidth = 1280, quality = 0.75): Promise<string> => {
@@ -341,9 +342,12 @@ export const ListPropertyPage: React.FC = () => {
               <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white font-['Outfit'] mt-1">
                 List Your Commercial Property
               </h1>
-              <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">
-                Connect with vetted corporate tenants, MNCs, and commercial investors across Noida and Delhi-NCR.
-              </p>
+              <HyperlinkedText
+                as="p"
+                inline
+                className="text-sm text-slate-600 dark:text-slate-300 mt-1"
+                text="Connect with vetted corporate tenants, MNCs, and commercial investors across Noida and Delhi-NCR."
+              />
             </div>
 
             {/* Actionable Error Alert */}

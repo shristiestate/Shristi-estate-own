@@ -4,6 +4,7 @@ import { Building2, MapPin, ArrowRight, Layers } from 'lucide-react';
 import { Building } from '../../types';
 import { getBuildingStructureDisplay } from '../../utils/textFormat';
 import { StorageService } from '../../services/storageService';
+import { HyperlinkedText } from './HyperlinkedText';
 
 interface BuildingCardProps {
   building: Building;
@@ -77,9 +78,13 @@ export const BuildingCard: React.FC<BuildingCardProps> = ({ building, index }) =
             </Link>
           </h3>
 
-          <p className="overview-card-text text-[10.5px] sm:text-[11px] text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed mt-1 font-sans">
-            {building.description}
-          </p>
+          <HyperlinkedText
+            as="p"
+            inline
+            hyperlinks={building.hyperlinks}
+            className="overview-card-text text-[10.5px] sm:text-[11px] text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed mt-1 font-sans"
+            text={building.description}
+          />
 
           {/* Specs Overview */}
           <div className="space-y-1.5 py-2 mt-2.5 border-y border-slate-100 dark:border-slate-800/80 text-[10px] sm:text-[10.5px]">

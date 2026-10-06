@@ -62,7 +62,7 @@ import { handleOverviewPaste, computeStructureDisplay, getBuildingStructureDispl
 import { EditBuildingPropertiesModal } from '../components/modals/EditBuildingPropertiesModal';
 import { AdminClientsManager } from '../components/admin/AdminClientsManager';
 import { AdminReelsManager } from '../components/admin/AdminReelsManager';
-import { INTERNAL_PAGE_PRESETS, formatHyperlinkUrl, applyHyperlinksToContent } from '../utils/hyperlinks';
+import { INTERNAL_PAGE_PRESETS, formatHyperlinkUrl, applyHyperlinksToContent, DEFAULT_GLOBAL_HYPERLINKS } from '../utils/hyperlinks';
 import { DEFAULT_BLOG_PLACEHOLDER_IMAGE, getBlogFeaturedImage, getBlogImageAlt, generateBlogSlug } from '../utils/blogConstants';
 import { AdminSeoPreviewSection } from '../components/common/AdminSeoPreviewSection';
 import { AdminMediaManager } from '../components/common/AdminMediaManager';
@@ -258,7 +258,7 @@ export const AdminPage: React.FC = () => {
   const [authError, setAuthError] = useState('');
 
   // Active Tab
-  const [activeTab, setActiveTab] = useState<'leads' | 'properties' | 'buildings' | 'locations' | 'media' | 'guides' | 'clients' | 'reels'>('properties');
+  const [activeTab, setActiveTab] = useState<'leads' | 'properties' | 'buildings' | 'locations' | 'media' | 'guides' | 'clients' | 'reels' | 'hyperlinks'>('properties');
 
   // Data
   const [properties, setProperties] = useState<Property[]>(() => StorageService.getInitialProperties());
@@ -268,6 +268,7 @@ export const AdminPage: React.FC = () => {
   const [guides, setGuides] = useState<MarketGuide[]>(() => StorageService.getInitialGuides());
   const [clients, setClients] = useState<ClientLogo[]>(() => StorageService.getInitialClients());
   const [reels, setReels] = useState<InstagramReel[]>(() => StorageService.getInitialInstagramReels());
+  const [globalHyperlinks, setGlobalHyperlinks] = useState<HyperlinkConfig[]>(() => StorageService.getInitialGlobalHyperlinks());
 
   // Market Guides Admin State
   const [guideSearch, setGuideSearch] = useState('');
@@ -831,7 +832,7 @@ export const AdminPage: React.FC = () => {
 
   const loadAllData = async () => {
     setLoading(true);
-    const [p, b, l, ld, gd, cl, rl] = await Promise.all([
+    const [p, b, l, ld, gd, cl, rl, ghl] = await Promise.all([
       StorageService.getProperties(),
       StorageService.getBuildings(),
       StorageService.getLocations(),
@@ -839,6 +840,7 @@ export const AdminPage: React.FC = () => {
       StorageService.getGuides(),
       StorageService.getClients(),
       StorageService.getInstagramReels(),
+      StorageService.getGlobalHyperlinks(),
     ]);
     setProperties(p);
     setBuildings(b);
@@ -847,7 +849,19 @@ export const AdminPage: React.FC = () => {
     setGuides(gd);
     setClients(cl);
     setReels(rl);
+    setGlobalHyperlinks(ghl);
     setLoading(false);
+  };
+
+  const handleGlobalHyperlinksChange = (updated: HyperlinkConfig[]) => {
+    setGlobalHyperlinks(updated);
+    StorageService.saveGlobalHyperlinks(updated);
+  };
+
+  const handleResetGlobalHyperlinks = () => {
+    if (window.confirm('Reset all site-wide SEO hyperlinks to default values?')) {
+      handleGlobalHyperlinksChange(DEFAULT_GLOBAL_HYPERLINKS);
+    }
   };
 
   // --- MARKET GUIDE ACTIONS ---
@@ -2280,6 +2294,15 @@ export const AdminPage: React.FC = () => {
         >
           <Video className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           <span>Instagram Reels ({reels.length})</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('hyperlinks')}
+          className={`px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 sm:gap-2 ${
+            activeTab === 'hyperlinks' ? 'bg-brand-600 text-white shadow-md' : 'glass-card hover:bg-slate-100 dark:hover:bg-slate-800'
+          }`}
+        >
+          <Link2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+          <span>SEO Hyperlinks ({globalHyperlinks.length})</span>
         </button>
       </div>
 
@@ -3778,6 +3801,43 @@ export const AdminPage: React.FC = () => {
           reels={reels} 
           onRefresh={loadAllData} 
         />
+      )}
+
+      {/* TAB: SITE-WIDE GLOBAL SEO HYPERLINKS MANAGER */}
+      {activeTab === 'hyperlinks' && (
+        <div className="space-y-6">
+          <div className="glass-card rounded-2xl p-6 sm:p-8 bg-white dark:bg-[#0B132B] border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-6 border-b border-slate-200 dark:border-slate-800">
+              <div>
+                <span className="text-xs font-mono uppercase tracking-wider text-brand-600 dark:text-brand-400">
+                  Global SEO Architecture
+                </span>
+                <h2 className="text-xl sm:text-2xl font-bold font-['Outfit'] mt-1 text-slate-900 dark:text-white">
+                  Site-Wide Automated Hyperlinks
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1 max-w-2xl font-sans">
+                  Manage keywords and phrases that are automatically converted into SEO internal links across all pages, property descriptions, building overviews, and market guides throughout the website.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleResetGlobalHyperlinks}
+                  className="px-3.5 py-2 rounded-xl text-xs font-medium border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors"
+                >
+                  Reset Defaults
+                </button>
+              </div>
+            </div>
+
+            <AdminHyperlinksManager
+              hyperlinks={globalHyperlinks}
+              onChange={handleGlobalHyperlinksChange}
+              entityName="Site-Wide"
+            />
+          </div>
+        </div>
       )}
 
       {/* PROPERTY ADD / EDIT MODAL */}

@@ -29,6 +29,7 @@ import { WhatsAppIcon } from '../components/common/SocialIcons';
 import { generateGeneralEnquiryWhatsAppLink } from '../utils/whatsapp';
 import { InteractiveHeroTexture } from '../components/common/InteractiveHeroTexture';
 import { InteractiveCategoryCard } from '../components/home/InteractiveCategoryCard';
+import { HyperlinkedText } from '../components/common/HyperlinkedText';
 
 // Lazy-load non-critical below-the-fold media showcases
 const ClientsMarquee = React.lazy(() => import('../components/home/ClientsMarquee').then(m => ({ default: m.ClientsMarquee })));
@@ -180,9 +181,12 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenEnquiry }) => {
             </p>
 
             {/* Description paragraph */}
-            <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 leading-relaxed font-sans max-w-2xl">
-              Explore verified office spaces, IT & business parks, warehouses, factory and industrial properties, commercial land, shops and prime corporate leasing opportunities across Noida and Delhi NCR.
-            </p>
+            <HyperlinkedText
+              as="p"
+              inline
+              className="text-sm sm:text-base text-slate-600 dark:text-slate-400 leading-relaxed font-sans max-w-2xl"
+              text="Explore verified office spaces, IT & business parks, warehouses, factory and industrial properties, commercial land, shops and prime corporate leasing opportunities across Noida and Delhi NCR."
+            />
 
             {/* Action Row - Architectural Sharp Buttons (0px corners, 1px borders) */}
             <div className="flex flex-wrap items-center gap-3 pt-2">
@@ -521,9 +525,12 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenEnquiry }) => {
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight">
               Can't Find Your Exact Floor Area or Location?
             </h2>
-            <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed font-sans">
-              Tell us what property you need. Our commercial real estate team has offline access to 500+ corporate office floors, warehouse parcels, and industrial units across Noida, Greater Noida, and NCR.
-            </p>
+            <HyperlinkedText
+              as="p"
+              inline
+              className="text-xs sm:text-sm text-neutral-300 leading-relaxed font-sans"
+              text="Tell us what property you need. Our commercial real estate team has offline access to 500+ corporate office floors, warehouse parcels, and industrial units across Noida, Greater Noida, and NCR."
+            />
 
             <div className="pt-4 flex flex-wrap items-center gap-3">
               <Link
@@ -566,9 +573,12 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenEnquiry }) => {
               <h3 className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-white mt-5 mb-2 leading-snug">
                 Local Commercial Expertise
               </h3>
-              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-sans">
-                Decade of on-ground commercial transaction experience across Sector 62, Sector 63, Sector 18, and the Expressway.
-              </p>
+              <HyperlinkedText
+                as="p"
+                inline
+                className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-sans"
+                text="Decade of on-ground commercial transaction experience across Sector 62, Sector 63, Sector 18, and the Expressway."
+              />
             </div>
             <div className="pt-6 mt-6 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white">
               <span>On-Ground Network</span>

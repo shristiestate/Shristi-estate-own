@@ -121,7 +121,7 @@ export const InteractiveHeroTexture: React.FC = () => {
     <div 
       ref={containerRef}
       aria-hidden="true" 
-      className="absolute inset-0 pointer-events-none overflow-hidden -z-10 select-none"
+      className="absolute inset-0 pointer-events-none overflow-hidden -z-10 select-none [mask-image:linear-gradient(to_bottom,black_0%,black_65%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_0%,black_65%,transparent_100%)]"
     >
       {/* 1. Mobile Texture Layer: Rendered as CSS background to prevent hijacking LCP from the headline */}
       <div 
@@ -162,9 +162,9 @@ export const InteractiveHeroTexture: React.FC = () => {
         className="hidden md:block absolute inset-0 pointer-events-none mix-blend-screen dark:mix-blend-lighten transition-opacity duration-300"
       />
 
-      {/* 5. Directional Gradient Masks for contrast & readability */}
+      {/* 5. Directional Gradient Masks for contrast & readability with feathered bottom fade */}
       <div className="absolute inset-0 bg-gradient-to-r from-slate-50/95 via-slate-50/80 to-slate-50/20 dark:from-[#070C1E]/95 dark:via-[#070C1E]/85 dark:to-transparent" />
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-slate-50 dark:to-[#070C1E]" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-slate-50/40 dark:to-[#070C1E]/40" />
     </div>
   );
 };

@@ -157,8 +157,8 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenEnquiry }) => {
         {/* INTERACTIVE CURSOR-REACTIVE 3D COMMERCIAL PARK TEXTURE UNDER H1 */}
         <InteractiveHeroTexture />
 
-        {/* Soft Ambient Background Orbs */}
-        <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-gradient-to-tr from-brand-600/10 to-accent-teal/10 rounded-full blur-3xl pointer-events-none -z-10" />
+        {/* Soft Ambient Background Orbs with Smooth Bottom Fade */}
+        <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-gradient-to-tr from-brand-600/10 to-accent-teal/10 rounded-full blur-3xl pointer-events-none -z-10 [mask-image:linear-gradient(to_bottom,black_0%,black_60%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_0%,black_60%,transparent_100%)]" />
 
         <div className="max-w-7xl mx-auto">
           {/* Main Hero Text Block - Editorial Layout */}

@@ -7,7 +7,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import { Header } from './components/layout/Header';
 import { Footer } from './components/layout/Footer';
 import { Property } from './types';
-import { SilkRibbonBackground } from './components/common/SilkRibbonBackground';
+import { SmokeBackground } from './components/common/SmokeBackground';
 
 // Lazy-load modals so their forms and logic don't bloat the critical initial JS bundle
 const EnquiryModal = React.lazy(() => import('./components/modals/EnquiryModal').then(m => ({ default: m.EnquiryModal })));
@@ -87,11 +87,11 @@ export const AppContent: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#070C1E] text-slate-900 dark:text-slate-100 transition-colors duration-200 relative">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#070C1E] text-slate-900 dark:text-slate-100 transition-colors duration-200 relative isolate">
       <ScrollToTop />
       
-      {/* Silky Wave Ribbon Animated Canvas Background */}
-      <SilkRibbonBackground />
+      {/* Full-Page Animated Smoke Effect Background Layer */}
+      <SmokeBackground />
       
       {/* Header */}
       <Header

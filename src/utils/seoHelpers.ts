@@ -1,4 +1,5 @@
 import { Building, Property } from '../types';
+import { resolveLocationSlug } from './propertyLocation';
 
 export interface SeoStatusResult {
   status: 'Complete' | 'Needs Attention';
@@ -149,7 +150,7 @@ export function generateTowerStructuredData(bld: Building, properties: Property[
             '@type': 'ListItem',
             'position': 3,
             'name': bld.location_name || 'Noida',
-            'item': `https://shristiestate.in/locations/${bld.location_id?.replace('loc-', '') || ''}`
+            'item': `https://shristiestate.in/locations/${resolveLocationSlug(bld.location_id, bld.location_name)}`
           },
           {
             '@type': 'ListItem',
@@ -208,7 +209,7 @@ export function generatePropertyStructuredData(prop: Property, building?: Buildi
             '@type': 'ListItem',
             'position': 3,
             'name': prop.location_name || 'Noida',
-            'item': `https://shristiestate.in/locations/${prop.location_id?.replace('loc-', '') || ''}`
+            'item': `https://shristiestate.in/locations/${resolveLocationSlug(prop.location_id, prop.location_name)}`
           },
           ...(building ? [{
             '@type': 'ListItem',

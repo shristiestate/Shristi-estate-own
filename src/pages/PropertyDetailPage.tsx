@@ -26,7 +26,7 @@ import { PropertyCard } from '../components/common/PropertyCard';
 import { WhatsAppIcon } from '../components/common/SocialIcons';
 import { generatePropertyWhatsAppLink } from '../utils/whatsapp';
 import { getBuildingStructureDisplay } from '../utils/textFormat';
-import { cleanPropertyAddress } from '../utils/propertyLocation';
+import { cleanPropertyAddress, resolveLocationSlug } from '../utils/propertyLocation';
 import { updatePageSeo } from '../utils/seo';
 import { 
   getPropertyImageAlt, 
@@ -136,7 +136,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
       <Breadcrumbs
         items={[
           { label: property.category.replace('-', ' ').toUpperCase(), path: `/${property.category}` },
-          { label: property.location_name, path: `/locations/${property.location_id.replace('loc-', '')}` },
+          { label: property.location_name, path: `/locations/${resolveLocationSlug(property.location_id, property.location_name)}` },
           ...(property.building_name && building ? [{ label: property.building_name, path: `/buildings/${building.slug}` }] : []),
           ...(property.tower ? [{ label: property.tower, path: `/buildings/${building?.slug || ''}` }] : []),
           { label: property.title || property.reference_number }

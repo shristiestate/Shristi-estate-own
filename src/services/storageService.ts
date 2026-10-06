@@ -367,7 +367,39 @@ export const StorageService = {
   getInitialLocationBySlug(slug?: string): Location | null {
     if (!slug) return null;
     const locations = this.getInitialLocations();
-    return locations.find(l => l.slug.toLowerCase() === slug.toLowerCase()) || null;
+    const clean = slug.toLowerCase().trim();
+
+    // 1. Direct slug match
+    const bySlug = locations.find(l => l.slug.toLowerCase() === clean);
+    if (bySlug) return bySlug;
+
+    // 2. Direct ID or stripped ID match (e.g. loc-sec-62, sec-62)
+    const byId = locations.find(l => 
+      l.id.toLowerCase() === clean || 
+      l.id.replace(/^loc-/, '').toLowerCase() === clean
+    );
+    if (byId) return byId;
+
+    // 3. Normalized sector match: sec-62 <-> sector-62
+    const normalized = clean.startsWith('sec-')
+      ? clean.replace(/^sec-/, 'sector-')
+      : clean.startsWith('sector-')
+        ? clean.replace(/^sector-/, 'sec-')
+        : clean;
+    const byNorm = locations.find(l => 
+      l.slug.toLowerCase() === normalized || 
+      l.id.toLowerCase() === normalized ||
+      l.id.replace(/^loc-/, '').toLowerCase() === normalized
+    );
+    if (byNorm) return byNorm;
+
+    // 4. Fuzzy / word match in name
+    const cleanWords = clean.replace(/-/g, ' ');
+    const byName = locations.find(l => 
+      l.name.toLowerCase().includes(cleanWords) || 
+      cleanWords.includes(l.name.toLowerCase())
+    );
+    return byName || null;
   },
 
   getInitialBuildings(): Building[] {
@@ -598,7 +630,8 @@ export const StorageService = {
   async getLocationBySlug(slug: string): Promise<Location | null> {
     if (!slug) return null;
     const initial = this.getInitialLocationBySlug(slug);
-    const cacheKey = `loc_slug_${slug.toLowerCase()}`;
+    const targetSlug = initial ? initial.slug : slug;
+    const cacheKey = `loc_slug_${targetSlug.toLowerCase()}`;
     const cached = getCached<Location>(cacheKey);
     if (cached) return cached;
 
@@ -606,7 +639,7 @@ export const StorageService = {
       if (isSupabaseConfigured && supabase) {
         try {
           const { data, error } = await withTimeout(
-            supabase.from('locations').select('*').eq('slug', slug).maybeSingle() as any
+            supabase.from('locations').select('*').or(`slug.eq.${targetSlug},slug.eq.${slug},id.eq.${initial?.id || slug}`).maybeSingle() as any
           );
           if (!error && data) {
             setCache(cacheKey, data as Location);
@@ -1906,8 +1939,20 @@ export const StorageService = {
     try {
       const stored = localStorage.getItem(STORAGE_KEYS.REELS);
       if (stored) {
-        _memReels = JSON.parse(stored);
-        return _memReels || INITIAL_INSTAGRAM_REELS;
+        const parsed: InstagramReel[] = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          _memReels = parsed.map(item => {
+            const init = INITIAL_INSTAGRAM_REELS.find(i => i.id === item.id);
+            return init ? { ...init, ...item, video_url: item.video_url || init.video_url } : item;
+          });
+          // Also append any newly introduced initial reels
+          const existingIds = new Set(parsed.map(p => p.id));
+          const missing = INITIAL_INSTAGRAM_REELS.filter(i => !existingIds.has(i.id));
+          if (missing.length > 0) {
+            _memReels = [..._memReels, ...missing];
+          }
+          return _memReels;
+        }
       }
     } catch (e) {
       console.error('Error reading stored instagram reels:', e);

@@ -26,6 +26,18 @@ export const LocationPage: React.FC<LocationPageProps> = ({ onOpenEnquiry }) => 
   useEffect(() => {
     if (!locationSlug) return;
     let isMounted = true;
+    
+    // Instant synchronous hydration if available
+    const syncLoc = StorageService.getInitialLocationBySlug(locationSlug);
+    if (syncLoc) {
+      setLocation(syncLoc);
+      setBuildings(StorageService.getInitialBuildingsByLocation(syncLoc.id));
+      setHasResolved(true);
+      if (locationSlug !== syncLoc.slug && typeof window !== 'undefined') {
+        window.history.replaceState(null, '', `/locations/${syncLoc.slug}`);
+      }
+    }
+
     StorageService.getLocationBySlug(locationSlug).then(async (loc) => {
       if (!isMounted) return;
       if (loc) {
@@ -33,6 +45,9 @@ export const LocationPage: React.FC<LocationPageProps> = ({ onOpenEnquiry }) => 
         const blds = await StorageService.getBuildingsByLocation(loc.id);
         if (isMounted) {
           setBuildings(blds);
+        }
+        if (locationSlug !== loc.slug && typeof window !== 'undefined') {
+          window.history.replaceState(null, '', `/locations/${loc.slug}`);
         }
       }
       if (isMounted) setHasResolved(true);

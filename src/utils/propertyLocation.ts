@@ -36,3 +36,50 @@ export function cleanPropertyAddress(address?: string | null, buildingName?: str
 
   return cleaned;
 }
+
+/**
+ * Resolves the canonical URL slug for any location identifier or name.
+ * Prevents broken link errors (e.g., "loc-sec-62" -> "sector-62").
+ */
+export function resolveLocationSlug(locationId?: string | null, locationName?: string | null): string {
+  if (!locationId && !locationName) return 'noida';
+
+  const idToSlugMap: Record<string, string> = {
+    'loc-sec-62': 'sector-62',
+    'sec-62': 'sector-62',
+    'loc-sec-63': 'sector-63',
+    'sec-63': 'sector-63',
+    'loc-noida-exp': 'noida-expressway',
+    'noida-exp': 'noida-expressway',
+    'loc-sec-18': 'sector-18',
+    'sec-18': 'sector-18',
+    'loc-sec-2': 'sector-2',
+    'sec-2': 'sector-2',
+    'loc-sec-83': 'sector-83',
+    'sec-83': 'sector-83',
+    'loc-sec-85': 'sector-85',
+    'sec-85': 'sector-85',
+    'loc-greater-noida': 'greater-noida',
+    'loc-sec-73': 'sector-73',
+    'sec-73': 'sector-73',
+  };
+
+  if (locationId) {
+    const cleanId = locationId.toLowerCase().trim();
+    if (idToSlugMap[cleanId]) return idToSlugMap[cleanId];
+    if (cleanId.startsWith('sec-')) return cleanId.replace(/^sec-(\d+)/, 'sector-$1');
+    if (cleanId.startsWith('loc-sec-')) return cleanId.replace(/^loc-sec-(\d+)/, 'sector-$1');
+    if (cleanId.startsWith('loc-')) return cleanId.replace(/^loc-/, '');
+    return cleanId;
+  }
+
+  if (locationName) {
+    const lower = locationName.toLowerCase().trim();
+    const secMatch = lower.match(/sector\s*(\d+)/i);
+    if (secMatch) return `sector-${secMatch[1]}`;
+    if (lower.includes('expressway')) return 'noida-expressway';
+    if (lower.includes('greater noida')) return 'greater-noida';
+  }
+
+  return 'noida';
+}

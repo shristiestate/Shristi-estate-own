@@ -22,6 +22,7 @@ import { Breadcrumbs } from '../components/common/Breadcrumbs';
 import { WhatsAppIcon } from '../components/common/SocialIcons';
 import { generateBuildingWhatsAppLink } from '../utils/whatsapp';
 import { getBuildingStructureDisplay } from '../utils/textFormat';
+import { resolveLocationSlug } from '../utils/propertyLocation';
 import { updatePageSeo } from '../utils/seo';
 import { 
   getTowerImageAlt, 
@@ -112,7 +113,7 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
       <Breadcrumbs
         items={[
           { label: 'Commercial Buildings', path: '/properties' },
-          { label: building.location_name, path: `/locations/${building.location_id.replace('loc-', '')}` },
+          { label: building.location_name, path: `/locations/${resolveLocationSlug(building.location_id, building.location_name)}` },
           { label: building.name }
         ]}
       />

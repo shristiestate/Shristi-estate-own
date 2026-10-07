@@ -67,6 +67,8 @@ export const Logo: React.FC<LogoProps> = ({
           <img
             src="/logo-icon-dark.png"
             alt="Shristi Estate Emblem"
+            width="34"
+            height="34"
             className="h-7 sm:h-8 md:h-9 w-auto max-h-[32px] sm:max-h-[36px] md:max-h-[40px] object-contain"
             style={{ maxHeight: '34px', width: 'auto' }}
           />
@@ -74,6 +76,8 @@ export const Logo: React.FC<LogoProps> = ({
           <img
             src="/logo-icon-light.png"
             alt="Shristi Estate Emblem"
+            width="34"
+            height="34"
             className="h-7 sm:h-8 md:h-9 w-auto max-h-[32px] sm:max-h-[36px] md:max-h-[40px] object-contain"
             style={{ maxHeight: '34px', width: 'auto' }}
           />
@@ -82,12 +86,16 @@ export const Logo: React.FC<LogoProps> = ({
             <img
               src="/logo-icon-light.png"
               alt="Shristi Estate Emblem"
+              width="34"
+              height="34"
               className="h-7 sm:h-8 md:h-9 w-auto max-h-[32px] sm:max-h-[36px] md:max-h-[40px] object-contain dark:hidden"
               style={{ maxHeight: '34px', width: 'auto' }}
             />
             <img
               src="/logo-icon-dark.png"
               alt="Shristi Estate Emblem"
+              width="34"
+              height="34"
               className="h-7 sm:h-8 md:h-9 w-auto max-h-[32px] sm:max-h-[36px] md:max-h-[40px] object-contain hidden dark:block"
               style={{ maxHeight: '34px', width: 'auto' }}
             />

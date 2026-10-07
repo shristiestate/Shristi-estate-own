@@ -275,7 +275,6 @@ const initStorage = () => {
         ...INITIAL_PROPERTIES.filter(p => !deletedSet.has(p.id)),
         ...INITIAL_BUILDINGS.flatMap(b => generateAvailablePropertiesForBuilding(b, deletedSet)).filter(p => !deletedSet.has(p.id))
       ];
-      localStorage.setItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(_memProperties));
     } else {
       const parsedProps: Property[] = JSON.parse(storedProps);
       const buildings = _memBuildings || INITIAL_BUILDINGS;
@@ -514,6 +513,17 @@ export const StorageService = {
       const deletedSet = getDeletedPropertyIdsSet();
       return INITIAL_PROPERTIES.filter(p => !deletedSet.has(p.id));
     }
+  },
+
+  /**
+   * Ultra-fast lightweight initial data provider for the homepage:
+   * Returns only the top 8 featured properties directly without generating
+   * 800+ synthetic units across 40 buildings synchronously on startup.
+   */
+  getInitialFeaturedProperties(): Property[] {
+    const deletedSet = getDeletedPropertyIdsSet();
+    const source = _memProperties || INITIAL_PROPERTIES;
+    return source.filter(p => p.featured && !deletedSet.has(p.id)).slice(0, 8);
   },
 
   getInitialPropertyBySlug(slug?: string): Property | null {

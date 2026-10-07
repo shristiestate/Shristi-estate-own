@@ -49,9 +49,14 @@ export const UnitImageShowcase: React.FC<UnitImageShowcaseProps> = ({
     return () => observer.disconnect();
   }, []);
 
-  // Auto-animate image transition ONLY when in viewport and not paused
+  // Auto-animate image transition ONLY on desktop with pointer when in viewport and not paused
   useEffect(() => {
     if (images.length <= 1 || isPaused || !isVisible) return;
+
+    // Mobile / Touch Optimization: do not run continuous background timers on mobile
+    const isTouchOrMobile = typeof window !== 'undefined' && 
+      (window.innerWidth < 768 || window.matchMedia('(hover: none)').matches);
+    if (isTouchOrMobile) return;
 
     timerRef.current = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % images.length);
@@ -104,8 +109,10 @@ export const UnitImageShowcase: React.FC<UnitImageShowcaseProps> = ({
             <img
               src={src}
               alt={`${alt} - Photo ${idx + 1}`}
-              loading={idx === 0 ? 'lazy' : 'lazy'}
+              loading="lazy"
               decoding="async"
+              width="400"
+              height="250"
               className={`w-full h-full object-cover transition-transform duration-3000 ease-out ${
                 isActive ? 'scale-105' : 'scale-100'
               }`}

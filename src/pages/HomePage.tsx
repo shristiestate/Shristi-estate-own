@@ -40,9 +40,9 @@ interface HomePageProps {
 }
 
 export const HomePage: React.FC<HomePageProps> = ({ onOpenEnquiry }) => {
-  const [properties, setProperties] = useState<Property[]>(() => StorageService.getInitialProperties());
-  const [buildings, setBuildings] = useState<Building[]>(() => StorageService.getInitialBuildings());
-  const [locations, setLocations] = useState<Location[]>(() => StorageService.getInitialLocations());
+  const [properties, setProperties] = useState<Property[]>(() => StorageService.getInitialFeaturedProperties());
+  const [buildings, setBuildings] = useState<Building[]>(() => StorageService.getInitialBuildings().slice(0, 8));
+  const [locations, setLocations] = useState<Location[]>(() => StorageService.getInitialLocations().slice(0, 8));
   const navigate = useNavigate();
 
   // Search filter state

@@ -272,6 +272,7 @@ export const AdminPage: React.FC = () => {
   const [globalHyperlinks, setGlobalHyperlinks] = useState<HyperlinkConfig[]>(() => StorageService.getInitialGlobalHyperlinks());
   const [cascadeDeleteTarget, setCascadeDeleteTarget] = useState<CascadeDeleteTarget | null>(null);
   const [isDeletingCascade, setIsDeletingCascade] = useState(false);
+  const [cascadeDeleteError, setCascadeDeleteError] = useState<string | null>(null);
 
   // Market Guides Admin State
   const [guideSearch, setGuideSearch] = useState('');
@@ -1560,6 +1561,7 @@ export const AdminPage: React.FC = () => {
 
   const handlePromptDeleteBuilding = (bld: Building) => {
     const relUnits = properties.filter(p => p.building_id === bld.id);
+    setCascadeDeleteError(null);
     setCascadeDeleteTarget({
       type: 'building',
       id: bld.id,
@@ -1751,6 +1753,7 @@ export const AdminPage: React.FC = () => {
       p.location_id === loc.id || (p.building_id && relBuildingIds.has(p.building_id))
     );
 
+    setCascadeDeleteError(null);
     setCascadeDeleteTarget({
       type: 'location',
       id: loc.id,
@@ -1773,6 +1776,7 @@ export const AdminPage: React.FC = () => {
   const handleConfirmCascadeDelete = async () => {
     if (!cascadeDeleteTarget) return;
     setIsDeletingCascade(true);
+    setCascadeDeleteError(null);
     try {
       if (cascadeDeleteTarget.type === 'location') {
         const locId = cascadeDeleteTarget.id;
@@ -1799,8 +1803,14 @@ export const AdminPage: React.FC = () => {
         setProperties(prev => prev.filter(p => p.building_id !== bldId));
       }
       setCascadeDeleteTarget(null);
+      setCascadeDeleteError(null);
     } catch (err: any) {
-      alert(`Cascade delete failed: ${err?.message || 'Database error'}`);
+      console.error('Cascade delete operation failed:', err);
+      const rawMsg = err?.message || 'Database error occurred during cascade deletion';
+      const cleanMsg = rawMsg.toLowerCase().includes('foreign key') || rawMsg.includes('23503')
+        ? 'Foreign key constraint restriction encountered. Child records could not be automatically unlinked. Please verify database permissions.'
+        : rawMsg;
+      setCascadeDeleteError(cleanMsg);
     } finally {
       setIsDeletingCascade(false);
     }
@@ -7424,8 +7434,12 @@ export const AdminPage: React.FC = () => {
         isOpen={Boolean(cascadeDeleteTarget)}
         target={cascadeDeleteTarget}
         isDeleting={isDeletingCascade}
+        error={cascadeDeleteError}
         onConfirm={handleConfirmCascadeDelete}
-        onCancel={() => setCascadeDeleteTarget(null)}
+        onCancel={() => {
+          setCascadeDeleteTarget(null);
+          setCascadeDeleteError(null);
+        }}
       />
     </div>
   );

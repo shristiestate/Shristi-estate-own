@@ -737,7 +737,47 @@ export const StorageService = {
     // 1. Database-level cascade delete: single atomic transaction via foreign key constraints
     if (isSupabaseConfigured && supabase) {
       try {
-        const { error } = await supabase.from('locations').delete().eq('id', locationId);
+        const res = await supabase.from('locations').delete().eq('id', locationId);
+        let error = res?.error;
+
+        // Fallback: If ON DELETE CASCADE constraint has not yet been applied in Postgres (error code 23503)
+        if (error && (error.code === '23503' || error.message?.toLowerCase().includes('foreign key'))) {
+          console.warn('Foreign key constraint hit during location delete, performing sequential cascade cleanup...');
+          const buildings = await this.getBuildings();
+          const relBuildingIds = buildings
+            .filter(b => b.location_id === locationId || (b.locations && b.locations.includes(locationId)))
+            .map(b => b.id);
+
+          if (relBuildingIds.length > 0) {
+            try {
+              await supabase.from('properties').delete().in('building_id', relBuildingIds);
+            } catch (e) {
+              console.warn('Properties cleanup by building_id:', e);
+            }
+          }
+          try {
+            await supabase.from('properties').delete().eq('location_id', locationId);
+          } catch (e) {
+            console.warn('Properties cleanup by location_id:', e);
+          }
+
+          if (relBuildingIds.length > 0) {
+            try {
+              await supabase.from('buildings').delete().in('id', relBuildingIds);
+            } catch (e) {
+              console.warn('Buildings cleanup by id:', e);
+            }
+          }
+          try {
+            await supabase.from('buildings').delete().eq('location_id', locationId);
+          } catch (e) {
+            console.warn('Buildings cleanup by location_id:', e);
+          }
+
+          const retryRes = await supabase.from('locations').delete().eq('id', locationId);
+          error = retryRes?.error;
+        }
+
         if (error) {
           console.error('Supabase cascade delete location error:', error);
           throw new Error(error.message || 'Database error deleting location');
@@ -770,6 +810,11 @@ export const StorageService = {
 
       // Update properties / units (cascaded from location and buildings)
       const properties = await this.getProperties();
+      const deletedProperties = properties.filter(p => 
+        p.location_id === locationId || (p.building_id && deletedBuildingIds.has(p.building_id))
+      );
+      deletedProperties.forEach(p => recordDeletedPropertyId(p.id));
+
       const updatedProperties = properties.filter(p => 
         p.location_id !== locationId && (!p.building_id || !deletedBuildingIds.has(p.building_id))
       );
@@ -1068,7 +1113,21 @@ export const StorageService = {
     // 1. Database-level cascade delete: single atomic transaction via foreign key constraint
     if (isSupabaseConfigured && supabase) {
       try {
-        const { error } = await supabase.from('buildings').delete().eq('id', buildingId);
+        const res = await supabase.from('buildings').delete().eq('id', buildingId);
+        let error = res?.error;
+
+        // Fallback: If ON DELETE CASCADE constraint has not yet been applied in Postgres (error code 23503)
+        if (error && (error.code === '23503' || error.message?.toLowerCase().includes('foreign key'))) {
+          console.warn('Foreign key constraint hit during building delete, performing sequential cascade cleanup...');
+          try {
+            await supabase.from('properties').delete().eq('building_id', buildingId);
+          } catch (pErr) {
+            console.warn('Properties cleanup by building_id:', pErr);
+          }
+          const retryRes = await supabase.from('buildings').delete().eq('id', buildingId);
+          error = retryRes?.error;
+        }
+
         if (error) {
           console.error('Supabase cascade delete building error:', error);
           throw new Error(error.message || 'Database error deleting building');
@@ -1087,6 +1146,9 @@ export const StorageService = {
       _memBuildings = updatedBuildings;
 
       const properties = await this.getProperties();
+      const deletedProperties = properties.filter(p => p.building_id === buildingId);
+      deletedProperties.forEach(p => recordDeletedPropertyId(p.id));
+
       const updatedProperties = properties.filter(p => p.building_id !== buildingId);
       safeSetItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(updatedProperties));
       _memProperties = updatedProperties;

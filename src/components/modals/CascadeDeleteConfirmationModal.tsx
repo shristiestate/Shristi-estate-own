@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertTriangle, Trash2, X, Building2, Layers, Loader2 } from 'lucide-react';
+import { AlertTriangle, AlertCircle, Trash2, X, Building2, Layers, Loader2 } from 'lucide-react';
 
 export interface CascadeDeleteTarget {
   type: 'location' | 'building';
@@ -13,6 +13,7 @@ interface CascadeDeleteConfirmationModalProps {
   isOpen: boolean;
   target: CascadeDeleteTarget | null;
   isDeleting: boolean;
+  error?: string | null;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -21,6 +22,7 @@ export const CascadeDeleteConfirmationModal: React.FC<CascadeDeleteConfirmationM
   isOpen,
   target,
   isDeleting,
+  error,
   onConfirm,
   onCancel
 }) => {
@@ -112,6 +114,19 @@ export const CascadeDeleteConfirmationModal: React.FC<CascadeDeleteConfirmationM
           <span>All-or-nothing transaction: If any constraint fails, the deletion will roll back completely.</span>
         </div>
 
+        {/* Inline Error Alert */}
+        {error && (
+          <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 flex items-start gap-3 text-xs animate-in fade-in duration-150">
+            <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+            <div className="space-y-1 flex-1">
+              <span className="font-semibold block text-rose-900 dark:text-rose-200">Cascade Deletion Incomplete</span>
+              <p className="text-[11.5px] leading-relaxed text-rose-700/90 dark:text-rose-300/90 break-words font-sans">
+                {error}
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Action Buttons */}
         <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-2.5 pt-2 border-t border-slate-100 dark:border-slate-800">
           <button
@@ -133,6 +148,11 @@ export const CascadeDeleteConfirmationModal: React.FC<CascadeDeleteConfirmationM
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
                 <span>Cascading Deletion...</span>
+              </>
+            ) : error ? (
+              <>
+                <Trash2 className="w-4 h-4" />
+                <span>Retry Cascade Deletion</span>
               </>
             ) : (
               <>

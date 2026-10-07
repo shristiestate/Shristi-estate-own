@@ -37,34 +37,60 @@ export const getSupabase = async (): Promise<SupabaseClient | null> => {
 
 /**
  * Universal Fluent Query Chain Proxy:
- * Allows arbitrary method chaining on Supabase query builders (e.g. from(t).select().eq().order().limit().maybeSingle())
- * while deferring the actual Supabase client evaluation until the promise is awaited.
+ * Collects chained calls (e.g. .from(t).select().eq().order().limit().maybeSingle())
+ * and only executes them against the lazily-loaded Supabase client once awaited or when .then() is called.
  */
-function createFluentChain(rootPromise: Promise<any>): any {
+function createFluentChain(
+  initTarget: () => Promise<any>,
+  ops: Array<{ prop: string | symbol; args: any[] }> = []
+): any {
+  const execute = async () => {
+    try {
+      const clientTarget = await initTarget();
+      if (!clientTarget) {
+        return { data: null, error: new Error('Supabase client not initialized') };
+      }
+      let current: any = clientTarget;
+      for (const op of ops) {
+        if (!current) break;
+        const fn = current[op.prop];
+        if (typeof fn === 'function') {
+          current = fn.apply(current, op.args);
+        } else {
+          current = fn;
+        }
+      }
+      // If the resulting query builder is a Thenable (e.g., PostgrestFilterBuilder), await it
+      if (current && typeof current.then === 'function') {
+        const res = await current;
+        return res ?? { data: null, error: null };
+      }
+      return current ?? { data: null, error: null };
+    } catch (err: any) {
+      return { data: null, error: err };
+    }
+  };
+
   const handler: ProxyHandler<any> = {
     get(_target, prop) {
       if (prop === 'then') {
-        return (resolve: any, reject: any) => rootPromise.then(resolve, reject);
+        return (resolve: any, reject: any) => execute().then(resolve, reject);
       }
       if (prop === 'catch') {
-        return (reject: any) => rootPromise.catch(reject);
+        return (reject: any) => execute().catch(reject);
       }
       if (prop === 'finally') {
-        return (callback: any) => rootPromise.finally(callback);
+        return (callback: any) => execute().finally(callback);
+      }
+      if (prop === 'toJSON') {
+        return () => ({});
       }
       return (...args: any[]) => {
-        const nextPromise = rootPromise.then((target) => {
-          if (!target) return { data: null, error: new Error('Supabase client not initialized') };
-          const fn = target[prop];
-          if (typeof fn === 'function') {
-            return fn.apply(target, args);
-          }
-          return target[prop];
-        });
-        return createFluentChain(nextPromise);
+        return createFluentChain(initTarget, [...ops, { prop, args }]);
       };
     }
   };
+
   return new Proxy({} as any, handler);
 }
 
@@ -78,21 +104,21 @@ export const supabase: any = new Proxy({} as any, {
 
     if (prop === 'from') {
       return (table: string) => {
-        const targetPromise = getSupabase().then((client) => {
+        return createFluentChain(async () => {
+          const client = await getSupabase();
           if (!client) throw new Error('Supabase not configured');
           return client.from(table);
         });
-        return createFluentChain(targetPromise);
       };
     }
 
     if (prop === 'rpc') {
       return (fnName: string, params?: any) => {
-        const targetPromise = getSupabase().then((client) => {
+        return createFluentChain(async () => {
+          const client = await getSupabase();
           if (!client) throw new Error('Supabase not configured');
           return client.rpc(fnName, params);
         });
-        return createFluentChain(targetPromise);
       };
     }
 

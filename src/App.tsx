@@ -121,7 +121,7 @@ export const AppContent: React.FC = () => {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 relative z-10">
+      <main className="flex-1 relative z-10 w-full overflow-x-hidden">
         <React.Suspense fallback={
           <div className="min-h-[50vh] flex items-center justify-center">
             <div className="w-8 h-8 rounded-full border-2 border-brand-500 border-t-transparent animate-spin" />

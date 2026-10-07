@@ -294,6 +294,39 @@
     scrollbar-width: none;
   }
 
+  /* Sleek Admin Horizontal Scrollbar */
+  .admin-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148, 163, 184, 0.45) transparent;
+  }
+  .dark .admin-scrollbar {
+    scrollbar-color: rgba(56, 189, 248, 0.35) transparent;
+  }
+  .admin-scrollbar::-webkit-scrollbar {
+    height: 6px;
+    width: 6px;
+  }
+  .admin-scrollbar::-webkit-scrollbar-track {
+    background: rgba(148, 163, 184, 0.08);
+    border-radius: 9999px;
+  }
+  .admin-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.45);
+    border-radius: 9999px;
+  }
+  .admin-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(2, 132, 199, 0.7);
+  }
+  .dark .admin-scrollbar::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.4);
+  }
+  .dark .admin-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(56, 189, 248, 0.35);
+  }
+  .dark .admin-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(56, 189, 248, 0.75);
+  }
+
   /* Infinite Marquee Animations */
   @keyframes marquee {
     0% { transform: translateX(0); }

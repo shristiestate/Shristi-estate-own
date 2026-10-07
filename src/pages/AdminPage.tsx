@@ -323,6 +323,18 @@ export const AdminPage: React.FC = () => {
   const [newFeatureTag, setNewFeatureTag] = useState('');
   const [customPropertyTypeInput, setCustomPropertyTypeInput] = useState('');
 
+  // Horizontal Tab Navigation Ref & Scroller
+  const tabsScrollRef = React.useRef<HTMLDivElement>(null);
+  const scrollTabs = (direction: 'left' | 'right') => {
+    if (tabsScrollRef.current) {
+      const scrollAmount = 280;
+      tabsScrollRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
+
   // Property Modal Form (Add & Edit)
   const [showPropertyModal, setShowPropertyModal] = useState(false);
   const [isEditingProperty, setIsEditingProperty] = useState(false);
@@ -2034,7 +2046,7 @@ export const AdminPage: React.FC = () => {
   });
 
   return (
-    <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-5 sm:space-y-8">
+    <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-5 sm:space-y-8 w-full max-w-full overflow-x-clip">
       {/* Top Header & Quick Metrics */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-slate-200 dark:border-slate-800 pb-4 sm:pb-6">
         <div>
@@ -2309,84 +2321,107 @@ export const AdminPage: React.FC = () => {
         </button>
       </div>
 
-      {/* TABS NAVIGATION */}
-      <div className="flex items-center gap-1.5 sm:gap-2 border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto no-scrollbar scroll-smooth -mx-3 px-3 sm:mx-0 sm:px-0">
+      {/* TABS NAVIGATION WITH INTUITIVE SCROLL CONTROLS */}
+      <div className="relative flex items-center group/tabs">
         <button
-          onClick={() => setActiveTab('properties')}
-          className={`px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap shrink-0 ${
-            activeTab === 'properties' ? 'bg-brand-600 text-white shadow-md' : 'glass-card hover:bg-slate-100 dark:hover:bg-slate-800'
-          }`}
+          type="button"
+          onClick={() => scrollTabs('left')}
+          className="hidden sm:flex absolute -left-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-md items-center justify-center text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+          title="Scroll tabs left"
         >
-          Properties & Tariffs ({properties.length})
+          <ChevronLeft className="w-4 h-4" />
         </button>
-        <button
-          onClick={() => setActiveTab('buildings')}
-          className={`px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap shrink-0 ${
-            activeTab === 'buildings' ? 'bg-brand-600 text-white shadow-md' : 'glass-card hover:bg-slate-100 dark:hover:bg-slate-800'
-          }`}
+
+        <div
+          ref={tabsScrollRef}
+          className="w-full flex items-center gap-1.5 sm:gap-2 border-b border-slate-200 dark:border-slate-800 pb-2.5 overflow-x-auto admin-scrollbar scroll-smooth px-1"
         >
-          Buildings & Rates ({buildings.length})
-        </button>
+          <button
+            onClick={() => setActiveTab('properties')}
+            className={`px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap shrink-0 ${
+              activeTab === 'properties' ? 'bg-brand-600 text-white shadow-md' : 'glass-card hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            Properties & Tariffs ({properties.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('buildings')}
+            className={`px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap shrink-0 ${
+              activeTab === 'buildings' ? 'bg-brand-600 text-white shadow-md' : 'glass-card hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            Buildings & Rates ({buildings.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('leads')}
+            className={`px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap shrink-0 ${
+              activeTab === 'leads' ? 'bg-brand-600 text-white shadow-md' : 'glass-card hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            Leads & Inquiries ({leads.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('locations')}
+            className={`px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap shrink-0 ${
+              activeTab === 'locations' ? 'bg-brand-600 text-white shadow-md' : 'glass-card hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            Locations ({locations.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('guides')}
+            className={`px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 sm:gap-2 ${
+              activeTab === 'guides' ? 'bg-brand-600 text-white shadow-md' : 'glass-card hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span>Market Insights & Guides ({guides.length})</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('media')}
+            className={`px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 sm:gap-2 ${
+              activeTab === 'media' ? 'bg-brand-600 text-white shadow-md' : 'glass-card hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <ImageIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span>Image Uploader & Media ({allMediaItems.length})</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('clients')}
+            className={`px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 sm:gap-2 ${
+              activeTab === 'clients' ? 'bg-brand-600 text-white shadow-md' : 'glass-card hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span>Clients & Brands ({clients.length})</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('reels')}
+            className={`px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 sm:gap-2 ${
+              activeTab === 'reels' ? 'bg-brand-600 text-white shadow-md' : 'glass-card hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <Video className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span>Instagram Reels ({reels.length})</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('hyperlinks')}
+            className={`px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 sm:gap-2 ${
+              activeTab === 'hyperlinks' ? 'bg-brand-600 text-white shadow-md' : 'glass-card hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <Link2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span>SEO Hyperlinks ({globalHyperlinks.length})</span>
+          </button>
+        </div>
+
         <button
-          onClick={() => setActiveTab('leads')}
-          className={`px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap shrink-0 ${
-            activeTab === 'leads' ? 'bg-brand-600 text-white shadow-md' : 'glass-card hover:bg-slate-100 dark:hover:bg-slate-800'
-          }`}
+          type="button"
+          onClick={() => scrollTabs('right')}
+          className="hidden sm:flex absolute -right-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-md items-center justify-center text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+          title="Scroll tabs right"
         >
-          Leads & Inquiries ({leads.length})
-        </button>
-        <button
-          onClick={() => setActiveTab('locations')}
-          className={`px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap shrink-0 ${
-            activeTab === 'locations' ? 'bg-brand-600 text-white shadow-md' : 'glass-card hover:bg-slate-100 dark:hover:bg-slate-800'
-          }`}
-        >
-          Locations ({locations.length})
-        </button>
-        <button
-          onClick={() => setActiveTab('guides')}
-          className={`px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 sm:gap-2 ${
-            activeTab === 'guides' ? 'bg-brand-600 text-white shadow-md' : 'glass-card hover:bg-slate-100 dark:hover:bg-slate-800'
-          }`}
-        >
-          <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          <span>Market Insights & Guides ({guides.length})</span>
-        </button>
-        <button
-          onClick={() => setActiveTab('media')}
-          className={`px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 sm:gap-2 ${
-            activeTab === 'media' ? 'bg-brand-600 text-white shadow-md' : 'glass-card hover:bg-slate-100 dark:hover:bg-slate-800'
-          }`}
-        >
-          <ImageIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          <span>Image Uploader & Media ({allMediaItems.length})</span>
-        </button>
-        <button
-          onClick={() => setActiveTab('clients')}
-          className={`px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 sm:gap-2 ${
-            activeTab === 'clients' ? 'bg-brand-600 text-white shadow-md' : 'glass-card hover:bg-slate-100 dark:hover:bg-slate-800'
-          }`}
-        >
-          <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          <span>Clients & Brands ({clients.length})</span>
-        </button>
-        <button
-          onClick={() => setActiveTab('reels')}
-          className={`px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 sm:gap-2 ${
-            activeTab === 'reels' ? 'bg-brand-600 text-white shadow-md' : 'glass-card hover:bg-slate-100 dark:hover:bg-slate-800'
-          }`}
-        >
-          <Video className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          <span>Instagram Reels ({reels.length})</span>
-        </button>
-        <button
-          onClick={() => setActiveTab('hyperlinks')}
-          className={`px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 sm:gap-2 ${
-            activeTab === 'hyperlinks' ? 'bg-brand-600 text-white shadow-md' : 'glass-card hover:bg-slate-100 dark:hover:bg-slate-800'
-          }`}
-        >
-          <Link2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          <span>SEO Hyperlinks ({globalHyperlinks.length})</span>
+          <ChevronRight className="w-4 h-4" />
         </button>
       </div>
 
@@ -2419,10 +2454,10 @@ export const AdminPage: React.FC = () => {
           </div>
 
           {/* CATEGORY QUICK-FILTER TABS (ALL 6 ASSET CLASSES) */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar text-xs">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs">
             <button
               onClick={() => setPropertyCategoryFilter('all')}
-              className={`px-3 py-1.5 rounded-xl font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 ${
+              className={`px-3 py-1.5 rounded-xl font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${
                 propertyCategoryFilter === 'all'
                   ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-950 shadow-sm'
                   : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
@@ -2448,7 +2483,7 @@ export const AdminPage: React.FC = () => {
                 <button
                   key={cat}
                   onClick={() => setPropertyCategoryFilter(cat)}
-                  className={`px-3 py-1.5 rounded-xl font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 ${
+                  className={`px-3 py-1.5 rounded-xl font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${
                     isActive
                       ? `${cfg.badgeBg} text-white shadow-md shadow-brand-500/20`
                       : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
@@ -2467,71 +2502,87 @@ export const AdminPage: React.FC = () => {
           </div>
 
           {/* Desktop & Tablet Table (>= md) */}
-          <div className="hidden md:block glass-card rounded-3xl overflow-hidden border border-slate-200/90 dark:border-slate-800 bg-white/70 dark:bg-[#0B132B]/75 shadow-md">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-100/80 dark:bg-slate-800/80 text-slate-500 font-semibold border-b border-slate-200 dark:border-slate-800">
+          <div className="hidden md:block glass-card rounded-2xl overflow-hidden border border-slate-200/90 dark:border-slate-800 bg-white/70 dark:bg-[#0B132B]/75 shadow-md">
+            <div className="overflow-x-auto admin-scrollbar">
+              <table className="w-full min-w-[1150px] text-left text-xs border-separate border-spacing-0">
+                <thead className="bg-slate-100/95 dark:bg-slate-800/95 text-slate-600 dark:text-slate-300 font-semibold whitespace-nowrap">
                   <tr>
-                    <th className="p-3.5">Property & Category</th>
-                    <th className="p-3.5">Building & Location</th>
-                    <th className="p-3.5">Area & Technical Specs</th>
-                    <th className="p-3.5">Tariff / Price</th>
-                    <th className="p-3.5">Status</th>
-                    <th className="p-3.5">SEO Status</th>
-                    <th className="p-3.5">Actions</th>
+                    <th className="p-3.5 min-w-[280px] sticky left-0 z-20 bg-slate-100/95 dark:bg-slate-800/95 backdrop-blur-md border-b border-r border-slate-200 dark:border-slate-700 shadow-[4px_0_8px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_8px_-2px_rgba(0,0,0,0.4)]">
+                      Property & Category
+                    </th>
+                    <th className="p-3.5 min-w-[170px] border-b border-slate-200 dark:border-slate-800">
+                      Building & Location
+                    </th>
+                    <th className="p-3.5 min-w-[180px] border-b border-slate-200 dark:border-slate-800">
+                      Area & Technical Specs
+                    </th>
+                    <th className="p-3.5 min-w-[130px] border-b border-slate-200 dark:border-slate-800">
+                      Tariff / Price
+                    </th>
+                    <th className="p-3.5 min-w-[160px] border-b border-slate-200 dark:border-slate-800">
+                      Status
+                    </th>
+                    <th className="p-3.5 min-w-[160px] border-b border-slate-200 dark:border-slate-800">
+                      SEO Status
+                    </th>
+                    <th className="p-3.5 min-w-[150px] text-right pr-4 sticky right-0 z-20 bg-slate-100/95 dark:bg-slate-800/95 backdrop-blur-md border-b border-l border-slate-200 dark:border-slate-700 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.06)] dark:shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.4)]">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
+                <tbody>
                   {filteredProperties.map((prop) => {
                     const cfg = CATEGORY_CONFIG[prop.category] || CATEGORY_CONFIG['office-space'];
                     const CatIcon = cfg?.icon || Building2;
                     return (
-                      <tr key={prop.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
-                        {/* Image & Title & Category Badge */}
-                        <td className="p-3.5 flex items-start gap-3">
-                          <div className="relative group/img cursor-pointer shrink-0 mt-0.5" onClick={() => handleOpenEditProperty(prop)}>
-                            <img 
-                              src={prop.primary_image} 
-                              alt="" 
-                              onError={(e) => {
-                                const target = e.currentTarget;
-                                if (!target.dataset.failed) {
-                                  target.dataset.failed = 'true';
-                                  target.src = 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=600&q=80';
-                                }
-                              }}
-                              className="w-16 h-12 rounded-xl object-cover border border-slate-200 dark:border-slate-700 group-hover/img:opacity-80 transition-opacity" 
-                            />
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-xl opacity-0 group-hover/img:opacity-100 transition-opacity">
-                              <Edit3 className="w-3.5 h-3.5 text-white" />
+                      <tr key={prop.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors group">
+                        {/* Image & Title & Category Badge (Sticky Left) */}
+                        <td className="p-3.5 min-w-[280px] sticky left-0 z-10 bg-white/95 dark:bg-[#0B132B]/95 backdrop-blur-md group-hover:bg-slate-50/95 dark:group-hover:bg-[#111c3d]/95 border-b border-r border-slate-100 dark:border-slate-800 shadow-[4px_0_8px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_8px_-2px_rgba(0,0,0,0.4)] transition-colors">
+                          <div className="flex items-start gap-3">
+                            <div className="relative group/img cursor-pointer shrink-0 mt-0.5" onClick={() => handleOpenEditProperty(prop)}>
+                              <img 
+                                src={prop.primary_image} 
+                                alt="" 
+                                onError={(e) => {
+                                  const target = e.currentTarget;
+                                  if (!target.dataset.failed) {
+                                    target.dataset.failed = 'true';
+                                    target.src = 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=600&q=80';
+                                  }
+                                }}
+                                className="w-16 h-12 rounded-xl object-cover border border-slate-200 dark:border-slate-700 group-hover/img:opacity-80 transition-opacity" 
+                              />
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-xl opacity-0 group-hover/img:opacity-100 transition-opacity">
+                                <Edit3 className="w-3.5 h-3.5 text-white" />
+                              </div>
                             </div>
-                          </div>
-                          <div className="min-w-0 space-y-1">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border ${cfg.badgeClass}`}>
-                                <CatIcon className="w-3 h-3" />
-                                <span>{cfg.label}</span>
-                              </span>
-                              <span className="text-[10px] font-mono text-brand-500 font-bold">
-                                {prop.reference_number}
-                              </span>
-                            </div>
+                            <div className="min-w-0 space-y-1">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border ${cfg.badgeClass}`}>
+                                  <CatIcon className="w-3 h-3" />
+                                  <span>{cfg.label}</span>
+                                </span>
+                                <span className="text-[10px] font-mono text-brand-500 font-bold">
+                                  {prop.reference_number}
+                                </span>
+                              </div>
 
-                            <span 
-                              onClick={() => handleOpenEditProperty(prop)}
-                              className="font-bold text-slate-900 dark:text-white text-xs block line-clamp-1 hover:text-brand-600 cursor-pointer"
-                              title={prop.title}
-                            >
-                              {prop.title}
-                            </span>
-                            <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block truncate">
-                              {prop.property_type || 'Commercial Property'}
-                            </span>
+                              <span 
+                                onClick={() => handleOpenEditProperty(prop)}
+                                className="font-bold text-slate-900 dark:text-white text-xs block line-clamp-1 hover:text-brand-600 cursor-pointer"
+                                title={prop.title}
+                              >
+                                {prop.title}
+                              </span>
+                              <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block truncate">
+                                {prop.property_type || 'Commercial Property'}
+                              </span>
+                            </div>
                           </div>
                         </td>
 
                         {/* Building & Location */}
-                        <td className="p-3.5">
+                        <td className="p-3.5 min-w-[170px] border-b border-slate-100 dark:border-slate-800">
                           <div className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1">
                             <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                             <span className="truncate">{prop.building_name || 'Independent / Standalone'}</span>
@@ -2543,7 +2594,7 @@ export const AdminPage: React.FC = () => {
                         </td>
 
                         {/* Area & Technical Specs */}
-                        <td className="p-3.5 space-y-0.5">
+                        <td className="p-3.5 min-w-[180px] space-y-0.5 border-b border-slate-100 dark:border-slate-800">
                           <div className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1">
                             <span>{prop.built_up_area?.toLocaleString()} {prop.area_unit || 'sq.ft'}</span>
                             <span className="text-[10px] font-normal text-slate-400">({prop.furnishing})</span>
@@ -2569,7 +2620,7 @@ export const AdminPage: React.FC = () => {
                         </td>
 
                         {/* Tariff / Pricing */}
-                        <td className="p-3.5">
+                        <td className="p-3.5 min-w-[130px] whitespace-nowrap border-b border-slate-100 dark:border-slate-800">
                           <div className="font-bold text-slate-900 dark:text-white text-sm">
                             {prop.price_display}
                           </div>
@@ -2584,11 +2635,11 @@ export const AdminPage: React.FC = () => {
                         </td>
 
                         {/* Status */}
-                        <td className="p-3.5">
+                        <td className="p-3.5 min-w-[160px] whitespace-nowrap border-b border-slate-100 dark:border-slate-800">
                           <select
                             value={prop.status}
                             onChange={(e) => handlePropertyStatus(prop, e.target.value as PropertyStatus)}
-                            className="glass-input px-2.5 py-1.5 rounded-xl text-xs font-semibold cursor-pointer border border-slate-200 dark:border-slate-700 hover:border-brand-500 transition-colors"
+                            className="glass-input w-full min-w-[145px] px-2.5 py-1.5 rounded-xl text-xs font-semibold cursor-pointer border border-slate-200 dark:border-slate-700 hover:border-brand-500 transition-colors bg-white/80 dark:bg-slate-900/80"
                           >
                             <option value="Available">Available</option>
                             <option value="Ready to Move">Ready to Move</option>
@@ -2600,7 +2651,7 @@ export const AdminPage: React.FC = () => {
                         </td>
 
                         {/* SEO Status */}
-                        <td className="p-3.5">
+                        <td className="p-3.5 min-w-[160px] whitespace-nowrap border-b border-slate-100 dark:border-slate-800">
                           {(() => {
                             const seoStatus = computeSeoStatus(prop, 'property');
                             return (
@@ -2610,20 +2661,20 @@ export const AdminPage: React.FC = () => {
                                   handleOpenEditProperty(prop);
                                   setPropertyModalTab('seo');
                                 }}
-                                className="group/seo text-left cursor-pointer"
+                                className="group/seo text-left cursor-pointer inline-flex flex-col items-start"
                                 title={seoStatus.isComplete ? 'SEO Complete. Click to review SEO settings.' : `Missing: ${seoStatus.missingFields.join(', ')}. Click to fix.`}
                               >
-                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border transition-all ${
+                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border transition-all whitespace-nowrap shrink-0 ${
                                   seoStatus.isComplete
                                     ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 group-hover/seo:bg-emerald-500/25'
                                     : 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30 group-hover/seo:bg-amber-500/25'
                                 }`}>
-                                  {seoStatus.isComplete ? <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" /> : <AlertCircle className="w-3 h-3 text-amber-500 shrink-0" />}
+                                  {seoStatus.isComplete ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" /> : <AlertCircle className="w-3.5 h-3.5 text-amber-500 shrink-0" />}
                                   <span>{seoStatus.isComplete ? 'Complete' : 'Needs Attention'}</span>
                                 </span>
                                 {!seoStatus.isComplete && (
-                                  <span className="block text-[10px] text-slate-400 mt-0.5 truncate max-w-[110px]">
-                                    {seoStatus.missingFields.length} missing
+                                  <span className="block text-[10px] text-slate-400 mt-0.5 whitespace-nowrap pl-1">
+                                    {seoStatus.missingFields.length} {seoStatus.missingFields.length === 1 ? 'item missing' : 'items missing'}
                                   </span>
                                 )}
                               </button>
@@ -2631,21 +2682,21 @@ export const AdminPage: React.FC = () => {
                           })()}
                         </td>
 
-                        {/* Action buttons: Edit, View, Delete */}
-                        <td className="p-3.5">
-                          <div className="flex items-center gap-1.5">
+                        {/* Action buttons: Edit, View, Delete (Sticky Right - Never Hidden) */}
+                        <td className="p-3.5 min-w-[150px] whitespace-nowrap text-right pr-4 sticky right-0 z-10 bg-white/95 dark:bg-[#0B132B]/95 backdrop-blur-md group-hover:bg-slate-50/95 dark:group-hover:bg-[#111c3d]/95 border-b border-l border-slate-100 dark:border-slate-800 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.06)] dark:shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.4)] transition-colors">
+                          <div className="flex items-center justify-end gap-1.5">
                             <button
                               onClick={() => handleOpenEditProperty(prop)}
-                              className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-brand-50 hover:bg-brand-600 dark:bg-brand-950/80 dark:hover:bg-brand-600 text-brand-700 dark:text-brand-300 hover:text-white border border-brand-200/90 dark:border-brand-800/80 flex items-center gap-1.5 transition-all shadow-sm hover:shadow-md hover:shadow-brand-500/20 active:scale-95 group cursor-pointer"
+                              className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-brand-50 hover:bg-brand-600 dark:bg-brand-950/80 dark:hover:bg-brand-600 text-brand-700 dark:text-brand-300 hover:text-white border border-brand-200/90 dark:border-brand-800/80 flex items-center gap-1.5 transition-all shadow-sm hover:shadow-md hover:shadow-brand-500/20 active:scale-95 group/btn cursor-pointer"
                               title="Edit All Details & Technical Specs"
                             >
-                              <Edit3 className="w-3.5 h-3.5 transition-transform group-hover:scale-110 group-hover:-rotate-12" />
+                              <Edit3 className="w-3.5 h-3.5 transition-transform group-hover/btn:scale-110 group-hover/btn:-rotate-12" />
                               <span>Update</span>
                             </button>
 
                             <Link
                               to={`/properties/${prop.slug}`}
-                              className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500"
+                              className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
                               title="View Public Page"
                             >
                               <ExternalLink className="w-3.5 h-3.5" />
@@ -3036,23 +3087,23 @@ export const AdminPage: React.FC = () => {
           </div>
 
           {/* Desktop Table (>= lg) */}
-          <div className="hidden lg:block glass-card rounded-3xl overflow-hidden border border-slate-200/90 dark:border-slate-800 bg-white/70 dark:bg-[#0B132B]/75 shadow-md">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-100/80 dark:bg-slate-800/80 text-slate-500 font-semibold border-b border-slate-200 dark:border-slate-800">
+          <div className="hidden lg:block glass-card rounded-2xl overflow-hidden border border-slate-200/90 dark:border-slate-800 bg-white/70 dark:bg-[#0B132B]/75 shadow-md">
+            <div className="overflow-x-auto admin-scrollbar">
+              <table className="w-full min-w-[1000px] text-left text-xs border-separate border-spacing-0">
+                <thead className="bg-slate-100/95 dark:bg-slate-800/95 text-slate-600 dark:text-slate-300 font-semibold whitespace-nowrap">
                   <tr>
-                    <th className="p-3.5">Client & Contact</th>
-                    <th className="p-3.5">Type & Source</th>
-                    <th className="p-3.5">Property / Requirement</th>
-                    <th className="p-3.5">Visit Preference</th>
-                    <th className="p-3.5">Status</th>
-                    <th className="p-3.5">Actions</th>
+                    <th className="p-3.5 min-w-[200px] sticky left-0 z-20 bg-slate-100/95 dark:bg-slate-800/95 backdrop-blur-md border-b border-r border-slate-200 dark:border-slate-700 shadow-[4px_0_8px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_8px_-2px_rgba(0,0,0,0.4)]">Client & Contact</th>
+                    <th className="p-3.5 border-b border-slate-200 dark:border-slate-800">Type & Source</th>
+                    <th className="p-3.5 border-b border-slate-200 dark:border-slate-800">Property / Requirement</th>
+                    <th className="p-3.5 border-b border-slate-200 dark:border-slate-800">Visit Preference</th>
+                    <th className="p-3.5 border-b border-slate-200 dark:border-slate-800">Status</th>
+                    <th className="p-3.5 min-w-[140px] text-right pr-4 sticky right-0 z-20 bg-slate-100/95 dark:bg-slate-800/95 backdrop-blur-md border-b border-l border-slate-200 dark:border-slate-700 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.06)] dark:shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.4)]">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
+                <tbody>
                   {filteredLeads.map((lead) => (
-                    <tr key={lead.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
-                      <td className="p-3.5">
+                    <tr key={lead.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors group">
+                      <td className="p-3.5 min-w-[200px] sticky left-0 z-10 bg-white/95 dark:bg-[#0B132B]/95 backdrop-blur-md group-hover:bg-slate-50/95 dark:group-hover:bg-[#111c3d]/95 border-b border-r border-slate-100 dark:border-slate-800 shadow-[4px_0_8px_-2px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_8px_-2px_rgba(0,0,0,0.4)] transition-colors">
                         <div className="font-bold text-slate-900 dark:text-white text-sm">
                           {lead.name}
                         </div>
@@ -3060,7 +3111,7 @@ export const AdminPage: React.FC = () => {
                         <div className="text-slate-400 text-[11px]">{lead.email}</div>
                       </td>
 
-                      <td className="p-3.5">
+                      <td className="p-3.5 border-b border-slate-100 dark:border-slate-800">
                         <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-brand-50 dark:bg-brand-950 text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-brand-800">
                           {lead.lead_type.replace('_', ' ')}
                         </span>
@@ -3069,7 +3120,7 @@ export const AdminPage: React.FC = () => {
                         </div>
                       </td>
 
-                      <td className="p-3.5 max-w-sm">
+                      <td className="p-3.5 max-w-sm border-b border-slate-100 dark:border-slate-800">
                         <div className="font-semibold text-slate-800 dark:text-slate-200 line-clamp-1">
                           {lead.property_title || lead.building_name || (lead.lead_type === 'list_property' ? 'Owner Commercial Listing' : 'Custom Space Requirement')}
                         </div>
@@ -3104,7 +3155,7 @@ export const AdminPage: React.FC = () => {
                         })()}
                       </td>
 
-                      <td className="p-3.5 text-slate-600 dark:text-slate-300">
+                      <td className="p-3.5 text-slate-600 dark:text-slate-300 border-b border-slate-100 dark:border-slate-800">
                         {lead.preferred_visit_date ? (
                           <div>
                             <span className="font-semibold">{lead.preferred_visit_date}</span>
@@ -3115,7 +3166,7 @@ export const AdminPage: React.FC = () => {
                         )}
                       </td>
 
-                      <td className="p-3.5">
+                      <td className="p-3.5 border-b border-slate-100 dark:border-slate-800">
                         <select
                           value={lead.status}
                           onChange={(e) => handleStatusChange(lead.id, e.target.value as LeadStatus)}
@@ -3131,13 +3182,13 @@ export const AdminPage: React.FC = () => {
                         </select>
                       </td>
 
-                      <td className="p-3.5">
-                        <div className="flex items-center gap-1.5">
+                      <td className="p-3.5 text-right pr-4 sticky right-0 z-10 bg-white/95 dark:bg-[#0B132B]/95 backdrop-blur-md group-hover:bg-slate-50/95 dark:group-hover:bg-[#111c3d]/95 border-b border-l border-slate-100 dark:border-slate-800 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.06)] dark:shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.4)] transition-colors">
+                        <div className="flex items-center justify-end gap-1.5">
                           {lead.lead_type === 'list_property' && (
                             <button
                               type="button"
                               onClick={() => handleConvertLeadToProperty(lead)}
-                              className="px-2.5 py-1.5 rounded-lg bg-brand-50 hover:bg-brand-100 dark:bg-brand-950/80 dark:hover:bg-brand-900 text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-brand-800 text-[10px] font-bold inline-flex items-center gap-1 transition-all shadow-sm"
+                              className="px-2.5 py-1.5 rounded-lg bg-brand-50 hover:bg-brand-100 dark:bg-brand-950/80 dark:hover:bg-brand-900 text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-brand-800 text-[10px] font-bold inline-flex items-center gap-1 transition-all shadow-sm cursor-pointer"
                               title="Publish this Landlord Submission as a Live Property"
                             >
                               <PlusCircle className="w-3.5 h-3.5" />

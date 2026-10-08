@@ -36,6 +36,37 @@ const _cache = new Map<string, CacheEntry<any>>();
 const _inFlight = new Map<string, Promise<any>>();
 const DEFAULT_CACHE_TTL_MS = 3 * 60 * 1000; // 3 minutes
 
+function parseBuildingMeta(bld: any): Partial<Building> {
+  if (!bld) return {};
+  let meta: any = {};
+  if (typeof bld.available_floors === 'string' && bld.available_floors.startsWith('__meta:')) {
+    try {
+      meta = JSON.parse(bld.available_floors.replace('__meta:', ''));
+    } catch (e) {
+      // ignore
+    }
+  }
+  return meta;
+}
+
+function parsePropertyMeta(prop: any): { meta: Partial<Property>; cleanFeatures: string[] } {
+  if (!prop) return { meta: {}, cleanFeatures: [] };
+  let meta: any = {};
+  let cleanFeatures = prop.features;
+  if (Array.isArray(prop.features)) {
+    cleanFeatures = prop.features.filter((f: any) => {
+      if (typeof f === 'string' && f.startsWith('__meta:')) {
+        try {
+          meta = JSON.parse(f.replace('__meta:', ''));
+        } catch (e) {}
+        return false;
+      }
+      return true;
+    });
+  }
+  return { meta, cleanFeatures: cleanFeatures || [] };
+}
+
 function getCached<T>(key: string, ttlMs = DEFAULT_CACHE_TTL_MS): T | null {
   const entry = _cache.get(key);
   if (!entry) return null;
@@ -109,38 +140,16 @@ const safeSetItem = (key: string, value: string): boolean => {
       localStorage.setItem(key, value);
       return true;
     } catch (secondErr) {
-      // 3. Compact bulky base64 data from cached items if quota is still exceeded
+      // 3. Clear non-essential auxiliary caches if quota is still exceeded
       try {
-        if (key === STORAGE_KEYS.BUILDINGS) {
-          const parsed = JSON.parse(value);
-          if (Array.isArray(parsed)) {
-            const compacted = parsed.map((b: any) => ({
-              ...b,
-              gallery: Array.isArray(b.gallery)
-                ? b.gallery.filter((img: string) => typeof img === 'string' && (img.startsWith('http') || img.length < 50000))
-                : b.gallery
-            }));
-            localStorage.setItem(key, JSON.stringify(compacted));
-            return true;
-          }
-        } else if (key === STORAGE_KEYS.PROPERTIES) {
-          const parsed = JSON.parse(value);
-          if (Array.isArray(parsed)) {
-            const compacted = parsed.map((p: any) => ({
-              ...p,
-              gallery: Array.isArray(p.gallery)
-                ? p.gallery.filter((img: string) => typeof img === 'string' && (img.startsWith('http') || img.length < 50000))
-                : p.gallery
-            }));
-            localStorage.setItem(key, JSON.stringify(compacted));
-            return true;
-          }
-        }
+        localStorage.removeItem('shristi_custom_media');
+        // Prune older cached guides or search indices if available
+        localStorage.setItem(key, value);
+        return true;
       } catch (thirdErr) {
-        console.warn(`LocalStorage compact save also failed for "${key}":`, thirdErr);
+        console.warn(`LocalStorage quota still exceeded for "${key}". Database and in-memory cache remain fully active.`, thirdErr);
+        return false;
       }
-      console.warn(`LocalStorage quota still exceeded for "${key}". Memory cache remains fully active.`, secondErr);
-      return false;
     }
   }
 };
@@ -835,7 +844,7 @@ export const StorageService = {
     }
   },
 
-  // BUILDINGS - OPTIMIZED WITH LIGHTWEIGHT CARD FIELDS & TTL CACHE
+  // BUILDINGS - WITH FULL PERSISTENCE & METADATA RESTORATION
   async getBuildings(): Promise<Building[]> {
     const cached = getCached<Building[]>('buildings_cards');
     if (cached) return cached;
@@ -853,27 +862,35 @@ export const StorageService = {
 
       if (isSupabaseConfigured && supabase) {
         try {
-          // Optimized lightweight card query: excludes heavy metadata and full galleries
+          // Select all columns from buildings so full galleries, SEO & specs are loaded
           const { data, error } = await withTimeout(
             supabase.from('buildings')
-              .select('id, name, slug, location_id, location_name, category, address, description, hero_image, total_floors, size_range, rent_range, sale_range, published, property_count, created_at')
-              .eq('published', true)
+              .select('*')
               .order('created_at', { ascending: false }) as any
           );
           if (!error && data && data.length > 0) {
             const mergedList: Building[] = (data as any[]).map(supaBld => {
+              const meta = parseBuildingMeta(supaBld);
               const localBld = localBuildings.find(lb => lb.id === supaBld.id || lb.slug === supaBld.slug);
               const deletedUnitCount = (localBld?.deleted_unit_ids && Array.isArray(localBld.deleted_unit_ids))
                 ? localBld.deleted_unit_ids.length
                 : (Array.isArray(supaBld.deleted_unit_ids) ? supaBld.deleted_unit_ids.length : 0);
+
               const combined: Building = {
-                ...supaBld,
                 ...(localBld || {}),
-                hero_image: supaBld.hero_image || localBld?.hero_image,
+                ...supaBld,
+                ...meta,
+                hero_image: supaBld.hero_image || meta.hero_image || localBld?.hero_image || '',
+                gallery: (Array.isArray(supaBld.gallery) && supaBld.gallery.length > 0)
+                  ? supaBld.gallery
+                  : ((Array.isArray(meta.gallery) && meta.gallery.length > 0) ? meta.gallery : (localBld?.gallery || [])),
+                image_details: (Array.isArray(supaBld.image_details) && supaBld.image_details.length > 0)
+                  ? supaBld.image_details
+                  : (meta.image_details || localBld?.image_details || []),
                 structure_display: getBuildingStructureDisplay(supaBld),
-                property_count: typeof localBld?.property_count === 'number'
-                  ? localBld.property_count
-                  : (typeof supaBld.property_count === 'number' ? supaBld.property_count : Math.max(0, 20 - deletedUnitCount))
+                property_count: typeof supaBld.property_count === 'number'
+                  ? supaBld.property_count
+                  : (typeof localBld?.property_count === 'number' ? localBld.property_count : Math.max(0, 20 - deletedUnitCount))
               };
               return combined;
             });
@@ -918,8 +935,16 @@ export const StorageService = {
             supabase.from('buildings').select('*').eq('slug', slug).maybeSingle() as any
           );
           if (!error && data) {
+            const meta = parseBuildingMeta(data);
             const bld: Building = {
               ...data,
+              ...meta,
+              gallery: (Array.isArray(data.gallery) && data.gallery.length > 0)
+                ? data.gallery
+                : ((Array.isArray(meta.gallery) && meta.gallery.length > 0) ? meta.gallery : []),
+              image_details: (Array.isArray(data.image_details) && data.image_details.length > 0)
+                ? data.image_details
+                : (meta.image_details || []),
               structure_display: getBuildingStructureDisplay(data),
               property_count: typeof data.property_count === 'number' ? data.property_count : Math.max(0, 20 - (data.deleted_unit_ids?.length || 0))
             };
@@ -951,8 +976,16 @@ export const StorageService = {
             supabase.from('buildings').select('*').eq('id', buildingId).maybeSingle() as any
           );
           if (!error && data) {
+            const meta = parseBuildingMeta(data);
             const bld: Building = {
               ...data,
+              ...meta,
+              gallery: (Array.isArray(data.gallery) && data.gallery.length > 0)
+                ? data.gallery
+                : ((Array.isArray(meta.gallery) && meta.gallery.length > 0) ? meta.gallery : []),
+              image_details: (Array.isArray(data.image_details) && data.image_details.length > 0)
+                ? data.image_details
+                : (meta.image_details || []),
               structure_display: getBuildingStructureDisplay(data),
               property_count: typeof data.property_count === 'number' ? data.property_count : Math.max(0, 20 - (data.deleted_unit_ids?.length || 0))
             };
@@ -973,6 +1006,9 @@ export const StorageService = {
   },
 
   async saveBuilding(building: Building): Promise<void> {
+    clearStorageCache('bld');
+    clearStorageCache('buildings_cards');
+    clearStorageCache('homepage');
     const structureDisplay = getBuildingStructureDisplay(building);
     const now = new Date().toISOString();
     const existingBld = (_memBuildings || []).find(b => b.id === building.id);
@@ -1000,6 +1036,7 @@ export const StorageService = {
       structure_display: structureDisplay,
       sale_range: (building.sale_range && String(building.sale_range).trim() !== '') ? building.sale_range : null as any,
       gallery: Array.isArray(building.gallery) ? building.gallery : [],
+      image_details: Array.isArray(building.image_details) ? building.image_details : [],
       towers: Array.isArray(building.towers) ? building.towers : [],
     };
 
@@ -1025,86 +1062,46 @@ export const StorageService = {
     }
 
     if (isSupabaseConfigured && supabase) {
-      try {
-        const { error } = await withTimeout(supabase.from('buildings').upsert(sanitized));
-        if (error) {
-          // If upsert fails due to missing optional columns on Supabase, attempt fallback with core schema columns and encode metadata
-          const metaPayload = {
-            available_floors: sanitized.available_floors || null,
-            structure_display: sanitized.structure_display,
-            basement_floors: sanitized.basement_floors,
-            ground_option: sanitized.ground_option,
-            towers: sanitized.towers,
-            total_towers: sanitized.total_towers,
-            tower_details: sanitized.tower_details,
-            categories: sanitized.categories,
-            locations: sanitized.locations,
-            location_names: sanitized.location_names,
-            building_name: sanitized.building_name,
-            block_name: sanitized.block_name,
-            tower_number: sanitized.tower_number,
-            sector: sanitized.sector,
-            gmaps_direction: sanitized.gmaps_direction,
-            status: sanitized.status,
-            short_description: sanitized.short_description,
-            overview: sanitized.overview,
-            location_connectivity: sanitized.location_connectivity,
-            specs: sanitized.specs,
-            hero_image_alt: sanitized.hero_image_alt,
-            hero_image_title: sanitized.hero_image_title,
-            hero_image_caption: sanitized.hero_image_caption,
-            image_details: sanitized.image_details,
-            seo_title: sanitized.seo_title,
-            seo_description: sanitized.seo_description,
-            seo_keywords: sanitized.seo_keywords,
-            canonical_url: sanitized.canonical_url,
-            og_title: sanitized.og_title,
-            og_description: sanitized.og_description,
-            og_image: sanitized.og_image !== undefined ? sanitized.og_image : '',
-            hyperlinks: sanitized.hyperlinks,
-            deleted_unit_ids: mergedDeleted,
-            updated_at: now
-          };
-          const basePayload: any = {
-            id: sanitized.id,
-            name: sanitized.name,
-            slug: sanitized.slug,
-            location_id: sanitized.location_id,
-            location_name: sanitized.location_name,
-            category: sanitized.category,
-            address: sanitized.address,
-            description: sanitized.description,
-            hero_image: sanitized.hero_image,
-            gallery: sanitized.gallery,
-            total_floors: sanitized.total_floors,
-            available_floors: '__meta:' + JSON.stringify(metaPayload),
-            size_range: sanitized.size_range,
-            rent_range: sanitized.rent_range || null,
-            sale_range: sanitized.sale_range || null,
-            furnishing_options: sanitized.furnishing_options,
-            parking: sanitized.parking,
-            lifts: sanitized.lifts,
-            security: sanitized.security,
-            power_backup: sanitized.power_backup,
-            amenities: sanitized.amenities,
-            nearby_landmarks: sanitized.nearby_landmarks,
-            nearby_transport: sanitized.nearby_transport,
-            published: sanitized.published,
-            property_count: sanitized.property_count || 0
-          };
-          let fallbackRes = await withTimeout(supabase.from('buildings').upsert(basePayload));
-          if (fallbackRes.error && fallbackRes.error.code === '23503') {
-            // Foreign key violation on location_id (e.g. location not seeded in DB)
-            // Retry with location_id = null since full location info is preserved in metaPayload
-            basePayload.location_id = null;
-            fallbackRes = await withTimeout(supabase.from('buildings').upsert(basePayload));
-          }
-          if (fallbackRes.error) {
-            console.warn('Supabase fallback upsert warning (local saved successfully):', fallbackRes.error);
-          }
+      const { error } = await withTimeout(supabase.from('buildings').upsert(sanitized));
+      if (error) {
+        console.warn('Direct building upsert warning, attempting compatibility fallback:', error);
+        const metaPayload = { ...sanitized };
+        const basePayload: any = {
+          id: sanitized.id,
+          name: sanitized.name,
+          slug: sanitized.slug,
+          location_id: sanitized.location_id,
+          location_name: sanitized.location_name,
+          category: sanitized.category,
+          address: sanitized.address,
+          description: sanitized.description,
+          hero_image: sanitized.hero_image,
+          gallery: sanitized.gallery,
+          total_floors: sanitized.total_floors,
+          available_floors: '__meta:' + JSON.stringify(metaPayload),
+          size_range: sanitized.size_range,
+          rent_range: sanitized.rent_range || null,
+          sale_range: sanitized.sale_range || null,
+          furnishing_options: sanitized.furnishing_options,
+          parking: sanitized.parking,
+          lifts: sanitized.lifts,
+          security: sanitized.security,
+          power_backup: sanitized.power_backup,
+          amenities: sanitized.amenities,
+          nearby_landmarks: sanitized.nearby_landmarks,
+          nearby_transport: sanitized.nearby_transport,
+          published: sanitized.published,
+          property_count: sanitized.property_count || 0
+        };
+        let fallbackRes = await withTimeout(supabase.from('buildings').upsert(basePayload));
+        if (fallbackRes.error && fallbackRes.error.code === '23503') {
+          basePayload.location_id = null;
+          fallbackRes = await withTimeout(supabase.from('buildings').upsert(basePayload));
         }
-      } catch (e) {
-        console.warn('Supabase upsert building network warning (local saved successfully):', e);
+        if (fallbackRes.error) {
+          console.error('Supabase saveBuilding failed completely:', fallbackRes.error);
+          throw new Error(`Failed to save building to database: ${fallbackRes.error.message || fallbackRes.error.details || 'Database write failed'}`);
+        }
       }
     }
   },
@@ -1167,7 +1164,7 @@ export const StorageService = {
     }
   },
 
-  // PROPERTIES
+  // PROPERTIES - WITH FULL PERSISTENCE & METADATA RESTORATION
   async getProperties(): Promise<Property[]> {
     const cached = getCached<Property[]>('properties_all');
     if (cached) return cached;
@@ -1185,25 +1182,35 @@ export const StorageService = {
 
       if (isSupabaseConfigured && supabase) {
         try {
+          // Select all columns from properties so galleries, description, features, and SEO are preserved
           const { data, error } = await withTimeout(
             supabase.from('properties')
-              .select('id, title, slug, building_id, building_name, location_id, location_name, category, property_type, listing_type, price, rent_price, sale_price, built_up_area, area_unit, floor, status, possession, primary_image, featured, verified, sector, tower, unit_number, block_name, created_at, updated_at')
+              .select('*')
               .order('featured', { ascending: false })
               .order('created_at', { ascending: false }) as any
           );
           if (!error && data && data.length > 0) {
             baseProps = (data as any[]).map(supaProp => {
               const localProp = localProps.find(lp => lp.id === supaProp.id || lp.slug === supaProp.slug);
+              const { meta, cleanFeatures } = parsePropertyMeta(supaProp);
               return {
-                ...supaProp,
                 ...(localProp || {}),
+                ...supaProp,
+                ...meta,
+                gallery: (Array.isArray(supaProp.gallery) && supaProp.gallery.length > 0)
+                  ? supaProp.gallery
+                  : ((Array.isArray(meta.gallery) && meta.gallery.length > 0) ? meta.gallery : (localProp?.gallery || [])),
+                image_details: (Array.isArray(supaProp.image_details) && supaProp.image_details.length > 0)
+                  ? supaProp.image_details
+                  : (meta.image_details || localProp?.image_details || []),
+                features: cleanFeatures.length > 0 ? cleanFeatures : (localProp?.features || []),
                 tower: supaProp.tower || localProp?.tower || null,
                 block_name: supaProp.block_name || localProp?.block_name,
                 unit_number: supaProp.unit_number || localProp?.unit_number,
                 sector: supaProp.sector || localProp?.sector,
                 rent_price: supaProp.rent_price || localProp?.rent_price,
                 sale_price: supaProp.sale_price || localProp?.sale_price,
-                updated_at: localProp?.updated_at || supaProp.created_at
+                updated_at: supaProp.updated_at || localProp?.updated_at || supaProp.created_at
               };
             });
 
@@ -1253,20 +1260,16 @@ export const StorageService = {
             supabase.from('properties').select('*').eq('slug', slug).maybeSingle() as any
           );
           if (!error && data) {
-            let meta: any = {};
-            let cleanFeatures = data.features;
-            if (Array.isArray(data.features)) {
-              cleanFeatures = data.features.filter((f: any) => {
-                if (typeof f === 'string' && f.startsWith('__meta:')) {
-                  try { meta = JSON.parse(f.replace('__meta:', '')); } catch(e){}
-                  return false;
-                }
-                return true;
-              });
-            }
+            const { meta, cleanFeatures } = parsePropertyMeta(data);
             const fullProp: Property = {
               ...data,
               ...meta,
+              gallery: (Array.isArray(data.gallery) && data.gallery.length > 0)
+                ? data.gallery
+                : ((Array.isArray(meta.gallery) && meta.gallery.length > 0) ? meta.gallery : []),
+              image_details: (Array.isArray(data.image_details) && data.image_details.length > 0)
+                ? data.image_details
+                : (meta.image_details || []),
               features: cleanFeatures
             };
             setCache(cacheKey, fullProp);
@@ -1349,6 +1352,7 @@ export const StorageService = {
 
   async saveProperty(property: Property): Promise<void> {
     clearStorageCache('prop');
+    clearStorageCache('properties_all');
     clearStorageCache('homepage');
     const now = new Date().toISOString();
     const sanitized: Property = {
@@ -1375,6 +1379,7 @@ export const StorageService = {
       features: Array.isArray(property.features) ? property.features : [],
       amenities: Array.isArray(property.amenities) ? property.amenities : [],
       gallery: Array.isArray(property.gallery) ? property.gallery : [],
+      image_details: Array.isArray(property.image_details) ? property.image_details : [],
       block_name: property.block_name || null,
       unit_number: property.unit_number || null,
       sector: property.sector || null,
@@ -1387,7 +1392,6 @@ export const StorageService = {
       primary_image_alt: property.primary_image_alt || null,
       primary_image_title: property.primary_image_title || null,
       primary_image_caption: property.primary_image_caption || null,
-      image_details: property.image_details || [],
       seo_title: property.seo_title || null,
       seo_description: property.seo_description || null,
       seo_keywords: property.seo_keywords || null,
@@ -1434,49 +1438,65 @@ export const StorageService = {
     }
 
     if (isSupabaseConfigured && supabase) {
-      try {
-        const { error } = await withTimeout(supabase.from('properties').upsert(sanitized));
-        if (error) {
-          const metaPayload = {
-            og_image: sanitized.og_image !== undefined ? sanitized.og_image : '',
-            seo_title: sanitized.seo_title || null,
-            seo_description: sanitized.seo_description || null,
-            seo_keywords: sanitized.seo_keywords || null,
-            canonical_url: sanitized.canonical_url || null,
-            og_title: sanitized.og_title || null,
-            og_description: sanitized.og_description || null,
-            primary_image_alt: sanitized.primary_image_alt || null,
-            primary_image_title: sanitized.primary_image_title || null,
-            primary_image_caption: sanitized.primary_image_caption || null,
-            short_description: sanitized.short_description || null,
-            overview: sanitized.overview || null,
-            location_connectivity: sanitized.location_connectivity || null,
-            highlights: sanitized.highlights || null,
-            hyperlinks: sanitized.hyperlinks || [],
-            updated_at: now
-          };
-          const baseFeatures = Array.isArray(sanitized.features)
-            ? sanitized.features.filter(f => typeof f !== 'string' || !f.startsWith('__meta:'))
-            : [];
-          baseFeatures.push('__meta:' + JSON.stringify(metaPayload));
+      const { error } = await withTimeout(supabase.from('properties').upsert(sanitized));
+      if (error) {
+        console.warn('Direct property upsert warning, attempting compatibility fallback:', error);
+        const metaPayload = { ...sanitized };
+        const baseFeatures = Array.isArray(sanitized.features)
+          ? sanitized.features.filter(f => typeof f !== 'string' || !f.startsWith('__meta:'))
+          : [];
+        baseFeatures.push('__meta:' + JSON.stringify(metaPayload));
 
-          const { 
-            tower, block_name, unit_number, sector, rent_price, sale_price,
-            short_description, overview, location_connectivity, highlights,
-            primary_image_alt, primary_image_title, primary_image_caption,
-            image_details, seo_title, seo_description, seo_keywords,
-            canonical_url, og_title, og_description, og_image, hyperlinks,
-            updated_at,
-            ...basePayload 
-          } = sanitized as any;
-          basePayload.features = baseFeatures;
-          const fallbackRes = await withTimeout(supabase.from('properties').upsert(basePayload));
-          if (fallbackRes.error) {
-            console.warn('Supabase fallback upsert property warning (local saved successfully):', fallbackRes.error);
-          }
+        const basePayload: any = {
+          id: sanitized.id,
+          title: sanitized.title,
+          slug: sanitized.slug,
+          reference_number: sanitized.reference_number,
+          category: sanitized.category,
+          property_type: sanitized.property_type,
+          listing_type: sanitized.listing_type,
+          status: sanitized.status,
+          price: sanitized.price,
+          price_display: sanitized.price_display,
+          rate_per_sqft: sanitized.rate_per_sqft || null,
+          rent_frequency: sanitized.rent_frequency || null,
+          location_id: sanitized.location_id,
+          location_name: sanitized.location_name,
+          building_id: sanitized.building_id,
+          building_name: sanitized.building_name,
+          address: sanitized.address,
+          city: sanitized.city,
+          built_up_area: sanitized.built_up_area,
+          carpet_area: sanitized.carpet_area,
+          land_area: sanitized.land_area,
+          area_unit: sanitized.area_unit,
+          floor: sanitized.floor,
+          total_floors: sanitized.total_floors,
+          furnishing: sanitized.furnishing,
+          parking: sanitized.parking,
+          power_load: sanitized.power_load,
+          road_width: sanitized.road_width,
+          possession: sanitized.possession,
+          description: sanitized.description,
+          features: baseFeatures,
+          amenities: sanitized.amenities,
+          primary_image: sanitized.primary_image,
+          gallery: sanitized.gallery,
+          featured: sanitized.featured || false,
+          published: sanitized.published !== undefined ? sanitized.published : true,
+          is_seed: sanitized.is_seed || false,
+          created_at: sanitized.created_at
+        };
+        let fallbackRes = await withTimeout(supabase.from('properties').upsert(basePayload));
+        if (fallbackRes.error && fallbackRes.error.code === '23503') {
+          basePayload.location_id = null;
+          basePayload.building_id = null;
+          fallbackRes = await withTimeout(supabase.from('properties').upsert(basePayload));
         }
-      } catch (e) {
-        console.warn('Supabase upsert property network warning (local saved successfully):', e);
+        if (fallbackRes.error) {
+          console.error('Supabase saveProperty failed completely:', fallbackRes.error);
+          throw new Error(`Failed to save property to database: ${fallbackRes.error.message || fallbackRes.error.details || 'Database write failed'}`);
+        }
       }
     }
   },
@@ -1484,6 +1504,7 @@ export const StorageService = {
   async saveProperties(propertiesToSave: Property[]): Promise<void> {
     if (!propertiesToSave || propertiesToSave.length === 0) return;
     clearStorageCache('prop');
+    clearStorageCache('properties_all');
     clearStorageCache('homepage');
     const now = new Date().toISOString();
     const sanitizedList: Property[] = propertiesToSave.map(property => ({
@@ -1510,6 +1531,7 @@ export const StorageService = {
       features: Array.isArray(property.features) ? property.features : [],
       amenities: Array.isArray(property.amenities) ? property.amenities : [],
       gallery: Array.isArray(property.gallery) ? property.gallery : [],
+      image_details: Array.isArray(property.image_details) ? property.image_details : [],
       block_name: property.block_name || null,
       unit_number: property.unit_number || null,
       sector: property.sector || null,
@@ -1522,7 +1544,6 @@ export const StorageService = {
       primary_image_alt: property.primary_image_alt || null,
       primary_image_title: property.primary_image_title || null,
       primary_image_caption: property.primary_image_caption || null,
-      image_details: property.image_details || [],
       seo_title: property.seo_title || null,
       seo_description: property.seo_description || null,
       seo_keywords: property.seo_keywords || null,
@@ -1553,10 +1574,12 @@ export const StorageService = {
 
     // Supabase upsert in one batch with timeout
     if (isSupabaseConfigured && supabase) {
-      try {
-        await withTimeout(supabase.from('properties').upsert(sanitizedList));
-      } catch (e) {
-        console.warn('Supabase batch upsert properties warning (local saved):', e);
+      const { error } = await withTimeout(supabase.from('properties').upsert(sanitizedList));
+      if (error) {
+        console.warn('Supabase batch upsert properties failed, saving sequentially with fallback:', error);
+        for (const item of sanitizedList) {
+          await this.saveProperty(item);
+        }
       }
     }
   },

@@ -148,13 +148,21 @@ export const EditBuildingPropertiesModal: React.FC<EditBuildingPropertiesModalPr
 
   // Save full property from EditPropertyModal
   const handleSaveFullUnit = async (updatedUnit: Property) => {
-    await StorageService.saveProperty(updatedUnit);
-    setProperties(prev => prev.map(p => p.id === updatedUnit.id ? updatedUnit : p));
-    if (onPropertiesUpdated) {
-      onPropertiesUpdated(properties.map(p => p.id === updatedUnit.id ? updatedUnit : p));
+    try {
+      await StorageService.saveProperty(updatedUnit);
+      setProperties(prev => {
+        const next = prev.map(p => p.id === updatedUnit.id ? updatedUnit : p);
+        if (onPropertiesUpdated) {
+          onPropertiesUpdated(next);
+        }
+        return next;
+      });
+      setShowFullEditModal(false);
+      setFullEditingUnit(null);
+    } catch (err: any) {
+      console.error('Failed to save full unit:', err);
+      alert('Failed to save listing: ' + (err?.message || 'Database error'));
     }
-    setShowFullEditModal(false);
-    setFullEditingUnit(null);
   };
 
   // Load properties when modal opens for building
@@ -239,13 +247,23 @@ export const EditBuildingPropertiesModal: React.FC<EditBuildingPropertiesModalPr
   }, [editingImageUnit]);
 
   // Save selected image & gallery for active unit
-  const handleSaveUnitImage = () => {
+  const handleSaveUnitImage = async () => {
     if (!editingImageUnit) return;
     const finalUrl = selectedImageUrl.trim() || editingImageUnit.primary_image;
+    const updated: Property = {
+      ...editingImageUnit,
+      primary_image: finalUrl,
+      gallery: selectedGallery
+    };
     handleUpdateProperty(editingImageUnit.id, {
       primary_image: finalUrl,
       gallery: selectedGallery
     });
+    try {
+      await StorageService.saveProperty(updated);
+    } catch (e) {
+      console.warn('Auto-save unit image warning (will commit with batch):', e);
+    }
     setEditingImageUnit(null);
   };
 

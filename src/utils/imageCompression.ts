@@ -1,12 +1,43 @@
 /**
+ * Attempts to upload/save the compressed image directly into the project's
+ * public/images/ folders via the Vite dev server endpoint.
+ * Falls back silently to the dataUrl if the server endpoint is unavailable.
+ */
+async function trySaveToProject(file: File, dataUrl: string, folder: string = 'uploads'): Promise<string> {
+  if (typeof window === 'undefined' || !dataUrl) return dataUrl;
+  try {
+    const res = await fetch('/api/upload-image', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        filename: file.name,
+        dataUrl,
+        folder
+      })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.success && data.url) {
+        return data.url;
+      }
+    }
+  } catch {
+    // Dev server upload endpoint not available or offline, fallback to data URL
+  }
+  return dataUrl;
+}
+
+/**
  * Highly optimized client-side image compressor utility for web applications.
  * Converts images to optimized WebP (with fallback to JPEG) with responsive dimensions,
  * preventing LocalStorage QuotaExceeded errors while maintaining crisp visual fidelity.
+ * If running on Vite dev server, also automatically saves the file to public/images/<folder>/.
  */
 export const compressImageFile = (
   file: File, 
   maxWidth = 1200, 
-  quality = 0.76
+  quality = 0.76,
+  folder: 'towers' | 'properties' | 'uploads' | 'categories' = 'uploads'
 ): Promise<string> => {
   return new Promise((resolve) => {
     if (!file) {
@@ -17,7 +48,11 @@ export const compressImageFile = (
     // Preserve SVGs directly
     if (file.type === 'image/svg+xml') {
       const reader = new FileReader();
-      reader.onload = () => resolve((reader.result as string) || '');
+      reader.onload = async () => {
+        const result = (reader.result as string) || '';
+        const saved = await trySaveToProject(file, result, folder);
+        resolve(saved);
+      };
       reader.onerror = () => resolve('');
       reader.readAsDataURL(file);
       return;
@@ -26,7 +61,11 @@ export const compressImageFile = (
     // For small GIFs under 1.5MB, preserve animation
     if (file.type === 'image/gif' && file.size < 1.5 * 1024 * 1024) {
       const reader = new FileReader();
-      reader.onload = () => resolve((reader.result as string) || '');
+      reader.onload = async () => {
+        const result = (reader.result as string) || '';
+        const saved = await trySaveToProject(file, result, folder);
+        resolve(saved);
+      };
       reader.onerror = () => resolve('');
       reader.readAsDataURL(file);
       return;
@@ -41,7 +80,7 @@ export const compressImageFile = (
       }
 
       const img = new Image();
-      img.onload = () => {
+      img.onload = async () => {
         try {
           let width = img.width;
           let height = img.height;
@@ -98,16 +137,19 @@ export const compressImageFile = (
             }
           }
 
-          resolve(output);
+          const savedUrl = await trySaveToProject(file, output, folder);
+          resolve(savedUrl);
         } catch (err) {
           console.warn('Canvas compression error, falling back:', err);
-          resolve(dataUrl);
+          const saved = await trySaveToProject(file, dataUrl, folder);
+          resolve(saved);
         }
       };
 
-      img.onerror = () => {
+      img.onerror = async () => {
         console.warn('Image element decode failed, falling back to data URL');
-        resolve(dataUrl);
+        const saved = await trySaveToProject(file, dataUrl, folder);
+        resolve(saved);
       };
 
       img.src = dataUrl;

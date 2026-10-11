@@ -72,13 +72,16 @@ export const AdminMediaManager: React.FC<AdminMediaManagerProps> = ({
     onImageDetailsChange(current);
   };
 
+  // Target subfolder in public/images
+  const targetFolder = entityType === 'tower' ? 'towers' : 'properties';
+
   // Upload primary photo
   const handlePrimaryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setIsUploadingPrimary(true);
     try {
-      const compressed = await compressImageFile(file);
+      const compressed = await compressImageFile(file, 1200, 0.76, targetFolder);
       if (compressed) {
         onPrimaryImageChange(compressed);
       } else {
@@ -102,7 +105,7 @@ export const AdminMediaManager: React.FC<AdminMediaManagerProps> = ({
       const results: string[] = [];
       for (const file of files) {
         try {
-          const compressed = await compressImageFile(file);
+          const compressed = await compressImageFile(file, 1200, 0.76, targetFolder);
           if (compressed) results.push(compressed);
         } catch (fErr) {
           console.warn('Failed compressing a gallery image:', fErr);

@@ -9,11 +9,11 @@ const isPlaceholderKey = !envKey || envKey === 'your-anon-key-here';
 
 const supabaseUrl = !isPlaceholderUrl 
   ? envUrl 
-  : 'https://vdrqvvxvvuqqgxwqjfyy.supabase.co';
+  : 'https://patsctxtcfnqllxrvulc.supabase.co';
 
 const supabaseAnonKey = !isPlaceholderKey 
   ? envKey 
-  : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkcnF2dnh2dnVxcWd4d3FqZnl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5NzQwOTMsImV4cCI6MjEwNDU1MDA5M30.ulf1wysrZSTp4tWKozQC0-AVHarj0-u8pMjTUjCJCe8';
+  : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhdHNjdHh0Y2ZucWxseHJ2dWxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4MDc3MzMsImV4cCI6MjEwODM4MzczM30.UqlHfp78_mFgG0JuZZTSfC4gZXy3W1vFcXTXJ4NBHi4';
 
 export const isSupabaseConfigured = Boolean(
   supabaseUrl && 

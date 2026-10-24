@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 import { INITIAL_LOCATIONS, INITIAL_BUILDINGS, INITIAL_PROPERTIES, INITIAL_LEADS } from '../src/data/mockData.js';
 
-const supabaseUrl = 'https://vdrqvvxvvuqqgxwqjfyy.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkcnF2dnh2dnVxcWd4d3FqZnl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5NzQwOTMsImV4cCI6MjEwNDU1MDA5M30.ulf1wysrZSTp4tWKozQC0-AVHarj0-u8pMjTUjCJCe8';
+const supabaseUrl = 'https://patsctxtcfnqllxrvulc.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhdHNjdHh0Y2ZucWxseHJ2dWxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4MDc3MzMsImV4cCI6MjEwODM4MzczM30.UqlHfp78_mFgG0JuZZTSfC4gZXy3W1vFcXTXJ4NBHi4';
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 

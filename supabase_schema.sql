@@ -184,8 +184,24 @@ CREATE POLICY "Public read locations" ON locations FOR SELECT USING (true);
 CREATE POLICY "Public read buildings" ON buildings FOR SELECT USING (published = true);
 CREATE POLICY "Public read properties" ON properties FOR SELECT USING (published = true);
 
--- Public Leads Insertion Policy
+-- Public Management Policies (Admin CRUD & Seeding)
+CREATE POLICY "Public insert locations" ON locations FOR INSERT WITH CHECK (true);
+CREATE POLICY "Public update locations" ON locations FOR UPDATE USING (true) WITH CHECK (true);
+CREATE POLICY "Public delete locations" ON locations FOR DELETE USING (true);
+
+CREATE POLICY "Public insert buildings" ON buildings FOR INSERT WITH CHECK (true);
+CREATE POLICY "Public update buildings" ON buildings FOR UPDATE USING (true) WITH CHECK (true);
+CREATE POLICY "Public delete buildings" ON buildings FOR DELETE USING (true);
+
+CREATE POLICY "Public insert properties" ON properties FOR INSERT WITH CHECK (true);
+CREATE POLICY "Public update properties" ON properties FOR UPDATE USING (true) WITH CHECK (true);
+CREATE POLICY "Public delete properties" ON properties FOR DELETE USING (true);
+
+-- Leads Policies
 CREATE POLICY "Public insert leads" ON leads FOR INSERT WITH CHECK (true);
+CREATE POLICY "Public read leads" ON leads FOR SELECT USING (true);
+CREATE POLICY "Public update leads" ON leads FOR UPDATE USING (true) WITH CHECK (true);
+CREATE POLICY "Public delete leads" ON leads FOR DELETE USING (true);
 
 -- Extensions for Commercial Buildings: Multi-locations, Categories, Structure, and Towers
 ALTER TABLE buildings ADD COLUMN IF NOT EXISTS locations JSONB DEFAULT '[]'::jsonb;
@@ -224,6 +240,9 @@ CREATE TABLE IF NOT EXISTS guides (
 
 ALTER TABLE guides ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Public read guides" ON guides FOR SELECT USING (published = true);
+CREATE POLICY "Public insert guides" ON guides FOR INSERT WITH CHECK (true);
+CREATE POLICY "Public update guides" ON guides FOR UPDATE USING (true) WITH CHECK (true);
+CREATE POLICY "Public delete guides" ON guides FOR DELETE USING (true);
 
 -- 6. STORAGE BUCKET FOR BLOG IMAGES
 INSERT INTO storage.buckets (id, name, public) 

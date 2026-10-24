@@ -13,7 +13,7 @@ interface AdminSeoPreviewSectionProps {
   ogImage?: string;
   ogTitle?: string;
   ogDescription?: string;
-  type: 'building' | 'property';
+  type: 'building' | 'property' | 'guide';
   entity: any;
 }
 

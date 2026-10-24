@@ -1,20 +1,24 @@
-import { Location, Building, Property, Lead, LeadStatus, MarketGuide, ClientLogo, InstagramReel, HyperlinkConfig } from '../types';
-import { INITIAL_LOCATIONS, INITIAL_BUILDINGS, INITIAL_PROPERTIES, INITIAL_LEADS, INITIAL_MARKET_GUIDES, INITIAL_CLIENTS, INITIAL_INSTAGRAM_REELS } from '../data/mockData';
+import { Location, Building, Property, Lead, LeadStatus, MarketGuide, ClientLogo, InstagramReel, HyperlinkConfig, ClientReview } from '../types';
+import { INITIAL_LOCATIONS, INITIAL_BUILDINGS, INITIAL_PROPERTIES, INITIAL_LEADS, INITIAL_MARKET_GUIDES, INITIAL_CLIENTS, INITIAL_INSTAGRAM_REELS, INITIAL_REVIEWS } from '../data/mockData';
 import { supabase, isSupabaseConfigured } from './supabaseClient';
 import { getBuildingStructureDisplay } from '../utils/textFormat';
-import { generateAvailablePropertiesForBuilding } from '../utils/buildingUnits';
+import { generateAvailablePropertiesForBuilding, STANDARD_BUILDING_UNITS } from '../utils/buildingUnits';
 import { cleanPropertyAddress } from '../utils/propertyLocation';
 import { DEFAULT_GLOBAL_HYPERLINKS, GLOBAL_HYPERLINKS_STORAGE_KEY } from '../utils/hyperlinks';
+import { getSqFtImageForArea } from '../utils/unitSqftImages';
 
 const STORAGE_KEYS = {
   LOCATIONS: 'shristi_locations_v1',
   BUILDINGS: 'shristi_buildings_v1',
   PROPERTIES: 'shristi_properties_v1',
   DELETED_PROPERTIES: 'shristi_deleted_properties_v1',
+  DELETED_BUILDINGS: 'shristi_deleted_buildings_v1',
+  DELETED_LOCATIONS: 'shristi_deleted_locations_v1',
   LEADS: 'shristi_leads_v1',
   GUIDES: 'shristi_guides_v1',
   CLIENTS: 'shristi_clients_v1',
   REELS: 'shristi_reels_v1',
+  REVIEWS: 'shristi_reviews_v1',
   HYPERLINKS: GLOBAL_HYPERLINKS_STORAGE_KEY,
 };
 
@@ -22,10 +26,13 @@ let _memLocations: Location[] | null = null;
 let _memBuildings: Building[] | null = null;
 let _memProperties: Property[] | null = null;
 let _memDeletedProperties: Set<string> | null = null;
+let _memDeletedBuildings: Set<string> | null = null;
+let _memDeletedLocations: Set<string> | null = null;
 let _memLeads: Lead[] | null = null;
 let _memGuides: MarketGuide[] | null = null;
 let _memClients: ClientLogo[] | null = null;
 let _memReels: InstagramReel[] | null = null;
+let _memReviews: ClientReview[] | null = null;
 let _memGlobalHyperlinks: HyperlinkConfig[] | null = null;
 
 interface CacheEntry<T> {
@@ -89,6 +96,19 @@ export function clearStorageCache(prefix?: string): void {
   for (const k of Array.from(_cache.keys())) {
     if (k.startsWith(prefix)) _cache.delete(k);
   }
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('shristi_unit_images_updated', () => {
+    _memProperties = null;
+    clearStorageCache('props_');
+    clearStorageCache('properties_all');
+  });
+  window.addEventListener('shristi_unit_images_reset', () => {
+    _memProperties = null;
+    clearStorageCache('props_');
+    clearStorageCache('properties_all');
+  });
 }
 
 function dedupeRequest<T>(key: string, fetcher: () => Promise<T>): Promise<T> {
@@ -207,17 +227,117 @@ const clearDeletedPropertyId = (id: string) => {
   }
 };
 
+// Tombstone tracker for deleted commercial buildings
+const getDeletedBuildingIdsSet = (): Set<string> => {
+  if (_memDeletedBuildings) return _memDeletedBuildings;
+  const set = new Set<string>();
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEYS.DELETED_BUILDINGS);
+      if (stored) {
+        const list = JSON.parse(stored);
+        if (Array.isArray(list)) list.forEach(id => set.add(id));
+      }
+    } catch {
+      // ignore
+    }
+  }
+  _memDeletedBuildings = set;
+  return _memDeletedBuildings;
+};
+
+const recordDeletedBuildingId = (id: string) => {
+  if (!id) return;
+  const set = getDeletedBuildingIdsSet();
+  set.add(id);
+  _memDeletedBuildings = set;
+  if (typeof window !== 'undefined') {
+    try {
+      safeSetItem(STORAGE_KEYS.DELETED_BUILDINGS, JSON.stringify(Array.from(set)));
+    } catch {
+      // ignore
+    }
+  }
+};
+
+const clearDeletedBuildingId = (id: string) => {
+  if (!id) return;
+  const set = getDeletedBuildingIdsSet();
+  set.delete(id);
+  _memDeletedBuildings = set;
+  if (typeof window !== 'undefined') {
+    try {
+      safeSetItem(STORAGE_KEYS.DELETED_BUILDINGS, JSON.stringify(Array.from(set)));
+    } catch {
+      // ignore
+    }
+  }
+};
+
+// Tombstone tracker for deleted locations
+const getDeletedLocationIdsSet = (): Set<string> => {
+  if (_memDeletedLocations) return _memDeletedLocations;
+  const set = new Set<string>();
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEYS.DELETED_LOCATIONS);
+      if (stored) {
+        const list = JSON.parse(stored);
+        if (Array.isArray(list)) list.forEach(id => set.add(id));
+      }
+    } catch {
+      // ignore
+    }
+  }
+  _memDeletedLocations = set;
+  return _memDeletedLocations;
+};
+
+const recordDeletedLocationId = (id: string) => {
+  if (!id) return;
+  const set = getDeletedLocationIdsSet();
+  set.add(id);
+  _memDeletedLocations = set;
+  if (typeof window !== 'undefined') {
+    try {
+      safeSetItem(STORAGE_KEYS.DELETED_LOCATIONS, JSON.stringify(Array.from(set)));
+    } catch {
+      // ignore
+    }
+  }
+};
+
+const clearDeletedLocationId = (id: string) => {
+  if (!id) return;
+  const set = getDeletedLocationIdsSet();
+  set.delete(id);
+  _memDeletedLocations = set;
+  if (typeof window !== 'undefined') {
+    try {
+      safeSetItem(STORAGE_KEYS.DELETED_LOCATIONS, JSON.stringify(Array.from(set)));
+    } catch {
+      // ignore
+    }
+  }
+};
+
 // Initialize in-memory cache and localStorage with initial seeds if not populated
 const initStorage = () => {
   try {
+    const deletedLocSet = getDeletedLocationIdsSet();
+    const deletedBldSet = getDeletedBuildingIdsSet();
+    const deletedPropSet = getDeletedPropertyIdsSet();
+
     const storedLocs = localStorage.getItem(STORAGE_KEYS.LOCATIONS);
     if (!storedLocs) {
-      _memLocations = INITIAL_LOCATIONS;
-      safeSetItem(STORAGE_KEYS.LOCATIONS, JSON.stringify(INITIAL_LOCATIONS));
+      const filteredLocs = INITIAL_LOCATIONS.filter(l => !deletedLocSet.has(l.id));
+      _memLocations = filteredLocs;
+      safeSetItem(STORAGE_KEYS.LOCATIONS, JSON.stringify(filteredLocs));
     } else {
-      const parsedLocs: Location[] = JSON.parse(storedLocs);
+      let parsedLocs: Location[] = JSON.parse(storedLocs);
+      parsedLocs = parsedLocs.filter(l => !deletedLocSet.has(l.id));
       const existingIds = new Set(parsedLocs.map(l => l.id));
-      const missingLocs = INITIAL_LOCATIONS.filter(il => !existingIds.has(il.id));
+      const missingLocs = INITIAL_LOCATIONS.filter(il => !deletedLocSet.has(il.id) && !existingIds.has(il.id));
       if (missingLocs.length > 0) {
         _memLocations = [
           ...parsedLocs.map(l => {
@@ -234,14 +354,18 @@ const initStorage = () => {
 
     const storedBlds = localStorage.getItem(STORAGE_KEYS.BUILDINGS);
     if (!storedBlds) {
-      _memBuildings = INITIAL_BUILDINGS.map(b => ({
+      const filteredBlds = INITIAL_BUILDINGS.filter(b => !deletedBldSet.has(b.id));
+      _memBuildings = filteredBlds.map(b => ({
         ...b,
         structure_display: getBuildingStructureDisplay(b),
         property_count: typeof b.property_count === 'number' ? b.property_count : 20
       }));
-      localStorage.setItem(STORAGE_KEYS.BUILDINGS, JSON.stringify(INITIAL_BUILDINGS));
+      localStorage.setItem(STORAGE_KEYS.BUILDINGS, JSON.stringify(filteredBlds));
     } else {
       let parsedBlds: Building[] = JSON.parse(storedBlds);
+      // Auto-purge any deleted buildings from older local storage
+      parsedBlds = parsedBlds.filter(b => !deletedBldSet.has(b.id));
+
       // Auto-purge any stale residential villa photos from older local seeds
       let hasPurgedVilla = false;
       parsedBlds = parsedBlds.map(b => {
@@ -265,38 +389,64 @@ const initStorage = () => {
 
       const existingIds = new Set(parsedBlds.map(b => b.id));
       const existingSlugs = new Set(parsedBlds.map(b => b.slug.toLowerCase()));
-      const missingBlds = INITIAL_BUILDINGS.filter(b => !existingIds.has(b.id) && !existingSlugs.has(b.slug.toLowerCase()));
+      const missingBlds = INITIAL_BUILDINGS.filter(b => !deletedBldSet.has(b.id) && !existingIds.has(b.id) && !existingSlugs.has(b.slug.toLowerCase()));
       const source = missingBlds.length > 0 ? [...parsedBlds, ...missingBlds] : parsedBlds;
-      if (missingBlds.length > 0 || hasPurgedVilla) {
+      if (missingBlds.length > 0 || hasPurgedVilla || source.length !== JSON.parse(storedBlds).length) {
         localStorage.setItem(STORAGE_KEYS.BUILDINGS, JSON.stringify(source));
       }
       _memBuildings = source.map(b => ({
         ...b,
         structure_display: getBuildingStructureDisplay(b),
-        property_count: typeof b.property_count === 'number' ? b.property_count : Math.max(0, 20 - (b.deleted_unit_ids?.length || 0))
+        property_count: Math.max(0, STANDARD_BUILDING_UNITS.length - (b.deleted_unit_ids?.length || 0))
       }));
     }
 
     const storedProps = localStorage.getItem(STORAGE_KEYS.PROPERTIES);
-    const deletedSet = getDeletedPropertyIdsSet();
+    const deletedSet = deletedPropSet;
+    const standardUnitAreas = new Set(STANDARD_BUILDING_UNITS.map(u => u.area));
+
     if (!storedProps) {
       _memProperties = [
-        ...INITIAL_PROPERTIES.filter(p => !deletedSet.has(p.id)),
-        ...INITIAL_BUILDINGS.flatMap(b => generateAvailablePropertiesForBuilding(b, deletedSet)).filter(p => !deletedSet.has(p.id))
+        ...INITIAL_PROPERTIES.filter(p => !deletedSet.has(p.id) && (!p.building_id || !deletedBldSet.has(p.building_id)) && (!p.location_id || !deletedLocSet.has(p.location_id))),
+        ...INITIAL_BUILDINGS.filter(b => !deletedBldSet.has(b.id)).flatMap(b => generateAvailablePropertiesForBuilding(b, deletedSet)).filter(p => !deletedSet.has(p.id))
       ];
     } else {
       const parsedProps: Property[] = JSON.parse(storedProps);
-      const buildings = _memBuildings || INITIAL_BUILDINGS;
+      const buildings = (_memBuildings || INITIAL_BUILDINGS).filter(b => !deletedBldSet.has(b.id));
       const allGenerated = buildings.flatMap(b => generateAvailablePropertiesForBuilding(b, deletedSet));
-      const existingIds = new Set(parsedProps.map(p => p.id));
-      const existingSlugs = new Set(parsedProps.map(p => p.slug.toLowerCase()));
+      const generatedMap = new Map(allGenerated.map(g => [g.id, g]));
+
+      // Filter out any obsolete/replaced unit sizes for buildings, and sync canonical fields
+      const cleanedExisting = parsedProps
+        .filter(p => !deletedSet.has(p.id) && (!p.building_id || (!deletedBldSet.has(p.building_id) && standardUnitAreas.has(p.built_up_area))) && (!p.location_id || !deletedLocSet.has(p.location_id)))
+        .map(p => {
+          if (p.id.startsWith('prop-') && generatedMap.has(p.id)) {
+            const canonical = generatedMap.get(p.id)!;
+            return {
+              ...canonical,
+              ...p,
+              primary_image: canonical.primary_image,
+              gallery: canonical.gallery,
+              title: canonical.title,
+              built_up_area: canonical.built_up_area,
+              address: cleanPropertyAddress(p.address, p.building_name)
+            };
+          }
+          return {
+            ...p,
+            address: cleanPropertyAddress(p.address, p.building_name)
+          };
+        });
+
+      const existingIds = new Set(cleanedExisting.map(p => p.id));
+      const existingSlugs = new Set(cleanedExisting.map(p => p.slug.toLowerCase()));
       const missingGenerated = allGenerated.filter(p => !existingIds.has(p.id) && !existingSlugs.has(p.slug.toLowerCase()) && !deletedSet.has(p.id));
-      const cleanedExisting = parsedProps.filter(p => !deletedSet.has(p.id)).map(p => ({
-        ...p,
-        title: p.title.replace(/\s+in\s+I-Thum\s+Tower\s+[A-Za-z0-9-]+\b/i, ' in I-Thum'),
-        address: cleanPropertyAddress(p.address, p.building_name)
-      }));
       _memProperties = [...cleanedExisting, ...missingGenerated];
+      try {
+        localStorage.setItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(_memProperties));
+      } catch (e) {
+        // ignore storage error
+      }
     }
 
     const storedGuides = localStorage.getItem(STORAGE_KEYS.GUIDES);
@@ -311,15 +461,18 @@ const initStorage = () => {
     }
   } catch (e) {
     console.warn('Init storage error:', e);
-    _memLocations = INITIAL_LOCATIONS;
-    _memBuildings = INITIAL_BUILDINGS.map(b => ({
+    const deletedLocSet = getDeletedLocationIdsSet();
+    const deletedBldSet = getDeletedBuildingIdsSet();
+    const deletedSet = getDeletedPropertyIdsSet();
+    _memLocations = INITIAL_LOCATIONS.filter(l => !deletedLocSet.has(l.id));
+    _memBuildings = INITIAL_BUILDINGS.filter(b => !deletedBldSet.has(b.id)).map(b => ({
       ...b,
       structure_display: getBuildingStructureDisplay(b),
-      property_count: typeof b.property_count === 'number' ? b.property_count : 20
+      property_count: Math.max(0, STANDARD_BUILDING_UNITS.length - (b.deleted_unit_ids?.length || 0))
     }));
     _memProperties = [
-      ...INITIAL_PROPERTIES,
-      ...INITIAL_BUILDINGS.flatMap(b => generateAvailablePropertiesForBuilding(b))
+      ...INITIAL_PROPERTIES.filter(p => !deletedSet.has(p.id) && (!p.building_id || !deletedBldSet.has(p.building_id))),
+      ...INITIAL_BUILDINGS.filter(b => !deletedBldSet.has(b.id)).flatMap(b => generateAvailablePropertiesForBuilding(b, deletedSet)).filter(p => !deletedSet.has(p.id))
     ];
     _memGuides = INITIAL_MARKET_GUIDES;
   }
@@ -360,18 +513,46 @@ export const StorageService = {
     clearDeletedPropertyId(id);
   },
 
+  getDeletedBuildingIds(): Set<string> {
+    return getDeletedBuildingIdsSet();
+  },
+
+  saveDeletedBuildingId(id: string): void {
+    recordDeletedBuildingId(id);
+  },
+
+  unmarkDeletedBuildingId(id: string): void {
+    clearDeletedBuildingId(id);
+  },
+
+  getDeletedLocationIds(): Set<string> {
+    return getDeletedLocationIdsSet();
+  },
+
+  saveDeletedLocationId(id: string): void {
+    recordDeletedLocationId(id);
+  },
+
+  unmarkDeletedLocationId(id: string): void {
+    clearDeletedLocationId(id);
+  },
+
   // SYNCHRONOUS IMMEDIATE GETTERS (Zero delay, instant page shell rendering)
   getInitialLocations(): Location[] {
-    if (_memLocations && _memLocations.length > 0) return _memLocations;
+    const deletedLocSet = getDeletedLocationIdsSet();
+    if (_memLocations && _memLocations.length > 0) {
+      return _memLocations.filter(l => !deletedLocSet.has(l.id));
+    }
     try {
       const data = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.LOCATIONS) : null;
       const localLocs: Location[] = data ? JSON.parse(data) : INITIAL_LOCATIONS;
-      const existingIds = new Set(localLocs.map(l => l.id));
-      const missing = INITIAL_LOCATIONS.filter(l => !existingIds.has(l.id));
-      _memLocations = [...localLocs, ...missing];
+      const filtered = localLocs.filter(l => !deletedLocSet.has(l.id));
+      const existingIds = new Set(filtered.map(l => l.id));
+      const missing = INITIAL_LOCATIONS.filter(l => !deletedLocSet.has(l.id) && !existingIds.has(l.id));
+      _memLocations = [...filtered, ...missing];
       return _memLocations;
     } catch {
-      return INITIAL_LOCATIONS;
+      return INITIAL_LOCATIONS.filter(l => !deletedLocSet.has(l.id));
     }
   },
 
@@ -414,28 +595,32 @@ export const StorageService = {
   },
 
   getInitialBuildings(): Building[] {
-    if (_memBuildings && _memBuildings.length > 0) return _memBuildings;
+    const deletedBldSet = getDeletedBuildingIdsSet();
+    if (_memBuildings && _memBuildings.length > 0) {
+      return _memBuildings.filter(b => !deletedBldSet.has(b.id));
+    }
     try {
       let localBuildings: Building[] = [];
       const stored = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.BUILDINGS) : null;
       if (stored) {
         localBuildings = JSON.parse(stored);
       }
-      const existingIds = new Set(localBuildings.map(b => b.id));
-      const existingSlugs = new Set(localBuildings.map(b => b.slug.toLowerCase()));
-      const missing = INITIAL_BUILDINGS.filter(b => !existingIds.has(b.id) && !existingSlugs.has(b.slug.toLowerCase()));
-      const source = [...localBuildings, ...missing];
+      const filtered = localBuildings.filter(b => !deletedBldSet.has(b.id));
+      const existingIds = new Set(filtered.map(b => b.id));
+      const existingSlugs = new Set(filtered.map(b => b.slug.toLowerCase()));
+      const missing = INITIAL_BUILDINGS.filter(b => !deletedBldSet.has(b.id) && !existingIds.has(b.id) && !existingSlugs.has(b.slug.toLowerCase()));
+      const source = [...filtered, ...missing];
       _memBuildings = source.map(b => ({
         ...b,
         structure_display: getBuildingStructureDisplay(b),
-        property_count: typeof b.property_count === 'number' ? b.property_count : Math.max(0, 20 - (b.deleted_unit_ids?.length || 0))
+        property_count: Math.max(0, STANDARD_BUILDING_UNITS.length - (b.deleted_unit_ids?.length || 0))
       }));
       return _memBuildings;
     } catch {
-      return INITIAL_BUILDINGS.map(b => ({
+      return INITIAL_BUILDINGS.filter(b => !deletedBldSet.has(b.id)).map(b => ({
         ...b,
         structure_display: getBuildingStructureDisplay(b),
-        property_count: typeof b.property_count === 'number' ? b.property_count : 20
+        property_count: Math.max(0, STANDARD_BUILDING_UNITS.length - (b.deleted_unit_ids?.length || 0))
       }));
     }
   },
@@ -483,19 +668,13 @@ export const StorageService = {
   getBuildingUnitCount(building?: Building | null): number {
     if (!building) return 0;
     const deletedList = Array.isArray(building.deleted_unit_ids) ? building.deleted_unit_ids : [];
-    const globalDeletedSet = getDeletedPropertyIdsSet();
-    if (deletedList.length > 0 || globalDeletedSet.size > 0) {
-      try {
-        const active = this.getInitialPropertiesByBuilding(building.id);
-        return active.length;
-      } catch {
-        return Math.max(0, (typeof building.property_count === 'number' ? building.property_count : 20) - deletedList.length);
-      }
+    try {
+      const active = this.getInitialPropertiesByBuilding(building.id);
+      if (active.length > 0) return active.length;
+    } catch {
+      // fallback
     }
-    if (typeof building.property_count === 'number' && building.property_count >= 0) {
-      return building.property_count;
-    }
-    return 20;
+    return Math.max(0, STANDARD_BUILDING_UNITS.length - deletedList.length);
   },
 
   getInitialProperties(): Property[] {
@@ -508,14 +687,31 @@ export const StorageService = {
       const baseProps = localProps.length > 0 ? localProps : INITIAL_PROPERTIES;
       const buildings = this.getInitialBuildings();
       const allGenerated = buildings.flatMap(b => generateAvailablePropertiesForBuilding(b));
-      const existingIds = new Set(baseProps.map(p => p.id));
-      const existingSlugs = new Set(baseProps.map(p => p.slug.toLowerCase()));
+      const standardUnitAreas = new Set(STANDARD_BUILDING_UNITS.map(u => u.area));
+      const generatedMap = new Map<string, Property>(allGenerated.map((g: Property) => [g.id, g]));
+      const cleanedBaseProps = baseProps
+        .filter(p => !deletedSet.has(p.id) && (!p.building_id || standardUnitAreas.has(p.built_up_area)))
+        .map(p => {
+          if (p.id.startsWith('prop-') && generatedMap.has(p.id)) {
+            const canonical = generatedMap.get(p.id)!;
+            return {
+              ...canonical,
+              ...p,
+              primary_image: canonical.primary_image,
+              gallery: canonical.gallery,
+              title: canonical.title,
+              built_up_area: canonical.built_up_area,
+              address: cleanPropertyAddress(p.address, p.building_name)
+            };
+          }
+          return {
+            ...p,
+            address: cleanPropertyAddress(p.address, p.building_name)
+          };
+        });
+      const existingIds = new Set(cleanedBaseProps.map(p => p.id));
+      const existingSlugs = new Set(cleanedBaseProps.map(p => p.slug.toLowerCase()));
       const missingGenerated = allGenerated.filter(p => !existingIds.has(p.id) && !existingSlugs.has(p.slug.toLowerCase()) && !deletedSet.has(p.id));
-      const cleanedBaseProps = baseProps.filter(p => !deletedSet.has(p.id)).map(p => ({
-        ...p,
-        title: p.title.replace(/\s+in\s+I-Thum\s+Tower\s+[A-Za-z0-9-]+\b/i, ' in I-Thum'),
-        address: cleanPropertyAddress(p.address, p.building_name)
-      }));
       _memProperties = [...cleanedBaseProps, ...missingGenerated];
       return _memProperties;
     } catch {
@@ -558,10 +754,12 @@ export const StorageService = {
     const allProps = this.getInitialProperties();
     const deletedSet = getDeletedPropertyIdsSet();
     const bldDeleted = new Set(building?.deleted_unit_ids || []);
+    const standardUnitAreas = new Set(STANDARD_BUILDING_UNITS.map(u => u.area));
     const existing = allProps.filter(p => 
       !deletedSet.has(p.id) && 
       !bldDeleted.has(p.id) && 
-      (p.building_id === buildingId || (building && (p.building_name?.toLowerCase() === building.name.toLowerCase() || p.building_id === building.id)))
+      (p.building_id === buildingId || (building && (p.building_name?.toLowerCase() === building.name.toLowerCase() || p.building_id === building.id))) &&
+      standardUnitAreas.has(p.built_up_area)
     );
 
     if (!building) return existing;
@@ -702,6 +900,7 @@ export const StorageService = {
   async saveLocation(location: Location): Promise<void> {
     clearStorageCache('loc');
     clearStorageCache('homepage');
+    clearDeletedLocationId(location.id);
     try {
       const locations = await this.getLocations();
       const index = locations.findIndex(l => l.id === location.id);
@@ -753,7 +952,49 @@ export const StorageService = {
   async deleteLocation(locationId: string): Promise<void> {
     clearStorageCache();
 
-    // 1. Database-level cascade delete: single atomic transaction via foreign key constraints
+    // 1. Immediately record location tombstone
+    recordDeletedLocationId(locationId);
+
+    // 2. Synchronize local cache & storage first to reflect the cascaded removal of Location, Buildings, and Units
+    try {
+      const buildings = await this.getBuildings();
+      const deletedBuildingIds = new Set<string>(
+        buildings
+          .filter(b => b.location_id === locationId || (b.locations && b.locations.includes(locationId)))
+          .map(b => b.id)
+      );
+
+      // Record tombstones for all cascaded buildings
+      deletedBuildingIds.forEach((bId: string) => recordDeletedBuildingId(bId));
+
+      // Update locations
+      const locations = await this.getLocations();
+      const updatedLocations = locations.filter(l => l.id !== locationId);
+      safeSetItem(STORAGE_KEYS.LOCATIONS, JSON.stringify(updatedLocations));
+      _memLocations = updatedLocations;
+
+      // Update buildings (cascaded from location)
+      const updatedBuildings = buildings.filter(b => !deletedBuildingIds.has(b.id));
+      safeSetItem(STORAGE_KEYS.BUILDINGS, JSON.stringify(updatedBuildings));
+      _memBuildings = updatedBuildings;
+
+      // Update properties / units (cascaded from location and buildings)
+      const properties = await this.getProperties();
+      const deletedProperties = properties.filter(p => 
+        p.location_id === locationId || (p.building_id && deletedBuildingIds.has(p.building_id))
+      );
+      deletedProperties.forEach(p => recordDeletedPropertyId(p.id));
+
+      const updatedProperties = properties.filter(p => 
+        p.location_id !== locationId && (!p.building_id || !deletedBuildingIds.has(p.building_id))
+      );
+      safeSetItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(updatedProperties));
+      _memProperties = updatedProperties;
+    } catch (e) {
+      console.warn('LocalStorage cascade sync warning for locations:', e);
+    }
+
+    // 3. Database-level cascade delete: single atomic transaction via foreign key constraints
     if (isSupabaseConfigured && supabase) {
       try {
         const res = await supabase.from('locations').delete().eq('id', locationId);
@@ -798,49 +1039,11 @@ export const StorageService = {
         }
 
         if (error) {
-          console.error('Supabase cascade delete location error:', error);
-          throw new Error(error.message || 'Database error deleting location');
+          console.warn('Supabase cascade delete location warning (local deletion preserved):', error);
         }
       } catch (err: any) {
-        console.error('Supabase delete location transaction failed:', err);
-        throw err;
+        console.warn('Supabase delete location transaction warning (local deletion preserved):', err);
       }
-    }
-
-    // 2. Synchronize local cache & storage to reflect the cascaded removal of Location, Buildings, and Units
-    try {
-      const buildings = await this.getBuildings();
-      const deletedBuildingIds = new Set(
-        buildings
-          .filter(b => b.location_id === locationId || (b.locations && b.locations.includes(locationId)))
-          .map(b => b.id)
-      );
-
-      // Update locations
-      const locations = await this.getLocations();
-      const updatedLocations = locations.filter(l => l.id !== locationId);
-      safeSetItem(STORAGE_KEYS.LOCATIONS, JSON.stringify(updatedLocations));
-      _memLocations = updatedLocations;
-
-      // Update buildings (cascaded from location)
-      const updatedBuildings = buildings.filter(b => !deletedBuildingIds.has(b.id));
-      safeSetItem(STORAGE_KEYS.BUILDINGS, JSON.stringify(updatedBuildings));
-      _memBuildings = updatedBuildings;
-
-      // Update properties / units (cascaded from location and buildings)
-      const properties = await this.getProperties();
-      const deletedProperties = properties.filter(p => 
-        p.location_id === locationId || (p.building_id && deletedBuildingIds.has(p.building_id))
-      );
-      deletedProperties.forEach(p => recordDeletedPropertyId(p.id));
-
-      const updatedProperties = properties.filter(p => 
-        p.location_id !== locationId && (!p.building_id || !deletedBuildingIds.has(p.building_id))
-      );
-      safeSetItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(updatedProperties));
-      _memProperties = updatedProperties;
-    } catch (e) {
-      console.warn('LocalStorage cascade sync warning for locations:', e);
     }
   },
 
@@ -850,11 +1053,12 @@ export const StorageService = {
     if (cached) return cached;
 
     return dedupeRequest('buildings_cards', async () => {
+      const deletedBldSet = getDeletedBuildingIdsSet();
       let localBuildings: Building[] = [];
       try {
         const stored = localStorage.getItem(STORAGE_KEYS.BUILDINGS);
         if (stored) {
-          localBuildings = JSON.parse(stored);
+          localBuildings = (JSON.parse(stored) as Building[]).filter(b => !deletedBldSet.has(b.id));
         }
       } catch (e) {
         console.warn('Error reading local buildings:', e);
@@ -869,7 +1073,8 @@ export const StorageService = {
               .order('created_at', { ascending: false }) as any
           );
           if (!error && data && data.length > 0) {
-            const mergedList: Building[] = (data as any[]).map(supaBld => {
+            const activeData = (data as any[]).filter(supaBld => !deletedBldSet.has(supaBld.id));
+            const mergedList: Building[] = activeData.map(supaBld => {
               const meta = parseBuildingMeta(supaBld);
               const localBld = localBuildings.find(lb => lb.id === supaBld.id || lb.slug === supaBld.slug);
               const deletedUnitCount = (localBld?.deleted_unit_ids && Array.isArray(localBld.deleted_unit_ids))
@@ -909,12 +1114,12 @@ export const StorageService = {
 
       const existingIds = new Set(localBuildings.map(b => b.id));
       const existingSlugs = new Set(localBuildings.map(b => b.slug.toLowerCase()));
-      const missing = INITIAL_BUILDINGS.filter(b => !existingIds.has(b.id) && !existingSlugs.has(b.slug.toLowerCase()));
+      const missing = INITIAL_BUILDINGS.filter(b => !deletedBldSet.has(b.id) && !existingIds.has(b.id) && !existingSlugs.has(b.slug.toLowerCase()));
       const source = [...localBuildings, ...missing];
       const finalBlds = source.map(b => ({
         ...b,
         structure_display: getBuildingStructureDisplay(b),
-        property_count: typeof b.property_count === 'number' ? b.property_count : Math.max(0, 20 - (b.deleted_unit_ids?.length || 0))
+        property_count: Math.max(0, STANDARD_BUILDING_UNITS.length - (b.deleted_unit_ids?.length || 0))
       }));
       _memBuildings = finalBlds;
       return finalBlds;
@@ -924,6 +1129,7 @@ export const StorageService = {
   async getBuildingBySlug(slug: string): Promise<Building | null> {
     if (!slug) return null;
     const initial = this.getInitialBuildingBySlug(slug);
+    if (initial && getDeletedBuildingIdsSet().has(initial.id)) return null;
     const cacheKey = `bld_slug_${slug.toLowerCase()}`;
     const cached = getCached<Building>(cacheKey);
     if (cached) return cached;
@@ -935,6 +1141,7 @@ export const StorageService = {
             supabase.from('buildings').select('*').eq('slug', slug).maybeSingle() as any
           );
           if (!error && data) {
+            if (getDeletedBuildingIdsSet().has(data.id)) return null;
             const meta = parseBuildingMeta(data);
             const bld: Building = {
               ...data,
@@ -960,7 +1167,7 @@ export const StorageService = {
   },
 
   async getBuildingById(buildingId: string): Promise<Building | null> {
-    if (!buildingId) return null;
+    if (!buildingId || getDeletedBuildingIdsSet().has(buildingId)) return null;
     if (_memBuildings) {
       const found = _memBuildings.find(b => b.id === buildingId);
       if (found && found.gallery && found.gallery.length > 0) return found;
@@ -976,6 +1183,7 @@ export const StorageService = {
             supabase.from('buildings').select('*').eq('id', buildingId).maybeSingle() as any
           );
           if (!error && data) {
+            if (getDeletedBuildingIdsSet().has(data.id)) return null;
             const meta = parseBuildingMeta(data);
             const bld: Building = {
               ...data,
@@ -1009,6 +1217,7 @@ export const StorageService = {
     clearStorageCache('bld');
     clearStorageCache('buildings_cards');
     clearStorageCache('homepage');
+    clearDeletedBuildingId(building.id);
     const structureDisplay = getBuildingStructureDisplay(building);
     const now = new Date().toISOString();
     const existingBld = (_memBuildings || []).find(b => b.id === building.id);
@@ -1062,7 +1271,8 @@ export const StorageService = {
     }
 
     if (isSupabaseConfigured && supabase) {
-      const { error } = await withTimeout(supabase.from('buildings').upsert(sanitized));
+      try {
+        const { error } = await withTimeout(supabase.from('buildings').upsert(sanitized));
       if (error) {
         console.warn('Direct building upsert warning, attempting compatibility fallback:', error);
         const metaPayload = { ...sanitized };
@@ -1099,12 +1309,14 @@ export const StorageService = {
           fallbackRes = await withTimeout(supabase.from('buildings').upsert(basePayload));
         }
         if (fallbackRes.error) {
-          console.error('Supabase saveBuilding failed completely:', fallbackRes.error);
-          throw new Error(`Failed to save building to database: ${fallbackRes.error.message || fallbackRes.error.details || 'Database write failed'}`);
+          console.warn('Supabase saveBuilding warning (local saved successfully):', fallbackRes.error);
         }
       }
+    } catch (bldErr) {
+      console.warn('Supabase saveBuilding network error (local saved successfully):', bldErr);
     }
-  },
+  }
+},
 
   async getBuildingCascadeCounts(buildingId: string): Promise<{ unitCount: number }> {
     const properties = await this.getProperties();
@@ -1117,7 +1329,28 @@ export const StorageService = {
   async deleteBuilding(buildingId: string): Promise<void> {
     clearStorageCache();
 
-    // 1. Database-level cascade delete: single atomic transaction via foreign key constraint
+    // 1. Immediately record building tombstone
+    recordDeletedBuildingId(buildingId);
+
+    // 2. Synchronize local cache & storage first to reflect the cascaded removal of Building and its Units
+    try {
+      const buildings = await this.getBuildings();
+      const updatedBuildings = buildings.filter(b => b.id !== buildingId);
+      safeSetItem(STORAGE_KEYS.BUILDINGS, JSON.stringify(updatedBuildings));
+      _memBuildings = updatedBuildings;
+
+      const properties = await this.getProperties();
+      const deletedProperties = properties.filter(p => p.building_id === buildingId);
+      deletedProperties.forEach(p => recordDeletedPropertyId(p.id));
+
+      const updatedProperties = properties.filter(p => p.building_id !== buildingId);
+      safeSetItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(updatedProperties));
+      _memProperties = updatedProperties;
+    } catch (e) {
+      console.warn('LocalStorage cascade sync warning for buildings:', e);
+    }
+
+    // 3. Database-level cascade delete: single atomic transaction via foreign key constraint
     if (isSupabaseConfigured && supabase) {
       try {
         const res = await supabase.from('buildings').delete().eq('id', buildingId);
@@ -1136,31 +1369,11 @@ export const StorageService = {
         }
 
         if (error) {
-          console.error('Supabase cascade delete building error:', error);
-          throw new Error(error.message || 'Database error deleting building');
+          console.warn('Supabase cascade delete building warning (local deletion preserved):', error);
         }
       } catch (err: any) {
-        console.error('Supabase delete building transaction failed:', err);
-        throw err;
+        console.warn('Supabase delete building transaction warning (local deletion preserved):', err);
       }
-    }
-
-    // 2. Synchronize local cache & storage to reflect the cascaded removal of Building and its Units
-    try {
-      const buildings = await this.getBuildings();
-      const updatedBuildings = buildings.filter(b => b.id !== buildingId);
-      safeSetItem(STORAGE_KEYS.BUILDINGS, JSON.stringify(updatedBuildings));
-      _memBuildings = updatedBuildings;
-
-      const properties = await this.getProperties();
-      const deletedProperties = properties.filter(p => p.building_id === buildingId);
-      deletedProperties.forEach(p => recordDeletedPropertyId(p.id));
-
-      const updatedProperties = properties.filter(p => p.building_id !== buildingId);
-      safeSetItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(updatedProperties));
-      _memProperties = updatedProperties;
-    } catch (e) {
-      console.warn('LocalStorage cascade sync warning for buildings:', e);
     }
   },
 
@@ -1227,16 +1440,35 @@ export const StorageService = {
 
       // Merge standard available unit tiers for all buildings
       const deletedSet = getDeletedPropertyIdsSet();
+      const deletedBldSet = getDeletedBuildingIdsSet();
+      const deletedLocSet = getDeletedLocationIdsSet();
       const buildings = await this.getBuildings();
       const allGenerated = buildings.flatMap(b => generateAvailablePropertiesForBuilding(b, deletedSet));
       const existingIds = new Set(baseProps.map(p => p.id));
       const existingSlugs = new Set(baseProps.map(p => p.slug.toLowerCase()));
       const missingGenerated = allGenerated.filter(p => !existingIds.has(p.id) && !existingSlugs.has(p.slug.toLowerCase()) && !deletedSet.has(p.id));
-      const cleanedBaseProps = baseProps.filter(p => !deletedSet.has(p.id)).map(p => ({
-        ...p,
-        title: p.title.replace(/\s+in\s+I-Thum\s+Tower\s+[A-Za-z0-9-]+\b/i, ' in I-Thum'),
-        address: cleanPropertyAddress(p.address, p.building_name)
-      }));
+      const cleanedBaseProps = baseProps
+        .filter(p => !deletedSet.has(p.id) && (!p.building_id || !deletedBldSet.has(p.building_id)) && (!p.location_id || !deletedLocSet.has(p.location_id)))
+        .map(p => {
+        const sqftOverride = getSqFtImageForArea(p.built_up_area);
+        const shouldOverrideImage = sqftOverride && sqftOverride.primary_image && (
+          p.is_seed ||
+          p.id.startsWith('prop-') ||
+          !p.primary_image ||
+          p.primary_image.includes('placeholder') ||
+          p.primary_image.includes('default-property') ||
+          p.primary_image.includes('unsplash')
+        );
+        return {
+          ...p,
+          primary_image: shouldOverrideImage ? sqftOverride.primary_image : p.primary_image,
+          gallery: (shouldOverrideImage && Array.isArray(sqftOverride.gallery) && sqftOverride.gallery.length > 0)
+            ? sqftOverride.gallery
+            : p.gallery,
+          title: p.title.replace(/\s+in\s+I-Thum\s+Tower\s+[A-Za-z0-9-]+\b/i, ' in I-Thum'),
+          address: cleanPropertyAddress(p.address, p.building_name)
+        };
+      });
 
       const finalProps = [...cleanedBaseProps, ...missingGenerated];
       _memProperties = finalProps;
@@ -1316,10 +1548,12 @@ export const StorageService = {
       const deletedSet = getDeletedPropertyIdsSet();
       const bldDeleted = new Set(building?.deleted_unit_ids || []);
 
+      const standardUnitAreas = new Set(STANDARD_BUILDING_UNITS.map(u => u.area));
       const existing = allProps.filter(p => 
         !deletedSet.has(p.id) &&
         !bldDeleted.has(p.id) &&
-        (p.building_id === buildingId || (building && (p.building_name?.toLowerCase() === building.name.toLowerCase() || p.building_id === building.id)))
+        (p.building_id === buildingId || (building && (p.building_name?.toLowerCase() === building.name.toLowerCase() || p.building_id === building.id))) &&
+        standardUnitAreas.has(p.built_up_area)
       );
 
       if (!building) {
@@ -1438,7 +1672,8 @@ export const StorageService = {
     }
 
     if (isSupabaseConfigured && supabase) {
-      const { error } = await withTimeout(supabase.from('properties').upsert(sanitized));
+      try {
+        const { error } = await withTimeout(supabase.from('properties').upsert(sanitized));
       if (error) {
         console.warn('Direct property upsert warning, attempting compatibility fallback:', error);
         const metaPayload = { ...sanitized };
@@ -1494,12 +1729,14 @@ export const StorageService = {
           fallbackRes = await withTimeout(supabase.from('properties').upsert(basePayload));
         }
         if (fallbackRes.error) {
-          console.error('Supabase saveProperty failed completely:', fallbackRes.error);
-          throw new Error(`Failed to save property to database: ${fallbackRes.error.message || fallbackRes.error.details || 'Database write failed'}`);
+          console.warn('Supabase saveProperty warning (local storage saved successfully):', fallbackRes.error);
         }
       }
+    } catch (dbErr) {
+      console.warn('Supabase saveProperty network exception (local storage saved successfully):', dbErr);
     }
-  },
+  }
+},
 
   async saveProperties(propertiesToSave: Property[]): Promise<void> {
     if (!propertiesToSave || propertiesToSave.length === 0) return;
@@ -1574,12 +1811,20 @@ export const StorageService = {
 
     // Supabase upsert in one batch with timeout
     if (isSupabaseConfigured && supabase) {
-      const { error } = await withTimeout(supabase.from('properties').upsert(sanitizedList));
-      if (error) {
-        console.warn('Supabase batch upsert properties failed, saving sequentially with fallback:', error);
-        for (const item of sanitizedList) {
-          await this.saveProperty(item);
+      try {
+        const { error } = await withTimeout(supabase.from('properties').upsert(sanitizedList));
+        if (error) {
+          console.warn('Supabase batch upsert properties failed, saving sequentially with fallback:', error);
+          for (const item of sanitizedList) {
+            try {
+              await this.saveProperty(item);
+            } catch (singleErr) {
+              console.warn('Single property Supabase sync warning (local saved):', singleErr);
+            }
+          }
         }
+      } catch (batchErr) {
+        console.warn('Supabase batch upsert network warning (local properties saved successfully):', batchErr);
       }
     }
   },
@@ -1707,11 +1952,11 @@ export const StorageService = {
     });
   },
 
-  async createLead(leadData: Omit<Lead, 'id' | 'created_at' | 'status'>): Promise<Lead> {
+  async createLead(leadData: Omit<Lead, 'id' | 'created_at' | 'status'> & { status?: LeadStatus }): Promise<Lead> {
     const newLead: Lead = {
       ...leadData,
       id: `lead-${Date.now()}`,
-      status: 'New',
+      status: leadData.status || 'New',
       created_at: new Date().toISOString(),
     };
 
@@ -2163,8 +2408,76 @@ export const StorageService = {
     safeSetItem(STORAGE_KEYS.REELS, JSON.stringify(list));
   },
 
+  // --- CLIENT REVIEWS & TESTIMONIALS ---
+  getInitialReviews(): ClientReview[] {
+    if (_memReviews) return _memReviews;
+    if (typeof window === 'undefined') return INITIAL_REVIEWS;
+    try {
+      const stored = localStorage.getItem(STORAGE_KEYS.REVIEWS);
+      if (stored) {
+        _memReviews = JSON.parse(stored);
+        return _memReviews || INITIAL_REVIEWS;
+      }
+    } catch (e) {
+      console.error('Error reading stored client reviews:', e);
+    }
+    _memReviews = INITIAL_REVIEWS;
+    return INITIAL_REVIEWS;
+  },
+
+  async getReviews(): Promise<ClientReview[]> {
+    return this.getInitialReviews();
+  },
+
+  async saveReview(review: ClientReview): Promise<void> {
+    const list = [...this.getInitialReviews()];
+    const index = list.findIndex(r => r.id === review.id);
+    if (index >= 0) {
+      list[index] = review;
+    } else {
+      list.unshift(review);
+    }
+    _memReviews = list;
+    safeSetItem(STORAGE_KEYS.REVIEWS, JSON.stringify(list));
+  },
+
+  async deleteReview(reviewId: string): Promise<void> {
+    const list = this.getInitialReviews().filter(r => r.id !== reviewId);
+    _memReviews = list;
+    safeSetItem(STORAGE_KEYS.REVIEWS, JSON.stringify(list));
+  },
+
+  // Reset all unit images across building inventory
+  resetAllUnitImages(): void {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      try {
+        window.localStorage.removeItem('shristi_unit_sqft_images_v1');
+        window.localStorage.removeItem('shristi_unit_sqft_images_v2');
+      } catch (e) {}
+    }
+    const buildings = this.getInitialBuildings();
+    const deletedSet = getDeletedPropertyIdsSet();
+    const allGenerated = buildings.flatMap(b => generateAvailablePropertiesForBuilding(b, deletedSet));
+    _memProperties = [
+      ...INITIAL_PROPERTIES.filter(p => !deletedSet.has(p.id)),
+      ...allGenerated.filter(p => !deletedSet.has(p.id))
+    ];
+    safeSetItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(_memProperties));
+    clearStorageCache('properties');
+  },
+
   // Reset database back to default seed data
   resetDefaults(): void {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      try {
+        localStorage.removeItem(STORAGE_KEYS.DELETED_PROPERTIES);
+        localStorage.removeItem(STORAGE_KEYS.DELETED_BUILDINGS);
+        localStorage.removeItem(STORAGE_KEYS.DELETED_LOCATIONS);
+      } catch (e) {}
+    }
+    _memDeletedProperties = null;
+    _memDeletedBuildings = null;
+    _memDeletedLocations = null;
     localStorage.setItem(STORAGE_KEYS.LOCATIONS, JSON.stringify(INITIAL_LOCATIONS));
     localStorage.setItem(STORAGE_KEYS.BUILDINGS, JSON.stringify(INITIAL_BUILDINGS));
     localStorage.setItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(INITIAL_PROPERTIES));
@@ -2172,5 +2485,6 @@ export const StorageService = {
     localStorage.setItem(STORAGE_KEYS.GUIDES, JSON.stringify(INITIAL_MARKET_GUIDES));
     localStorage.setItem(STORAGE_KEYS.CLIENTS, JSON.stringify(INITIAL_CLIENTS));
     localStorage.setItem(STORAGE_KEYS.REELS, JSON.stringify(INITIAL_INSTAGRAM_REELS));
+    localStorage.setItem(STORAGE_KEYS.REVIEWS, JSON.stringify(INITIAL_REVIEWS));
   }
 };

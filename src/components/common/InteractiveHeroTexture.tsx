@@ -1,4 +1,5 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { getSiteImages } from '../../utils/siteImages';
 
 /**
  * InteractiveHeroTexture
@@ -14,6 +15,15 @@ export const InteractiveHeroTexture: React.FC = () => {
   const baseImgRef = useRef<HTMLImageElement | null>(null);
   const revealImgRef = useRef<HTMLImageElement | null>(null);
   const spotlightRef = useRef<HTMLDivElement | null>(null);
+  const [siteImages, setSiteImages] = useState(() => getSiteImages());
+
+  useEffect(() => {
+    const handleUpdate = (e: any) => {
+      if (e.detail) setSiteImages(e.detail);
+    };
+    window.addEventListener('shristi_site_images_updated', handleUpdate);
+    return () => window.removeEventListener('shristi_site_images_updated', handleUpdate);
+  }, []);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -127,15 +137,15 @@ export const InteractiveHeroTexture: React.FC = () => {
       <div 
         className="md:hidden absolute inset-0 w-full h-full bg-cover bg-no-repeat opacity-35 dark:opacity-20 blur-[2px] will-change-transform"
         style={{
-          backgroundImage: "url('/hero-commercial-park-mobile.jpg')",
+          backgroundImage: `url('${siteImages.hero.mobile || '/hero-commercial-park-mobile.webp'}')`,
           backgroundPosition: 'right bottom'
         }}
       />
 
-      {/* 2. Desktop Base Layer: High-performance texture (117KB desktop) for 3D mouse parallax */}
+      {/* 2. Desktop Base Layer: High-performance texture (97KB desktop WebP) for 3D mouse parallax */}
       <img
         ref={baseImgRef}
-        src="/hero-commercial-park.jpg"
+        src={siteImages.hero.desktop || '/hero-commercial-park.webp'}
         decoding="async"
         alt=""
         className="hidden md:block w-full h-full object-cover object-right sm:object-[75%_35%] lg:object-right-bottom opacity-35 dark:opacity-20 blur-[2px] sm:blur-[2.5px] will-change-transform"
@@ -145,7 +155,7 @@ export const InteractiveHeroTexture: React.FC = () => {
       {/* 3. Interactive Cursor Reveal Lens: Sharpens under cursor on desktop only */}
       <img
         ref={revealImgRef}
-        src="/hero-commercial-park.jpg"
+        src={siteImages.hero.desktop || '/hero-commercial-park.webp'}
         decoding="async"
         alt=""
         className="hidden md:block absolute inset-0 w-full h-full object-cover object-right sm:object-[75%_35%] lg:object-right-bottom opacity-65 dark:opacity-40 blur-[0.5px] will-change-transform"

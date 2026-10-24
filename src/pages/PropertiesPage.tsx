@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { Search, Filter, X, ArrowUpDown, SlidersHorizontal, ArrowRight, Building2, MapPin } from 'lucide-react';
+import { Search, Filter, X, ArrowUpDown, SlidersHorizontal, ArrowRight, Building2, MapPin, ChevronLeft, ChevronRight, PhoneCall, FileText, Sparkles, Clock, CheckCircle2 } from 'lucide-react';
 import { StorageService } from '../services/storageService';
 import { Property, Location } from '../types';
 import { PropertyCard } from '../components/common/PropertyCard';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
 import { HyperlinkedText } from '../components/common/HyperlinkedText';
+import { updatePageSeo, getOrganizationSchema, getBreadcrumbSchema } from '../utils/seo';
+import { RequirementModal } from '../components/modals/RequirementModal';
+import { WhatsAppIcon } from '../components/common/SocialIcons';
+import { buildWhatsAppUrl } from '../utils/whatsapp';
 
 interface PropertiesPageProps {
   onOpenEnquiry: (property?: Property) => void;
@@ -16,6 +20,11 @@ export const PropertiesPage: React.FC<PropertiesPageProps> = ({ onOpenEnquiry })
   const [properties, setProperties] = useState<Property[]>(() => StorageService.getInitialProperties());
   const [locations, setLocations] = useState<Location[]>(() => StorageService.getInitialLocations());
   const [showMobileFilter, setShowMobileFilter] = useState(false);
+  const [showRequirementModal, setShowRequirementModal] = useState(false);
+
+  // Pagination state (Fixed 12 properties per page)
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 12;
 
   // Filter states
   const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
@@ -25,6 +34,44 @@ export const PropertiesPage: React.FC<PropertiesPageProps> = ({ onOpenEnquiry })
   const [furnishing, setFurnishing] = useState('');
   const [minArea, setMinArea] = useState('');
   const [sortBy, setSortBy] = useState<'default' | 'price-asc' | 'price-desc' | 'area-desc'>('default');
+
+  useEffect(() => {
+    const canonical = 'https://shristiestate.in/properties';
+    const catText = category ? `${category} ` : 'Commercial ';
+    const typeText = listingType ? `for ${listingType} ` : 'for Rent & Lease ';
+    const title = `${catText}Properties ${typeText}in Noida | Verified Listings`;
+    const description = `Explore verified commercial real estate listings in Noida, Greater Noida, and Expressway. Compare ${category || 'office spaces, warehouses, and IT parks'} with prices, floor plans, and amenities.`;
+
+    const cleanup = updatePageSeo({
+      title,
+      description,
+      canonicalUrl: canonical,
+      keywords: 'commercial properties noida, office space for rent noida, it park lease, warehouse for rent noida, commercial real estate listings',
+      ogType: 'website',
+      breadcrumbs: [
+        { name: 'Home', url: 'https://shristiestate.in' },
+        { name: 'Properties', url: canonical }
+      ],
+      structuredData: {
+        '@context': 'https://schema.org',
+        '@graph': [
+          getOrganizationSchema(),
+          {
+            '@type': 'CollectionPage',
+            '@id': `${canonical}#collection`,
+            'url': canonical,
+            'name': title,
+            'description': description
+          },
+          getBreadcrumbSchema([
+            { name: 'Home', url: 'https://shristiestate.in' },
+            { name: 'Properties', url: canonical }
+          ])
+        ]
+      }
+    });
+    return cleanup;
+  }, [category, listingType]);
 
   useEffect(() => {
     let isMounted = true;
@@ -55,8 +102,14 @@ export const PropertiesPage: React.FC<PropertiesPageProps> = ({ onOpenEnquiry })
     setFurnishing('');
     setMinArea('');
     setSortBy('default');
+    setCurrentPage(1);
     setSearchParams({});
   };
+
+  // Reset to page 1 whenever any filter or sorting criteria changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, category, locationId, listingType, furnishing, minArea, sortBy]);
 
   // Filtering Logic
   const filtered = properties.filter((p) => {
@@ -84,6 +137,17 @@ export const PropertiesPage: React.FC<PropertiesPageProps> = ({ onOpenEnquiry })
     if (sortBy === 'area-desc') return b.built_up_area - a.built_up_area;
     return 0;
   });
+
+  // Pagination Logic (10-15 properties per view, default 12)
+  const totalPages = Math.max(1, Math.ceil(sorted.length / itemsPerPage));
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedProperties = sorted.slice(startIndex, startIndex + itemsPerPage);
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage < 1 || newPage > totalPages) return;
+    setCurrentPage(newPage);
+    window.scrollTo({ top: 380, behavior: 'smooth' });
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
@@ -253,9 +317,15 @@ export const PropertiesPage: React.FC<PropertiesPageProps> = ({ onOpenEnquiry })
         {/* Results Area (9 Cols) */}
         <div className="lg:col-span-9 space-y-6">
           {/* Top Sort & Count Bar */}
-          <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 px-1 border-b border-slate-200 dark:border-slate-800 pb-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400 px-1 border-b border-slate-200 dark:border-slate-800 pb-3">
             <div>
-              Showing <strong className="text-slate-900 dark:text-white">{sorted.length}</strong> matching commercial properties
+              {sorted.length > 0 ? (
+                <>
+                  Showing <strong className="text-slate-900 dark:text-white">{startIndex + 1}–{Math.min(startIndex + itemsPerPage, sorted.length)}</strong> of <strong className="text-slate-900 dark:text-white">{sorted.length}</strong> matching commercial properties
+                </>
+              ) : (
+                <span>0 matching properties</span>
+              )}
             </div>
 
             <div className="flex items-center gap-2">
@@ -293,24 +363,171 @@ export const PropertiesPage: React.FC<PropertiesPageProps> = ({ onOpenEnquiry })
                 >
                   Clear All Filters
                 </button>
-                <Link
-                  to="/tell-us-requirement"
+                <button
+                  onClick={() => setShowRequirementModal(true)}
                   className="btn-glass-primary px-6 py-2.5 rounded-none text-xs font-semibold flex items-center gap-1.5 uppercase tracking-wider"
                 >
-                  <span>Tell Us What Property You Need</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>Submit Your Requirement</span>
+                </button>
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0 border-t border-l border-slate-200 dark:border-slate-800">
-              {sorted.map((prop, idx) => (
-                <PropertyCard key={prop.id} property={prop} index={idx} onEnquire={onOpenEnquiry} />
-              ))}
+            <div className="space-y-6">
+              {/* Paginated Property Grid (10-15 items) */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0 border-t border-l border-slate-200 dark:border-slate-800">
+                {paginatedProperties.map((prop, idx) => (
+                  <PropertyCard key={prop.id} property={prop} index={idx} onEnquire={onOpenEnquiry} />
+                ))}
+              </div>
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-slate-200 dark:border-slate-800">
+                  <div className="text-xs text-slate-500 dark:text-slate-400 font-sans">
+                    Showing page <strong className="text-slate-900 dark:text-white">{currentPage}</strong> of <strong className="text-slate-900 dark:text-white">{totalPages}</strong>
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1.5 rounded-none text-xs font-semibold border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B132B] text-slate-700 dark:text-slate-300 disabled:opacity-35 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1 transition-colors uppercase tracking-wider text-[11px]"
+                      aria-label="Previous Page"
+                    >
+                      <ChevronLeft className="w-3.5 h-3.5" />
+                      <span>Prev</span>
+                    </button>
+
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => {
+                      if (
+                        pageNum === 1 ||
+                        pageNum === totalPages ||
+                        (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+                      ) {
+                        return (
+                          <button
+                            key={pageNum}
+                            onClick={() => handlePageChange(pageNum)}
+                            className={`w-8 h-8 rounded-none text-xs font-semibold border transition-colors ${
+                              currentPage === pageNum
+                                ? 'bg-brand-600 border-brand-600 text-white'
+                                : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B132B] text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      } else if (
+                        pageNum === currentPage - 2 ||
+                        pageNum === currentPage + 2
+                      ) {
+                        return (
+                          <span key={pageNum} className="px-1 text-slate-400 text-xs">
+                            ...
+                          </span>
+                        );
+                      }
+                      return null;
+                    })}
+
+                    <button
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1.5 rounded-none text-xs font-semibold border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B132B] text-slate-700 dark:text-slate-300 disabled:opacity-35 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1 transition-colors uppercase tracking-wider text-[11px]"
+                      aria-label="Next Page"
+                    >
+                      <span>Next</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Can't Find Your Property? Custom Commercial Sourcing Banner (Sharp 0px Monolith) */}
+              <div className="mt-10 relative overflow-hidden rounded-none border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B132B] p-6 sm:p-8 lg:p-9 shadow-sm">
+                {/* Ambient glow accent */}
+                <div className="absolute -right-16 -top-16 w-64 h-64 bg-brand-500/10 dark:bg-brand-500/15 rounded-full blur-3xl pointer-events-none" />
+
+                <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6 lg:gap-8">
+                  {/* Left Column: Context, Heading, Value Propositions */}
+                  <div className="space-y-3 flex-1 min-w-0">
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-none text-[11px] font-mono font-semibold uppercase tracking-wider bg-brand-500/10 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 border border-brand-500/25">
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>Custom Commercial Sourcing</span>
+                    </div>
+
+                    <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold font-sans text-slate-900 dark:text-white tracking-tight">
+                      Can’t Find Your Ideal Commercial Space?
+                    </h2>
+
+                    <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-sans max-w-2xl">
+                      Need a specific floorplate, custom bare-shell or plug-and-play layout, or off-market commercial space in Noida? Submit your requirement and our corporate advisory team will shortlist verified options within 2 hours.
+                    </p>
+
+                    {/* Trust Badges */}
+                    <div className="flex flex-wrap items-center gap-x-5 gap-y-2 pt-1 text-xs text-slate-600 dark:text-slate-400 font-medium">
+                      <span className="flex items-center gap-1.5">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                        <span>Verified Off-Market Inventory</span>
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                        <span>Zero Advisory Fee for Tenants</span>
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <Clock className="w-4 h-4 text-brand-500 shrink-0" />
+                        <span>2-Hour Rapid Response</span>
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Right Column: Clean Sharp 0px Action Buttons */}
+                  <div className="flex flex-col sm:flex-row xl:flex-col gap-2.5 w-full xl:w-auto xl:min-w-[320px] shrink-0">
+                    <button
+                      onClick={() => setShowRequirementModal(true)}
+                      className="btn-glass-primary w-full px-6 py-3.5 rounded-none font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer group"
+                    >
+                      <FileText className="w-4 h-4 text-white group-hover:scale-110 transition-transform" />
+                      <span>Submit Your Requirement</span>
+                      <ArrowRight className="w-4 h-4 ml-0.5 group-hover:translate-x-0.5 transition-transform" />
+                    </button>
+
+                    <div className="grid grid-cols-2 gap-2.5 w-full">
+                      <a
+                        href="tel:+918750098666"
+                        className="px-3.5 py-2.5 rounded-none border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all shadow-2xs"
+                        title="Call Advisory: +91 87500 98666"
+                      >
+                        <PhoneCall className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
+                        <span>Call Now</span>
+                      </a>
+
+                      <a
+                        href={buildWhatsAppUrl("Hello Shristi Estate, I couldn't find my desired commercial space on your Available Properties page. Please assist me with customized options.")}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-whatsapp px-3.5 py-2.5 rounded-none text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all shadow-2xs"
+                      >
+                        <WhatsAppIcon className="w-4 h-4 text-white" />
+                        <span>WhatsApp</span>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>
       </div>
+
+      {/* Requirement Modal */}
+      <RequirementModal
+        isOpen={showRequirementModal}
+        onClose={() => setShowRequirementModal(false)}
+        defaultLocation={locationId || ''}
+        defaultCategory={category || 'Office Space'}
+      />
     </div>
   );
 };

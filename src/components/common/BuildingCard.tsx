@@ -16,6 +16,10 @@ export const BuildingCard: React.FC<BuildingCardProps> = ({ building, index }) =
     ? String(index + 1).padStart(2, '0') 
     : '01';
 
+  const unitCount = React.useMemo(() => {
+    return StorageService.getBuildingUnitCount(building);
+  }, [building]);
+
   return (
     <div className="relative rounded-none overflow-hidden flex flex-col group border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B132B] hover:bg-slate-50/80 dark:hover:bg-[#0E1838] transition-colors duration-300">
       {/* Top Architectural Header Bar: Minimal Line Icon Left, Number Right */}
@@ -34,21 +38,42 @@ export const BuildingCard: React.FC<BuildingCardProps> = ({ building, index }) =
       {/* Sharp Rectangular Building Hero Image */}
       <div className="relative aspect-[16/10] overflow-hidden bg-slate-900">
         <img
-          src={building.hero_image}
+          src={building.hero_image || '/hero-commercial-park.webp'}
           alt={building.name}
-          loading="lazy"
+          loading={index !== undefined && index < 3 ? 'eager' : 'lazy'}
+          fetchPriority={index !== undefined && index < 3 ? 'high' : 'auto'}
           decoding="async"
           width="400"
           height="250"
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            if (target.src !== 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80') {
+              target.src = 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80';
+            }
+          }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
 
         {/* Top Floating Badge */}
-        <div className="absolute top-2.5 right-2.5 pointer-events-auto">
-          <span className="px-1.5 py-0.5 rounded-none text-[8.5px] sm:text-[9px] font-semibold uppercase tracking-wider bg-brand-600 text-white shadow-sm">
-            {building.property_count || 1} Available {building.property_count === 1 ? 'Unit' : 'Units'}
-          </span>
+        <div className="absolute top-2.5 right-2.5 pointer-events-auto z-10">
+          <Link
+            to={`/buildings/${building.slug}/properties`}
+            title={`View ${unitCount} available ${unitCount === 1 ? 'unit' : 'units'} in ${building.name}`}
+            className="inline-flex items-center gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-sm text-[8.5px] sm:text-[9px] font-semibold uppercase tracking-wider bg-slate-950/80 hover:bg-brand-600 text-white backdrop-blur-md border border-white/20 hover:border-brand-400/50 shadow-sm transition-all duration-200 group/badge"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+            <span>
+              {unitCount > 0 ? (
+                <>
+                  <span className="font-bold text-white group-hover/badge:text-brand-100">{unitCount}</span> {unitCount === 1 ? 'Available Unit' : 'Available Units'}
+                </>
+              ) : (
+                'Inquire for Units'
+              )}
+            </span>
+          </Link>
         </div>
 
         {/* Building Name & Location at bottom of hero */}
@@ -90,27 +115,27 @@ export const BuildingCard: React.FC<BuildingCardProps> = ({ building, index }) =
 
           {/* Specs Overview */}
           <div className="space-y-1.5 py-2 mt-2.5 border-y border-slate-100 dark:border-slate-800/80 text-[10px] sm:text-[10.5px]">
-            <div className="flex items-center justify-between">
-              <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1 font-sans">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1 font-sans shrink-0">
                 <Layers className="w-2.5 h-2.5 text-brand-500 shrink-0" />
-                Floors & Structure:
+                Floors &amp; Structure:
               </span>
-              <span className="font-semibold text-slate-800 dark:text-slate-200 text-[10px] sm:text-[10.5px]">
+              <span className="font-semibold text-slate-800 dark:text-slate-200 text-[10px] sm:text-[10.5px] truncate min-w-0 text-right" title={getBuildingStructureDisplay(building)}>
                 {getBuildingStructureDisplay(building)}
               </span>
             </div>
 
-            <div className="flex items-center justify-between">
-              <span className="text-slate-500 dark:text-slate-400 font-sans">Unit Sizes:</span>
-              <span className="font-semibold text-slate-800 dark:text-slate-200 text-[10px] sm:text-[10.5px]">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-slate-500 dark:text-slate-400 font-sans shrink-0">Unit Sizes:</span>
+              <span className="font-semibold text-slate-800 dark:text-slate-200 text-[10px] sm:text-[10.5px] truncate min-w-0 text-right" title={building.size_range}>
                 {building.size_range}
               </span>
             </div>
 
             {building.rent_range && (
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400 font-sans">Typical Rent:</span>
-                <span className="font-semibold text-brand-600 dark:text-brand-400 text-[10px] sm:text-[10.5px]">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-slate-500 dark:text-slate-400 font-sans shrink-0">Typical Rent:</span>
+                <span className="font-semibold text-brand-600 dark:text-brand-400 text-[10px] sm:text-[10.5px] truncate min-w-0 text-right" title={building.rent_range}>
                   {building.rent_range}
                 </span>
               </div>
@@ -133,7 +158,7 @@ export const BuildingCard: React.FC<BuildingCardProps> = ({ building, index }) =
             className="btn-glass-primary px-2.5 py-1 rounded-none text-[10px] sm:text-[10.5px] font-semibold uppercase tracking-wider"
             title="View Available Units"
           >
-            Units ({StorageService.getBuildingUnitCount(building)})
+            Units ({unitCount})
           </Link>
         </div>
       </div>

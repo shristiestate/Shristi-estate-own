@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Building2, MapPin, Search, Filter, ArrowRight, Shield, CheckCircle2 } from 'lucide-react';
+import { Building2, MapPin, Search, Filter, ArrowRight, Shield, CheckCircle2, ChevronDown, HelpCircle } from 'lucide-react';
 import { StorageService } from '../services/storageService';
 import { Property, Building, Location, PropertyCategory } from '../types';
 import { CATEGORY_METADATA } from '../data/mockData';
@@ -9,6 +9,91 @@ import { BuildingCard } from '../components/common/BuildingCard';
 import { LocationCard } from '../components/common/LocationCard';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
 import { HyperlinkedText } from '../components/common/HyperlinkedText';
+import { updatePageSeo, getOrganizationSchema, getBreadcrumbSchema } from '../utils/seo';
+
+interface CategoryFaq {
+  question: string;
+  answer: string;
+}
+
+const CATEGORY_FAQS: Record<string, CategoryFaq[]> = {
+  'office-space': [
+    {
+      question: 'What is the typical lease lock-in period for corporate office space in Noida?',
+      answer: 'Standard commercial office leases in Noida typically feature a 3 to 9-year tenure with an initial 3-year lock-in period. Standard rental escalations are generally structured at 15% every 3 years or 5% annually.'
+    },
+    {
+      question: 'What is included in plug-and-play furnished office spaces?',
+      answer: 'Plug-and-play furnished offices include pre-wired ergonomic modular workstations, executive cabins, conference and meeting rooms with AV provisions, dedicated reception lobbies, cafeteria facilities, server rooms, and 100% DG power backup.'
+    },
+    {
+      question: 'How are Common Area Maintenance (CAM) charges calculated?',
+      answer: 'CAM charges in Grade-A Noida IT & business parks typically range between ₹14 and ₹22 per sq. ft. per month. These charges cover dual-source power backup diesel generation, centralized HVAC chiller operations, 24/7 security, elevator maintenance, and common facility operations.'
+    },
+    {
+      question: 'What security deposit is required for commercial leasing in Noida?',
+      answer: 'Landlords across Noida and Delhi NCR generally require an interest-free refundable security deposit equivalent to 3 to 6 months of the agreed monthly gross rental.'
+    }
+  ],
+  'it-business-parks': [
+    {
+      question: 'Which prominent IT & business parks are located in Noida?',
+      answer: 'Key Grade-A IT campuses include Advant Navis Business Park (Expressway), Candor TechSpace (Sector 62 & Sector 135), Max Towers (Sector 16B), Oxygen Business Park (Sector 144), Corenthum, and Stellar IT Park (Sector 62).'
+    },
+    {
+      question: 'What facilities are standard in institutional IT campuses in Noida?',
+      answer: 'Institutional campuses offer multi-tier security access controls, high-speed automated elevators, captive food courts, banks/ATMs, multi-level car parking, LEED/IGBC green certifications, and uninterrupted dual-grid power backup.'
+    },
+    {
+      question: 'What floor plate sizes are available in Noida tech parks?',
+      answer: 'Floor plates range from flexible 2,500 sq. ft. units up to expansive contiguous floor plates of 30,000 to 60,000+ sq. ft. designed for large technology corporations and global capability centers (GCCs).'
+    }
+  ],
+  'warehouses': [
+    {
+      question: 'What ceiling clear heights are available in Sector 83 and Greater Noida warehouses?',
+      answer: 'Modern Pre-Engineered Building (PEB) logistics warehouses offer clear heights between 28 feet and 42 feet, allowing high-density vertical pallet racking and multi-tier mezzanine configurations.'
+    },
+    {
+      question: 'Are warehouses in Noida equipped for heavy container trailers?',
+      answer: 'Yes, logistics facilities in Sector 83, Ecotech, and Yamuna Expressway are engineered with 40-to-60 foot internal concrete apron roads, hydraulic dock levelers, and generous turning radiuses for 40-foot multi-axle trailers.'
+    },
+    {
+      question: 'What fire safety and compliance approvals are provided?',
+      answer: 'Approved warehouses hold certified Fire NOCs, automated ceiling sprinkler systems, high-pressure fire hydrants, underground water storage tanks, and smoke heat extraction vents.'
+    }
+  ],
+  'factory-industrial': [
+    {
+      question: 'What sanctioned industrial power load is available for factories in Noida?',
+      answer: 'Industrial sheds in Sector 63, Sector 85, and Phase-II support dedicated high-tension (HT) sanctioned power loads ranging from 100 kVA up to 1,500+ kVA from the Uttar Pradesh state electricity board.'
+    },
+    {
+      question: 'Which industries are permissible under Noida industrial sector zoning?',
+      answer: 'Light engineering, electronics manufacturing, pharmaceuticals, packaging, export apparel manufacturing, auto components, and software labs are permitted under Noida Master Plan guidelines.'
+    }
+  ],
+  'shops-retail': [
+    {
+      question: 'Which sectors in Noida command the highest retail footfall?',
+      answer: 'Sector 18 is Noida’s premier central retail hub, accompanied by high-street retail developments along Noida Expressway (Sector 132/142) and institutional retail plazas in Sector 62.'
+    },
+    {
+      question: 'What lease formats are common for retail shops in Noida?',
+      answer: 'Retail units are leased under either a fixed monthly rental format or a hybrid revenue-share model (typically 7% to 15% of gross turnover plus a minimum guarantee).'
+    }
+  ],
+  'land': [
+    {
+      question: 'What commercial land plot sizes are available in Noida & Greater Noida?',
+      answer: 'Plots range from 500 sq. meters for boutique corporate headquarters to 5+ acres for institutional tech campuses and logistics parks along the Noida-Greater Noida and Yamuna Expressways.'
+    },
+    {
+      question: 'What is the Floor Area Ratio (FAR) for commercial plots in Noida?',
+      answer: 'Commercial FAR typically ranges from 1.5 to 3.0, with additional purchasable FAR permitted by the Noida Authority depending on arterial road width and sector master plans.'
+    }
+  ]
+};
 
 interface CategoryPageProps {
   categorySlug?: string;
@@ -53,6 +138,58 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
 
   const INITIAL_VISIBLE_LOCATIONS = 3;
   const [visibleLocationsCount, setVisibleLocationsCount] = useState<number>(INITIAL_VISIBLE_LOCATIONS);
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
+
+  useEffect(() => {
+    const canonical = `https://shristiestate.in/${activeSlug}`;
+    const pageTitle = `${meta.title} in Noida & Delhi NCR | Verified Listings | Shristi Estate`;
+    const pageDesc = `${meta.description} Browse top commercial listings, buildings, and micro-markets with verified pricing and floor plans.`;
+    const categoryFaqs = CATEGORY_FAQS[normalizedCategory] || CATEGORY_FAQS['office-space'] || [];
+
+    const cleanup = updatePageSeo({
+      title: pageTitle,
+      description: pageDesc,
+      canonicalUrl: canonical,
+      keywords: `${meta.title.toLowerCase()} noida, ${meta.title.toLowerCase()} for rent, ${activeSlug} noida expressway, commercial properties noida`,
+      ogType: 'website',
+      ogImage: meta.image,
+      breadcrumbs: [
+        { name: 'Home', url: 'https://shristiestate.in' },
+        { name: meta.title, url: canonical }
+      ],
+      structuredData: {
+        '@context': 'https://schema.org',
+        '@graph': [
+          getOrganizationSchema(),
+          {
+            '@type': 'CollectionPage',
+            '@id': `${canonical}#collection`,
+            'url': canonical,
+            'name': pageTitle,
+            'description': pageDesc,
+            'image': meta.image
+          },
+          ...(categoryFaqs.length > 0 ? [{
+            '@type': 'FAQPage',
+            '@id': `${canonical}#faq`,
+            'mainEntity': categoryFaqs.map((faq) => ({
+              '@type': 'Question',
+              'name': faq.question,
+              'acceptedAnswer': {
+                '@type': 'Answer',
+                'text': faq.answer
+              }
+            }))
+          }] : []),
+          getBreadcrumbSchema([
+            { name: 'Home', url: 'https://shristiestate.in' },
+            { name: meta.title, url: canonical }
+          ])
+        ]
+      }
+    });
+    return cleanup;
+  }, [activeSlug, normalizedCategory, meta]);
 
   useEffect(() => {
     setVisibleCount(INITIAL_VISIBLE_COUNT);
@@ -360,6 +497,54 @@ export const CategoryPage: React.FC<CategoryPageProps> = ({ categorySlug: propSl
           </div>
         )}
       </section>
+
+      {/* Commercial Knowledge & FAQs Section */}
+      {CATEGORY_FAQS[normalizedCategory] && CATEGORY_FAQS[normalizedCategory].length > 0 && (
+        <section className="rounded-none p-6 sm:p-8 bg-white dark:bg-[#0B132B] border border-slate-200 dark:border-slate-800 space-y-6">
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 rounded-none bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0 border border-brand-500/20">
+              <HelpCircle className="w-4 h-4 stroke-[1.75]" />
+            </div>
+            <div>
+              <h2 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white tracking-tight">
+                Frequently Asked Questions ({meta.title})
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Essential leasing guidelines, lock-in terms, and commercial tenant advisories in Noida &amp; Delhi NCR.
+              </p>
+            </div>
+          </div>
+
+          <div className="divide-y divide-slate-200 dark:divide-slate-800 border-t border-b border-slate-200 dark:border-slate-800">
+            {CATEGORY_FAQS[normalizedCategory].map((faq, idx) => {
+              const isOpen = openFaqIndex === idx;
+              return (
+                <div key={idx} className="py-3.5 sm:py-4">
+                  <button
+                    onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
+                    className="w-full text-left flex items-center justify-between gap-4 group"
+                    aria-expanded={isOpen}
+                  >
+                    <span className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+                      {faq.question}
+                    </span>
+                    <ChevronDown
+                      className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200 ${
+                        isOpen ? 'rotate-180 text-brand-600 dark:text-brand-400' : ''
+                      }`}
+                    />
+                  </button>
+                  {isOpen && (
+                    <p className="mt-2.5 text-xs sm:text-[13px] text-slate-600 dark:text-slate-400 leading-relaxed font-sans pr-6">
+                      {faq.answer}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* Requirement Callout */}
       <div className="rounded-none p-6 sm:p-8 bg-white dark:bg-[#0B132B] border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">

@@ -80,10 +80,15 @@ export const BlogDetailPage: React.FC<BlogDetailPageProps> = ({ onOpenEnquiry })
       canonicalUrl,
       ogImage: featuredImg,
       ogType: 'article',
+      breadcrumbs: [
+        { name: 'Home', url: 'https://shristiestate.in' },
+        { name: 'Blog', url: 'https://shristiestate.in/blog' },
+        { name: guide.title, url: canonicalUrl }
+      ],
       article: {
         publishedTime: guide.created_at || guide.date,
         modifiedTime: guide.updated_at || guide.created_at || guide.date,
-        author: guide.author || 'Shristi Estate Advisory Desk',
+        author: guide.author || 'Sanjeet Kumar',
         section: guide.category
       }
     });

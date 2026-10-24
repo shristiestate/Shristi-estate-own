@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Send, CheckCircle2, MessageSquare, PhoneCall, Building2, MapPin } from 'lucide-react';
 import { StorageService } from '../services/storageService';
@@ -6,8 +6,42 @@ import { Breadcrumbs } from '../components/common/Breadcrumbs';
 import { generateRequirementWhatsAppLink } from '../utils/whatsapp';
 import { handleOverviewPaste } from '../utils/textFormat';
 import { HyperlinkedText } from '../components/common/HyperlinkedText';
+import { updatePageSeo, getOrganizationSchema, getBreadcrumbSchema } from '../utils/seo';
 
 export const RequirementPage: React.FC = () => {
+  useEffect(() => {
+    const canonical = 'https://shristiestate.in/requirement';
+    const cleanup = updatePageSeo({
+      title: 'Post Commercial Space Requirement | Office Leasing | Shristi Estate',
+      description: 'Submit your corporate office, IT park, or warehouse space requirement in Noida & Delhi NCR. Receive verified property options and site visits within 24 hours.',
+      canonicalUrl: canonical,
+      keywords: 'commercial office requirement, post office space requirement noida, commercial space enquiry noida, warehouse requirement ncr',
+      ogType: 'website',
+      breadcrumbs: [
+        { name: 'Home', url: 'https://shristiestate.in' },
+        { name: 'Post Requirement', url: canonical }
+      ],
+      structuredData: {
+        '@context': 'https://schema.org',
+        '@graph': [
+          getOrganizationSchema(),
+          {
+            '@type': 'WebPage',
+            '@id': `${canonical}#webpage`,
+            'url': canonical,
+            'name': 'Post Commercial Requirement - Shristi Estate',
+            'description': 'Corporate requirement submission portal for commercial office space in Noida & Delhi NCR.'
+          },
+          getBreadcrumbSchema([
+            { name: 'Home', url: 'https://shristiestate.in' },
+            { name: 'Post Requirement', url: canonical }
+          ])
+        ]
+      }
+    });
+    return cleanup;
+  }, []);
+
   const [formData, setFormData] = useState({
     name: '',
     phone: '',

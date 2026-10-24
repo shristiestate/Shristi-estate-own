@@ -10,7 +10,8 @@ export default {
       fontFamily: {
         sans: ['"Space Grotesk"', 'system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
         display: ['"Space Grotesk"', 'system-ui', '-apple-system', 'sans-serif'],
-        serif: ['"Space Grotesk"', 'Georgia', 'serif'],
+        serif: ['"Space Grotesk"', 'system-ui', 'sans-serif'],
+        outfit: ['"Space Grotesk"', 'system-ui', 'sans-serif'],
         mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
       },
       colors: {

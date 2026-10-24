@@ -1,0 +1,23 @@
+{
+  "hero": {
+    "desktop": "/hero-commercial-park.webp",
+    "mobile": "/hero-commercial-park-mobile.webp",
+    "alt": "Shristi Estate Commercial Towers & Business Parks Noida"
+  },
+  "founder": {
+    "image": "/images/founder.webp",
+    "alt": "Sanjeet Kumar - Founder & Principal Advisor Shristi Estate"
+  },
+  "categories": {
+    "office-space": "/images/categories/office-spaces.webp",
+    "it-business-parks": "/images/categories/it-business-parks.webp",
+    "warehouses": "/images/categories/warehouses.webp",
+    "factory-industrial": "/images/categories/factory-industrial.webp",
+    "land": "/images/categories/commercial-land.webp",
+    "shops-retail": "/images/categories/shops-retail.webp"
+  },
+  "gallery": [
+    "/hero-commercial-park.webp",
+    "/images/founder.webp"
+  ]
+}

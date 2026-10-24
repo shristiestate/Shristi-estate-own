@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   X, 
   Send, 
@@ -47,6 +48,16 @@ export const EnquiryModal: React.FC<EnquiryModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
+
+  // Lock body scroll while modal is open
+  useEffect(() => {
+    if (!isOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -135,11 +146,13 @@ export const EnquiryModal: React.FC<EnquiryModalProps> = ({
     onClose();
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 overflow-y-auto isolate">
       {/* Frosted Backdrop */}
       <div 
-        className="fixed inset-0 bg-slate-950/70 backdrop-blur-md transition-opacity"
+        className="fixed inset-0 bg-slate-950/80 backdrop-blur-md transition-opacity"
         onClick={handleResetAndClose}
       />
 
@@ -208,7 +221,7 @@ export const EnquiryModal: React.FC<EnquiryModalProps> = ({
               {(property || buildingName) && (
                 <div className="mt-3 p-3 rounded-none bg-slate-50 dark:bg-[#070C1E] border border-slate-200 dark:border-slate-800 flex items-center gap-3 text-xs text-slate-700 dark:text-slate-300">
                   <Building2 className="w-4 h-4 text-brand-500 shrink-0" />
-                  <div className="truncate">
+                  <div className="truncate min-w-0 flex-1">
                     <span className="font-semibold">{property?.title || buildingName}</span>
                     {(property?.building_name || property?.location_name || locationName) && (
                       <span className="text-slate-500 dark:text-slate-400 ml-1">
@@ -385,6 +398,7 @@ export const EnquiryModal: React.FC<EnquiryModalProps> = ({
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

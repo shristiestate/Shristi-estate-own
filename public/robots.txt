@@ -1,5 +1,27 @@
 User-agent: *
 Allow: /
 Disallow: /admin
+Disallow: /admin/
+
+# AI Search & Answer Engine Crawlers (Generative Engine Optimization)
+User-agent: GPTBot
+Allow: /
+Disallow: /admin
+
+User-agent: ClaudeBot
+Allow: /
+Disallow: /admin
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /admin
+
+User-agent: Google-Extended
+Allow: /
+Disallow: /admin
+
+User-agent: Applebot
+Allow: /
+Disallow: /admin
 
 Sitemap: https://shristiestate.in/sitemap.xml

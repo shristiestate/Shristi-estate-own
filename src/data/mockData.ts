@@ -1,4 +1,4 @@
-import { Location, Building, Property, Lead, MarketGuide, ClientLogo, InstagramReel } from '../types';
+import { Location, Building, Property, Lead, MarketGuide, ClientLogo, InstagramReel, ClientReview } from '../types';
 
 export const INITIAL_LOCATIONS: Location[] = [
   {
@@ -145,7 +145,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     total_towers: 2,
     tower_details: 'Twin Towers (Tower A & Tower B)',
     available_floors: '2nd, 6th, 10th, 12th',
-    size_range: '750 sq.ft – 25,000 sq.ft',
+    size_range: '250 sq.ft – 2,000 sq.ft',
     rent_range: '₹55 – ₹70/sq.ft',
     furnishing_options: ['Fully Furnished', 'Semi-Furnished', 'Bare Shell', 'Plug & Play'],
     parking: '3-level basement car parking with automated access',
@@ -156,7 +156,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     nearby_landmarks: ['Electronic City Metro Station (500m)', 'Fortis Hospital Noida', 'NH-24 / Delhi-Meerut Expressway'],
     nearby_transport: '500m from Sector 62 Noida Metro Station, direct connection to Delhi via NH-24',
     published: true,
-    property_count: 3
+    property_count: 9
   },
   {
     id: 'bld-corenthum',
@@ -181,7 +181,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     total_towers: 2,
     tower_details: '2 Interconnected Wings',
     available_floors: 'Ground, 4th, 7th, 11th',
-    size_range: '1,500 sq.ft – 40,000 sq.ft',
+    size_range: '250 sq.ft – 2,000 sq.ft',
     rent_range: '₹58 – ₹72/sq.ft',
     sale_range: '₹8,500 – ₹12,500/sq.ft',
     furnishing_options: ['Furnished', 'Ready-to-Move', 'Bare Shell', 'Plug & Play'],
@@ -193,7 +193,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     nearby_landmarks: ['Noida Electronic City Metro (200m)', 'Shipra Mall Indirapuram', 'Fortis Hospital'],
     nearby_transport: '200 metres from Noida Electronic City Metro Station',
     published: true,
-    property_count: 2
+    property_count: 9
   },
   {
     id: 'bld-stellar-it',
@@ -218,7 +218,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     total_towers: 2,
     tower_details: '2 Towers (Tower 1, Tower 2)',
     available_floors: '3rd, 5th, 9th',
-    size_range: '2,000 sq.ft – 30,000 sq.ft',
+    size_range: '250 sq.ft – 2,000 sq.ft',
     rent_range: '₹60 – ₹75/sq.ft',
     furnishing_options: ['Plug-and-Play', 'Fully Furnished', 'Bare Shell'],
     parking: 'Covered basement and surface parking for 500+ cars',
@@ -229,7 +229,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     nearby_landmarks: ['Fortis Hospital', 'JSS Academy', 'Noida Electronic City Metro'],
     nearby_transport: 'Connected to Blue Line Metro Sector 62 (within 800m)',
     published: true,
-    property_count: 1
+    property_count: 9
   },
   {
     id: 'bld-noida-one',
@@ -254,7 +254,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     total_towers: 3,
     tower_details: '3 Connected Corporate Towers',
     available_floors: '2nd, 4th, 7th, 10th',
-    size_range: '650 sq.ft – 35,000 sq.ft',
+    size_range: '250 sq.ft – 2,000 sq.ft',
     rent_range: '₹52 – ₹65/sq.ft',
     sale_range: '₹7,500 – ₹11,000/sq.ft',
     furnishing_options: ['Fully Furnished', 'Bare Shell', 'Plug-and-Play'],
@@ -266,7 +266,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     nearby_landmarks: ['Electronic City Metro', 'Gautam Buddha University Campus', 'Symbiosis Centre'],
     nearby_transport: 'Immediate access to Sector 62 Metro Station & NH-24',
     published: true,
-    property_count: 2
+    property_count: 9
   },
   {
     id: 'bld-galaxy-business-park',
@@ -291,7 +291,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     total_towers: 2,
     tower_details: 'Twin IT Office Blocks',
     available_floors: '1st, 3rd, 6th',
-    size_range: '1,500 sq.ft – 35,000 sq.ft',
+    size_range: '250 sq.ft – 2,000 sq.ft',
     rent_range: '₹50 – ₹65/sq.ft',
     furnishing_options: ['Fully Furnished', 'Semi-Furnished', 'Bare Shell', 'Plug & Play'],
     parking: 'Two-level basement and surface parking for 400+ vehicles',
@@ -302,7 +302,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     nearby_landmarks: ['Fortis Hospital (400m)', 'Noida Electronic City Metro', 'The Corenthum'],
     nearby_transport: '500m from Electronic City Metro Station with direct NH-24 connection',
     published: true,
-    property_count: 0
+    property_count: 9
   },
   {
     id: 'bld-ithums-62',
@@ -327,7 +327,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     total_towers: 2,
     tower_details: 'High-Rise Commercial Twin Towers',
     available_floors: '4th, 8th, 12th, 16th',
-    size_range: '500 sq.ft – 25,000 sq.ft',
+    size_range: '250 sq.ft – 2,000 sq.ft',
     rent_range: '₹60 – ₹85/sq.ft',
     sale_range: '₹9,000 – ₹14,000/sq.ft',
     furnishing_options: ['Plug-and-Play', 'Fully Furnished', 'Bare Shell'],
@@ -339,7 +339,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     nearby_landmarks: ['Electronic City Metro Station', 'Fortis Hospital', 'NH-24'],
     nearby_transport: 'Walking distance to Noida Electronic City Metro Station',
     published: true,
-    property_count: 0
+    property_count: 9
   },
   {
     id: 'bld-ithum-heights',
@@ -364,7 +364,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     total_towers: 2,
     tower_details: 'Premium High-Rise Twin Towers',
     available_floors: '5th, 11th, 15th, 19th',
-    size_range: '600 sq.ft – 28,000 sq.ft',
+    size_range: '250 sq.ft – 2,000 sq.ft',
     rent_range: '₹60 – ₹80/sq.ft',
     sale_range: '₹9,200 – ₹13,500/sq.ft',
     furnishing_options: ['Fully Furnished', 'Semi-Furnished', 'Bare Shell', 'Plug & Play'],
@@ -376,7 +376,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     nearby_landmarks: ['Electronic City Metro', 'Sector 62 Institutional Sector', 'Fortis Hospital'],
     nearby_transport: 'Connected to Sector 62 and Electronic City Metro Stations',
     published: true,
-    property_count: 0
+    property_count: 9
   },
   {
     id: 'bld-pinnacle-tower',
@@ -400,7 +400,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     total_towers: 1,
     tower_details: 'Single Standalone Corporate Tower',
     available_floors: '2nd, 5th, 8th',
-    size_range: '1,200 sq.ft – 25,000 sq.ft',
+    size_range: '250 sq.ft – 2,000 sq.ft',
     rent_range: '₹50 – ₹65/sq.ft',
     furnishing_options: ['Furnished', 'Bare Shell', 'Plug & Play'],
     parking: 'Two-level basement plus open visitor parking',
@@ -411,7 +411,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     nearby_landmarks: ['The Corenthum (adjacent)', 'Noida Electronic City Metro', 'Fortis Hospital'],
     nearby_transport: '300m from Electronic City Metro Station',
     published: true,
-    property_count: 0
+    property_count: 9
   },
   {
     id: 'bld-joy-tower',
@@ -435,7 +435,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     total_towers: 1,
     tower_details: 'Single Tower',
     available_floors: '3rd, 6th, 9th',
-    size_range: '1,000 sq.ft – 22,000 sq.ft',
+    size_range: '250 sq.ft – 2,000 sq.ft',
     rent_range: '₹48 – ₹62/sq.ft',
     furnishing_options: ['Fully Furnished', 'Semi-Furnished', 'Bare Shell'],
     parking: 'Basement and dedicated open surface parking',
@@ -446,7 +446,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     nearby_landmarks: ['Logix Cyber Park', 'Stellar IT Park', 'Sector 62 Metro Station'],
     nearby_transport: '700m from Blue Line Metro Sector 62',
     published: true,
-    property_count: 0
+    property_count: 9
   },
   {
     id: 'bld-discovery-tower',
@@ -470,7 +470,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     total_towers: 1,
     tower_details: 'Single Corporate Block',
     available_floors: '2nd, 4th, 7th',
-    size_range: '1,200 sq.ft – 20,000 sq.ft',
+    size_range: '250 sq.ft – 2,000 sq.ft',
     rent_range: '₹50 – ₹65/sq.ft',
     furnishing_options: ['Furnished', 'Plug-and-Play', 'Bare Shell'],
     parking: 'Covered basement and surface parking bays',
@@ -481,7 +481,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     nearby_landmarks: ['NH-24 Expressway', 'Fortis Hospital', 'Electronic City Metro'],
     nearby_transport: 'Easy access to Delhi via NH-24 and Blue Line Metro',
     published: true,
-    property_count: 0
+    property_count: 9
   },
   {
     id: 'bld-unitech-infospace',
@@ -506,7 +506,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     total_towers: 4,
     tower_details: '4 Multi-Story Corporate Towers',
     available_floors: 'Ground, 3rd, 5th, 8th',
-    size_range: '3,000 sq.ft – 80,000 sq.ft',
+    size_range: '250 sq.ft – 2,000 sq.ft',
     rent_range: '₹55 – ₹70/sq.ft',
     furnishing_options: ['Plug-and-Play', 'Fully Furnished', 'Warm Shell', 'Bare Shell'],
     parking: 'Multi-level basement parking with 2,500+ car parking slots',
@@ -517,7 +517,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     nearby_landmarks: ['Candor TechSpace', 'Fortis Hospital', 'Sector 62 Metro Station'],
     nearby_transport: 'Direct arterial connection to Sector 62 Metro Station and NH-24',
     published: true,
-    property_count: 0
+    property_count: 9
   },
   {
     id: 'bld-candor-techspace',
@@ -542,7 +542,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     total_towers: 5,
     tower_details: '5 Grade-A Corporate Towers',
     available_floors: '1st, 4th, 7th, 10th',
-    size_range: '5,000 sq.ft – 1,00,000 sq.ft',
+    size_range: '250 sq.ft – 2,000 sq.ft',
     rent_range: '₹60 – ₹75/sq.ft',
     furnishing_options: ['Plug-and-Play', 'Fully Furnished', 'Warm Shell'],
     parking: 'Multi-level covered parking structure with capacity for 3,500+ cars',
@@ -553,7 +553,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     nearby_landmarks: ['Sector 62 Metro Station', 'Fortis Hospital', 'Electronic City'],
     nearby_transport: 'Close proximity to Blue Line Sector 62 Metro Station',
     published: true,
-    property_count: 0
+    property_count: 9
   },
   {
     id: 'bld-logix-cyber-park',
@@ -578,7 +578,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     total_towers: 4,
     tower_details: '4 Interlinked Corporate Towers (Tower A, B, C, D)',
     available_floors: '2nd, 5th, 8th, 11th',
-    size_range: '2,500 sq.ft – 50,000 sq.ft',
+    size_range: '250 sq.ft – 2,000 sq.ft',
     rent_range: '₹55 – ₹72/sq.ft',
     furnishing_options: ['Fully Furnished', 'Plug-and-Play', 'Bare Shell'],
     parking: 'Extensive 2-level basement parking with automated access control',
@@ -589,7 +589,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     nearby_landmarks: ['Fortis Hospital', 'Stellar IT Park', 'Sector 62 Metro'],
     nearby_transport: 'Quick connectivity to Sector 62 Metro Station and NH-24',
     published: true,
-    property_count: 0
+    property_count: 9
   },
   {
     id: 'bld-assotech-one',
@@ -613,7 +613,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     total_towers: 1,
     tower_details: 'Single Tower',
     available_floors: '2nd, 5th, 7th',
-    size_range: '1,000 sq.ft – 18,000 sq.ft',
+    size_range: '250 sq.ft – 2,000 sq.ft',
     rent_range: '₹50 – ₹65/sq.ft',
     furnishing_options: ['Fully Furnished', 'Semi-Furnished', 'Bare Shell'],
     parking: 'Two basements and ample surface parking',
@@ -624,7 +624,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     nearby_landmarks: ['Fortis Hospital (300m)', 'Logix Cyber Park', 'Noida Electronic City Metro'],
     nearby_transport: '500m from Blue Line Metro Sector 62',
     published: true,
-    property_count: 0
+    property_count: 9
   },
   {
     id: 'bld-knowledge-boulevard',
@@ -649,7 +649,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     total_towers: 2,
     tower_details: 'Twin Executive Towers',
     available_floors: '1st, 4th, 6th, 8th',
-    size_range: '3,000 sq.ft – 45,000 sq.ft',
+    size_range: '250 sq.ft – 2,000 sq.ft',
     rent_range: '₹60 – ₹80/sq.ft',
     furnishing_options: ['Plug-and-Play', 'Fully Furnished', 'Bare Shell'],
     parking: 'Two-level basement parking with 1,000+ car capacity',
@@ -660,7 +660,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     nearby_landmarks: ['NH-24 Delhi-Meerut Expressway', 'Electronic City Metro', 'HCL Campus'],
     nearby_transport: 'Direct frontage on NH-24 and 600m from Electronic City Metro',
     published: true,
-    property_count: 0
+    property_count: 9
   },
   {
     id: 'bld-galaxy-it-park',
@@ -684,7 +684,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     total_towers: 2,
     tower_details: '2 Interconnected Blocks',
     available_floors: '2nd, 4th, 7th',
-    size_range: '1,500 sq.ft – 30,000 sq.ft',
+    size_range: '250 sq.ft – 2,000 sq.ft',
     rent_range: '₹50 – ₹65/sq.ft',
     furnishing_options: ['Fully Furnished', 'Semi-Furnished', 'Plug & Play'],
     parking: 'Two levels of covered basement parking',
@@ -695,7 +695,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     nearby_landmarks: ['The Corenthum', 'Electronic City Metro', 'Fortis Hospital'],
     nearby_transport: 'Short walk to Electronic City Metro Station',
     published: true,
-    property_count: 0
+    property_count: 9
   },
   {
     id: 'bld-technopolis-it',
@@ -719,7 +719,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     total_towers: 1,
     tower_details: 'Single Tower',
     available_floors: '3rd, 5th, 8th',
-    size_range: '1,200 sq.ft – 20,000 sq.ft',
+    size_range: '250 sq.ft – 2,000 sq.ft',
     rent_range: '₹52 – ₹65/sq.ft',
     furnishing_options: ['Furnished', 'Plug-and-Play', 'Bare Shell'],
     parking: 'Basement and reserved surface parking',
@@ -730,7 +730,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     nearby_landmarks: ['Stellar IT Park', 'Logix Cyber Park', 'Sector 62 Metro'],
     nearby_transport: 'Convenient access to Sector 62 Blue Line Metro Station',
     published: true,
-    property_count: 0
+    property_count: 9
   },
   {
     id: 'bld-bsi-business-park',
@@ -754,7 +754,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     total_towers: 1,
     tower_details: 'Single Block',
     available_floors: '2nd, 4th, 6th',
-    size_range: '1,000 sq.ft – 15,000 sq.ft',
+    size_range: '250 sq.ft – 2,000 sq.ft',
     rent_range: '₹48 – ₹60/sq.ft',
     furnishing_options: ['Fully Furnished', 'Semi-Furnished', 'Bare Shell'],
     parking: 'Basement and visitor parking spaces',
@@ -765,7 +765,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     nearby_landmarks: ['Electronic City Metro', 'Fortis Hospital', 'NH-24'],
     nearby_transport: '800m from Electronic City Metro Station',
     published: true,
-    property_count: 0
+    property_count: 9
   },
   {
     id: 'bld-procapitus',
@@ -789,7 +789,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     total_towers: 1,
     tower_details: 'Single Corporate Facility',
     available_floors: '1st, 3rd, 5th',
-    size_range: '800 sq.ft – 12,000 sq.ft',
+    size_range: '250 sq.ft – 2,000 sq.ft',
     rent_range: '₹50 – ₹65/sq.ft',
     furnishing_options: ['Plug-and-Play', 'Fully Furnished'],
     parking: 'Basement car parking and 2-wheeler bays',
@@ -800,7 +800,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     nearby_landmarks: ['D-Block Commercial Market', 'Sector 62 Metro', 'Fortis Hospital'],
     nearby_transport: 'Quick access to Sector 62 Metro Station',
     published: true,
-    property_count: 0
+    property_count: 9
   },
   {
     id: 'bld-aps-business-park',
@@ -824,7 +824,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     total_towers: 1,
     tower_details: 'Single Corporate Building',
     available_floors: '2nd, 4th, 6th',
-    size_range: '850 sq.ft – 14,000 sq.ft',
+    size_range: '250 sq.ft – 2,000 sq.ft',
     rent_range: '₹45 – ₹60/sq.ft',
     furnishing_options: ['Furnished', 'Semi-Furnished', 'Bare Shell'],
     parking: 'Covered basement and surface parking',
@@ -835,7 +835,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     nearby_landmarks: ['Discovery Tower', 'NH-24 Highway', 'Electronic City Metro'],
     nearby_transport: 'Close proximity to NH-24 and Blue Line Metro',
     published: true,
-    property_count: 0
+    property_count: 9
   },
   {
     id: 'bld-cd-block-commercial',
@@ -859,7 +859,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     total_towers: 2,
     tower_details: 'C & D Block Commercial Wings',
     available_floors: 'Ground, 2nd, 3rd, 5th',
-    size_range: '600 sq.ft – 15,000 sq.ft',
+    size_range: '250 sq.ft – 2,000 sq.ft',
     rent_range: '₹45 – ₹60/sq.ft',
     sale_range: '₹7,000 – ₹10,500/sq.ft',
     furnishing_options: ['Fully Furnished', 'Semi-Furnished', 'Bare Shell'],
@@ -871,7 +871,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     nearby_landmarks: ['Fortis Hospital', 'Stellar IT Park', 'Sector 62 Market'],
     nearby_transport: 'Walking distance to Sector 62 Blue Line Metro Station',
     published: true,
-    property_count: 0
+    property_count: 9
   },
   {
     id: 'bld-hcl-towers',
@@ -896,7 +896,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     total_towers: 3,
     tower_details: '3 Campus Towers (Tower 1, 2, 3)',
     available_floors: '3rd, 6th, 9th, 11th',
-    size_range: '5,000 sq.ft – 60,000 sq.ft',
+    size_range: '250 sq.ft – 2,000 sq.ft',
     rent_range: '₹58 – ₹75/sq.ft',
     furnishing_options: ['Plug-and-Play', 'Fully Furnished', 'Warm Shell'],
     parking: 'Multi-level parking structure for 1,800+ cars and buses',
@@ -907,7 +907,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     nearby_landmarks: ['Knowledge Boulevard', 'NH-24 Expressway', 'Electronic City Metro'],
     nearby_transport: 'Frontage on NH-24 Expressway & 500m from Electronic City Metro Station',
     published: true,
-    property_count: 0
+    property_count: 9
   },
   {
     id: 'bld-embassy-corporate',
@@ -932,7 +932,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     total_towers: 2,
     tower_details: '2 High-Grade Corporate Blocks',
     available_floors: '2nd, 5th, 8th',
-    size_range: '4,000 sq.ft – 75,000 sq.ft',
+    size_range: '250 sq.ft – 2,000 sq.ft',
     rent_range: '₹60 – ₹78/sq.ft',
     furnishing_options: ['Plug-and-Play', 'Fully Furnished', 'Warm Shell', 'Bare Shell'],
     parking: 'Two-tier basement and surface parking for 1,200+ cars',
@@ -943,7 +943,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     nearby_landmarks: ['Electronic City Metro', 'Candor TechSpace', 'Fortis Hospital'],
     nearby_transport: 'Immediate access to Electronic City Metro Station & NH-24',
     published: true,
-    property_count: 0
+    property_count: 9
   },
   {
     id: 'bld-iconic-corenthum',
@@ -968,7 +968,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     total_towers: 1,
     tower_details: 'Single High-Rise Signature Tower',
     available_floors: '3rd, 7th, 12th, 15th',
-    size_range: '1,000 sq.ft – 35,000 sq.ft',
+    size_range: '250 sq.ft – 2,000 sq.ft',
     rent_range: '₹62 – ₹80/sq.ft',
     sale_range: '₹9,500 – ₹15,000/sq.ft',
     furnishing_options: ['Fully Furnished', 'Plug-and-Play', 'Bare Shell'],
@@ -980,7 +980,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     nearby_landmarks: ['Noida Electronic City Metro (150m)', 'The Corenthum', 'Shipra Mall'],
     nearby_transport: 'Direct walking distance (150m) to Electronic City Metro Station',
     published: true,
-    property_count: 0
+    property_count: 9
   },
   {
     id: 'bld-advant-navis',
@@ -1002,7 +1002,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     towers: ['Tower A', 'Tower B'],
     total_towers: 2,
     tower_details: 'Twin Towers (Tower A & Tower B)',
-    size_range: '2,500 sq.ft – 50,000 sq.ft',
+    size_range: '250 sq.ft – 2,000 sq.ft',
     rent_range: '₹65 – ₹85/sq.ft',
     furnishing_options: ['Fully Furnished', 'Plug-and-Play'],
     parking: '3000+ car parking slots across multi-tier basement',
@@ -1013,7 +1013,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     nearby_landmarks: ['Sector 142 Aqua Line Metro (Zero metres)', 'FNG Corridor Interchange'],
     nearby_transport: 'Direct footbridge connection to Sector 142 Metro Station',
     published: true,
-    property_count: 2
+    property_count: 9
   },
   {
     id: 'bld-sec83-logistics',
@@ -1035,7 +1035,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     towers: ['Single Facility'],
     total_towers: 1,
     tower_details: 'Single Facility',
-    size_range: '4,500 sq.ft – 50,000 sq.ft',
+    size_range: '250 sq.ft – 2,000 sq.ft',
     rent_range: '₹35 – ₹45/sq.ft',
     furnishing_options: ['Bare Shell', 'Industrial Shed'],
     parking: 'Dedicated heavy container truck parking & turning bays',
@@ -1046,7 +1046,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     nearby_landmarks: ['NSEZ Metro Station', 'FNG Expressway'],
     nearby_transport: 'Direct wide-road access for multi-axle trailers',
     published: true,
-    property_count: 2
+    property_count: 9
   },
   {
     id: 'bld-sec85-industrial',
@@ -1068,7 +1068,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     towers: ['Main Plant'],
     total_towers: 1,
     tower_details: 'Main Plant',
-    size_range: '5,000 sq.ft – 30,000 sq.ft',
+    size_range: '250 sq.ft – 2,000 sq.ft',
     rent_range: '₹30 – ₹40/sq.ft',
     furnishing_options: ['Bare Shell', 'Industrial Unit'],
     parking: 'Spacious internal loading and unloading yard',
@@ -1079,7 +1079,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     nearby_landmarks: ['Hosiery Complex Noida', 'Sector 81 Metro Station'],
     nearby_transport: 'Short drive to Dadri Main Road and NSEZ',
     published: true,
-    property_count: 2
+    property_count: 9
   },
   {
     id: 'bld-wave-silver',
@@ -1101,7 +1101,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     towers: ['Single Tower'],
     total_towers: 1,
     tower_details: 'Single Tower',
-    size_range: '450 sq.ft – 5,000 sq.ft',
+    size_range: '250 sq.ft – 2,000 sq.ft',
     rent_range: '₹120 – ₹250/sq.ft',
     furnishing_options: ['Fully Furnished', 'Bare Shell'],
     parking: 'Multi-level car parking nearby (10,000 cars)',
@@ -1112,7 +1112,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     nearby_landmarks: ['Sector 18 Metro Station', 'Mall of India Noida', 'Atta Market'],
     nearby_transport: '200 metres from Sector 18 Metro',
     published: true,
-    property_count: 2
+    property_count: 9
   },
   {
     id: 'bld-ithums-73',
@@ -1137,7 +1137,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     total_towers: 2,
     tower_details: 'High-Rise Commercial Twin Towers',
     available_floors: '3rd, 7th, 11th, 16th',
-    size_range: '450 sq.ft – 30,000 sq.ft',
+    size_range: '250 sq.ft – 2,000 sq.ft',
     rent_range: '₹55 – ₹75/sq.ft',
     sale_range: '₹8,500 – ₹13,500/sq.ft',
     furnishing_options: ['Fully Furnished', 'Bare Shell', 'Plug-and-Play'],
@@ -1149,7 +1149,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     nearby_landmarks: ['Sector 51/72 Metro Station', 'Vikas Marg', 'Broadways Hospital', 'Noida Extension Junction'],
     nearby_transport: '800m from Sector 51 Blue/Aqua Line Metro Station with direct Vikas Marg access',
     published: true,
-    property_count: 0
+    property_count: 9
   },
   {
     id: 'bld-anthurium',
@@ -1174,7 +1174,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     total_towers: 2,
     tower_details: 'Futuristic AI Commercial Towers',
     available_floors: '2nd, 5th, 9th, 12th',
-    size_range: '600 sq.ft – 35,000 sq.ft',
+    size_range: '250 sq.ft – 2,000 sq.ft',
     rent_range: '₹55 – ₹70/sq.ft',
     sale_range: '₹8,000 – ₹12,500/sq.ft',
     furnishing_options: ['Plug-and-Play', 'Fully Furnished', 'Bare Shell'],
@@ -1186,7 +1186,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     nearby_landmarks: ['Sector 72 Metro Interchange', 'Vikas Marg', 'IDEMIA Campus'],
     nearby_transport: 'Convenient 5-minute drive to Sector 51 & 72 Metro Stations',
     published: true,
-    property_count: 0
+    property_count: 9
   },
   {
     id: 'bld-magnus-tower',
@@ -1210,7 +1210,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     total_towers: 1,
     tower_details: 'Single Corporate Tower',
     available_floors: '3rd, 6th, 8th',
-    size_range: '1,000 sq.ft – 20,000 sq.ft',
+    size_range: '250 sq.ft – 2,000 sq.ft',
     rent_range: '₹50 – ₹65/sq.ft',
     furnishing_options: ['Fully Furnished', 'Semi-Furnished', 'Bare Shell'],
     parking: 'Two-tier covered basement parking and visitor parking',
@@ -1221,7 +1221,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     nearby_landmarks: ['iThums 73', 'Sector 72 Metro', 'Noida Extension Link Road'],
     nearby_transport: 'Frontage on primary sector corridor with direct route to NH-24 and FNG',
     published: true,
-    property_count: 0
+    property_count: 9
   },
   {
     id: 'bld-idemia-building',
@@ -1245,7 +1245,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     total_towers: 2,
     tower_details: 'Integrated Corporate Wings',
     available_floors: '2nd, 4th, 7th',
-    size_range: '3,000 sq.ft – 40,000 sq.ft',
+    size_range: '250 sq.ft – 2,000 sq.ft',
     rent_range: '₹55 – ₹70/sq.ft',
     furnishing_options: ['Plug-and-Play', 'Fully Furnished', 'Warm Shell'],
     parking: 'Covered basement and open visitor surface parking (600+ bays)',
@@ -1256,7 +1256,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     nearby_landmarks: ['OIDB Tower', 'Anthurium IT Park', 'Sector 73 Main Crossing'],
     nearby_transport: 'Quick transit access to Sector 51 Blue Line Metro and Aqua Line',
     published: true,
-    property_count: 0
+    property_count: 9
   },
   {
     id: 'bld-oidb-tower',
@@ -1280,7 +1280,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     total_towers: 1,
     tower_details: 'Single Institutional Tower',
     available_floors: '4th, 7th, 10th',
-    size_range: '2,500 sq.ft – 50,000 sq.ft',
+    size_range: '250 sq.ft – 2,000 sq.ft',
     rent_range: '₹60 – ₹75/sq.ft',
     furnishing_options: ['Fully Furnished', 'Plug-and-Play', 'Bare Shell'],
     parking: 'Two basements and dedicated executive surface parking',
@@ -1291,7 +1291,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     nearby_landmarks: ['IDEMIA Building', 'Vikas Marg', 'Sector 51 Metro Station'],
     nearby_transport: '5-minute drive to Sector 51/72 Metro interchange',
     published: true,
-    property_count: 0
+    property_count: 9
   },
   {
     id: 'bld-a-square-complex',
@@ -1315,7 +1315,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     total_towers: 1,
     tower_details: 'Single Commercial Block',
     available_floors: 'Ground, 2nd, 4th',
-    size_range: '500 sq.ft – 10,000 sq.ft',
+    size_range: '250 sq.ft – 2,000 sq.ft',
     rent_range: '₹60 – ₹110/sq.ft',
     sale_range: '₹12,000 – ₹18,000/sq.ft',
     furnishing_options: ['Fully Furnished', 'Semi-Furnished', 'Bare Shell'],
@@ -1327,7 +1327,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     nearby_landmarks: ['H3V Home Solutions', 'Vikas Marg Main Road', 'Sector 73 Market'],
     nearby_transport: 'Direct frontage on main arterial Vikas Marg connecting to Noida Extension',
     published: true,
-    property_count: 0
+    property_count: 9
   },
   {
     id: 'bld-shivalik-tower',
@@ -1351,7 +1351,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     total_towers: 1,
     tower_details: 'Single Tower',
     available_floors: '1st, 3rd, 6th',
-    size_range: '600 sq.ft – 12,000 sq.ft',
+    size_range: '250 sq.ft – 2,000 sq.ft',
     rent_range: '₹45 – ₹60/sq.ft',
     furnishing_options: ['Furnished', 'Semi-Furnished', 'Bare Shell'],
     parking: 'Covered basement and open visitor parking',
@@ -1362,7 +1362,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     nearby_landmarks: ['PM Plaza', 'Sector 73 Main Market', 'Sector 51 Metro'],
     nearby_transport: 'Quick transit connection to Blue Line and Aqua Line Metro',
     published: true,
-    property_count: 0
+    property_count: 9
   },
   {
     id: 'bld-pm-plaza',
@@ -1386,7 +1386,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     total_towers: 1,
     tower_details: 'Single Commercial Plaza',
     available_floors: 'Ground, 2nd, 4th',
-    size_range: '400 sq.ft – 8,000 sq.ft',
+    size_range: '250 sq.ft – 2,000 sq.ft',
     rent_range: '₹50 – ₹90/sq.ft',
     furnishing_options: ['Fully Furnished', 'Semi-Furnished', 'Bare Shell'],
     parking: 'Surface customer parking and basement bays',
@@ -1397,7 +1397,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     nearby_landmarks: ['Harishchand Complex', 'Sector 73 Commercial Market', 'Sector 72 Intersection'],
     nearby_transport: 'Direct access to main bus and auto transit corridors',
     published: true,
-    property_count: 0
+    property_count: 9
   },
   {
     id: 'bld-harishchand-complex',
@@ -1421,7 +1421,7 @@ export const INITIAL_BUILDINGS: Building[] = [
     total_towers: 1,
     tower_details: 'Single Building',
     available_floors: 'Ground, 1st, 3rd',
-    size_range: '350 sq.ft – 6,500 sq.ft',
+    size_range: '250 sq.ft – 2,000 sq.ft',
     rent_range: '₹45 – ₹80/sq.ft',
     furnishing_options: ['Semi-Furnished', 'Bare Shell', 'Furnished'],
     parking: 'Open front customer vehicle parking',
@@ -1432,265 +1432,11 @@ export const INITIAL_BUILDINGS: Building[] = [
     nearby_landmarks: ['A Square Complex', 'PM Plaza', 'Vikas Marg'],
     nearby_transport: 'Located on high-density Vikas Marg connecting central Noida to Greater Noida West',
     published: true,
-    property_count: 0
+    property_count: 9
   }
 ];
 
 export const INITIAL_PROPERTIES: Property[] = [
-  // SECTOR 62 - I-THUM PROPERTIES
-  {
-    id: 'prop-se-6200',
-    title: '1,850 sq.ft Furnished Corporate Space in I-Thum',
-    slug: '1850-sqft-furnished-office-ithum-tower-a-5th-floor',
-    reference_number: 'SE-6200',
-    category: 'office-space',
-    property_type: 'Fully Furnished Office',
-    listing_type: 'Rent',
-    status: 'Available',
-    price: 105000,
-    price_display: '₹1,05,000/month',
-    rate_per_sqft: '₹56.8/sq.ft',
-    rent_frequency: 'month',
-    location_id: 'loc-sec-62',
-    location_name: 'Sector 62, Noida',
-    building_id: 'bld-ithum',
-    building_name: 'I-Thum',
-    tower: 'Tower A',
-    address: 'iThum, Sector 62, Noida',
-    city: 'Noida',
-    built_up_area: 1850,
-    carpet_area: 1350,
-    area_unit: 'sq.ft',
-    floor: 5,
-    total_floors: 14,
-    furnishing: 'Furnished',
-    parking: '2 Reserved Covered Parking',
-    power_load: '100% DG Backup',
-    possession: 'Immediate',
-    description: 'Premier ready-to-move corporate office suite situated on the 5th floor of I-Thum Tower A. Designed with 24 linear modular workstations, 2 director cabins, conference room with LED presentation display, reception lounge, and server station.',
-    features: ['24 Workstations', '2 Director Cabins', 'Conference Room', 'Server Room', 'Direct High-Speed Lift Access'],
-    amenities: ['Central Air Conditioning', 'High Speed Elevators', '24/7 Security & CCTV', 'Food Court', 'Power Backup'],
-    primary_image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1000&q=80',
-    gallery: [
-      'https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=1000&q=80',
-      'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1000&q=80'
-    ],
-    featured: true,
-    published: true,
-    is_seed: true,
-    created_at: '2026-03-01T09:00:00Z'
-  },
-  {
-    id: 'prop-se-6201',
-    title: '1,150 sq.ft Furnished Corporate Office in I-Thum',
-    slug: '1150-sqft-furnished-office-ithum-sector-62',
-    reference_number: 'SE-6201',
-    category: 'office-space',
-    property_type: 'Fully Furnished Office',
-    listing_type: 'Rent',
-    status: 'Ready to Move',
-    price: 65000,
-    price_display: '₹65,000/month',
-    rate_per_sqft: '₹56.5/sq.ft',
-    rent_frequency: 'month',
-    location_id: 'loc-sec-62',
-    location_name: 'Sector 62, Noida',
-    building_id: 'bld-ithum',
-    building_name: 'I-Thum',
-    tower: 'Tower B',
-    address: 'iThum, Sector 62, Noida',
-    city: 'Noida',
-    built_up_area: 1150,
-    carpet_area: 850,
-    area_unit: 'sq.ft',
-    floor: 10,
-    total_floors: 14,
-    furnishing: 'Furnished',
-    parking: '1 Reserved Covered Parking',
-    power_load: '100% DG Backup',
-    possession: 'Ready to Move',
-    description: 'Immaculately designed plug-and-play furnished corporate office inside I-Thum Tower B. Features 1 Director Cabin, 1 Conference Room (8-seater), 18 Workstations, reception desk, server rack, and pantry. Ideal for IT/consulting firms seeking immediate setup.',
-    features: ['18 Workstations', '1 Director Cabin', '8-Seater Conference Room', 'Reception Area', 'Pantry & Server Rack'],
-    amenities: ['Central Air Conditioning', 'High Speed Elevators', '24/7 Security & CCTV', 'Food Court', 'Power Backup'],
-    primary_image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1000&q=80',
-    gallery: [
-      'https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=1000&q=80',
-      'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1000&q=80',
-      'https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1000&q=80',
-      'https://images.unsplash.com/photo-1577495508048-b635879837f1?auto=format&fit=crop&w=1000&q=80',
-      'https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&w=1000&q=80',
-      'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1000&q=80',
-      'https://images.unsplash.com/photo-1568992687947-868a62a9f521?auto=format&fit=crop&w=1000&q=80'
-    ],
-    featured: true,
-    published: true,
-    is_seed: true,
-    created_at: '2026-03-01T10:00:00Z'
-  },
-  {
-    id: 'prop-se-6202',
-    title: '2,400 sq.ft Plug-and-Play Office in I-Thum',
-    slug: '2400-sqft-plug-and-play-office-ithum-sector-62',
-    reference_number: 'SE-6202',
-    category: 'office-space',
-    property_type: 'Plug-and-Play Office',
-    listing_type: 'Rent',
-    status: 'Available',
-    price: 135000,
-    price_display: '₹1,35,000/month',
-    rate_per_sqft: '₹56/sq.ft',
-    rent_frequency: 'month',
-    location_id: 'loc-sec-62',
-    location_name: 'Sector 62, Noida',
-    building_id: 'bld-ithum',
-    building_name: 'I-Thum',
-    tower: 'Tower A',
-    address: 'iThum, Sector 62, Noida',
-    city: 'Noida',
-    built_up_area: 2400,
-    carpet_area: 1750,
-    area_unit: 'sq.ft',
-    floor: 6,
-    total_floors: 14,
-    furnishing: 'Plug-and-Play',
-    parking: '2 Reserved Covered Parking',
-    power_load: '100% DG Backup',
-    possession: 'Ready to Move',
-    description: 'Spacious modern office space featuring 36 linear workstations, 3 executive cabins, a 12-seater boardroom, wet pantry, and dedicated washrooms.',
-    features: ['36 Workstations', '3 Executive Cabins', '12-Seater Boardroom', 'Wet Pantry', 'Direct Metro Proximity'],
-    amenities: ['Central HVAC', 'Passenger & Freight Lifts', 'Visitor Lounge', '24/7 Security'],
-    primary_image: 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=1000&q=80',
-    gallery: [
-      'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80'
-    ],
-    featured: true,
-    published: true,
-    is_seed: true,
-    created_at: '2026-03-02T10:00:00Z'
-  },
-  // SECTOR 62 - NOIDA ONE
-  {
-    id: 'prop-se-6203',
-    title: '750 sq.ft Compact Corporate Office in Noida One',
-    slug: '750-sqft-compact-office-noida-one-sector-62',
-    reference_number: 'SE-6203',
-    category: 'office-space',
-    property_type: 'Semi-Furnished Office',
-    listing_type: 'Rent',
-    status: 'Ready to Move',
-    price: 42000,
-    price_display: '₹42,000/month',
-    rate_per_sqft: '₹56/sq.ft',
-    rent_frequency: 'month',
-    location_id: 'loc-sec-62',
-    location_name: 'Sector 62, Noida',
-    building_id: 'bld-noida-one',
-    building_name: 'Noida One',
-    address: 'Noida One, Sector 62',
-    city: 'Noida',
-    built_up_area: 750,
-    carpet_area: 550,
-    area_unit: 'sq.ft',
-    floor: 5,
-    total_floors: 10,
-    furnishing: 'Semi-Furnished',
-    parking: '1 Covered Bay',
-    power_load: '100% DG Backup',
-    possession: 'Ready to Move',
-    description: 'Well-lit boutique office suite suitable for startups, legal counsels, and consulting practices. Contains 1 cabin, 8 workstations, and a meeting corner.',
-    features: ['8 Workstations', '1 Cabin', 'Reception Space', 'Corner View'],
-    amenities: ['24/7 Security', 'Elevators', 'Basement Parking', 'Power Backup'],
-    primary_image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1000&q=80',
-    gallery: [
-      'https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=800&q=80'
-    ],
-    featured: false,
-    published: true,
-    is_seed: true,
-    created_at: '2026-03-03T10:00:00Z'
-  },
-  // SECTOR 62 - CORENTHUM (LARGE FLOOR PLATE)
-  {
-    id: 'prop-se-6204',
-    title: '15,000 sq.ft Independent Corporate Floor in Corenthum',
-    slug: '15000-sqft-corporate-floor-corenthum-sector-62',
-    reference_number: 'SE-6204',
-    category: 'it-business-parks',
-    property_type: 'Corporate Headquarters Office',
-    listing_type: 'Lease',
-    status: 'Available',
-    price: 900000,
-    price_display: '₹9,00,000/month',
-    rate_per_sqft: '₹60/sq.ft',
-    rent_frequency: 'month',
-    location_id: 'loc-sec-62',
-    location_name: 'Sector 62, Noida',
-    building_id: 'bld-corenthum',
-    building_name: 'Corenthum',
-    address: 'Corenthum, Sector 62, Noida',
-    city: 'Noida',
-    built_up_area: 15000,
-    carpet_area: 11200,
-    area_unit: 'sq.ft',
-    floor: 4,
-    total_floors: 12,
-    furnishing: 'Bare Shell',
-    parking: '12 Reserved Basement Spots',
-    power_load: '350 KVA Dedicated with N+1 Backup',
-    possession: 'Immediate',
-    description: 'Expansive full floor plate in Corenthum. Can accommodate 180–220 staff with custom fit-out options available. Zero-walking distance to Electronic City Metro Station.',
-    features: ['Entire Floor Plate', 'Floor to Ceiling Glass Windows', '350 KVA Power Load', 'Dedicated Server Room provision'],
-    amenities: ['Grand Double-Height Lobby', 'Food Court', 'High-capacity Goods Lift', 'LEED Architecture'],
-    primary_image: 'https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1000&q=80',
-    gallery: [
-      'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80'
-    ],
-    featured: true,
-    published: true,
-    is_seed: true,
-    created_at: '2026-03-03T11:00:00Z'
-  },
-  // SECTOR 62 - STELLAR IT PARK
-  {
-    id: 'prop-se-6205',
-    title: '2,150 sq.ft Fully Furnished Office in Stellar IT Park',
-    slug: '2150-sqft-furnished-office-stellar-it-park',
-    reference_number: 'SE-6205',
-    category: 'it-business-parks',
-    property_type: 'IT Office Space',
-    listing_type: 'Rent',
-    status: 'Ready to Move',
-    price: 139750,
-    price_display: '₹1,39,750/month',
-    rate_per_sqft: '₹65/sq.ft',
-    rent_frequency: 'month',
-    location_id: 'loc-sec-62',
-    location_name: 'Sector 62, Noida',
-    building_id: 'bld-stellar-it',
-    building_name: 'Stellar IT Park',
-    address: 'Stellar IT Park, Sector 62',
-    city: 'Noida',
-    built_up_area: 2150,
-    carpet_area: 1600,
-    area_unit: 'sq.ft',
-    floor: 7,
-    total_floors: 11,
-    furnishing: 'Furnished',
-    parking: '2 Covered Slots',
-    power_load: '100% DG Backup',
-    possession: 'Ready to Move',
-    description: 'Fully furnished, executive-grade IT office space. Includes 28 ergonomic workstations, 2 MD cabins, a conference room, server room, and lunchroom.',
-    features: ['28 Workstations', '2 Cabins', 'Conference Room', 'Server Room with AC'],
-    amenities: ['Auditorium Access', 'Cafeteria', 'Onsite Gym', 'Lush Campus'],
-    primary_image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1000&q=80',
-    gallery: [
-      'https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=800&q=80'
-    ],
-    featured: false,
-    published: true,
-    is_seed: true,
-    created_at: '2026-03-04T10:00:00Z'
-  },
   // SECTOR 2 NOIDA EXAMPLES
   {
     id: 'prop-se-0201',
@@ -1720,280 +1466,12 @@ export const INITIAL_PROPERTIES: Property[] = [
     description: 'Cost-effective commercial office located 3 minutes from Delhi border and Sector 15 Metro. 20 workstations, 2 cabins, and pantry.',
     features: ['20 Workstations', '2 Cabins', '3 Min from Metro', 'Low Maintenance'],
     amenities: ['Power Backup', 'Security Guard', 'Fiber Internet Connectivity'],
-    primary_image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1000&q=80',
+    primary_image: '/images/units/1500/unit-1500-1400-1600-sqft-conference-room-1792172020133.jpg',
     gallery: [],
     featured: false,
     published: true,
     is_seed: true,
     created_at: '2026-03-04T12:00:00Z'
-  },
-  {
-    id: 'prop-se-0202',
-    title: '4,000 sq.ft Independent Office Floor in Sector 2',
-    slug: '4000-sqft-office-floor-sector-2-noida',
-    reference_number: 'SE-0202',
-    category: 'office-space',
-    property_type: 'Independent Commercial Floor',
-    listing_type: 'Rent',
-    status: 'Available',
-    price: 220000,
-    price_display: '₹2,20,000/month',
-    rate_per_sqft: '₹55/sq.ft',
-    rent_frequency: 'month',
-    location_id: 'loc-sec-2',
-    location_name: 'Sector 2, Noida',
-    address: 'Main Road Block B, Sector 2, Noida',
-    city: 'Noida',
-    built_up_area: 4000,
-    carpet_area: 3100,
-    area_unit: 'sq.ft',
-    floor: 1,
-    total_floors: 3,
-    furnishing: 'Semi-Furnished',
-    parking: 'Front courtyard parking for 4 cars',
-    possession: 'Ready to Move',
-    description: 'Large independent floor suitable for BPO, back office operations, or creative studio. Direct wide road access.',
-    features: ['50+ Seater Capacity', 'High Ceilings', 'Independent Entrance'],
-    amenities: ['Power Backup', '24/7 Security', 'Pantry'],
-    primary_image: 'https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1000&q=80',
-    gallery: [],
-    featured: false,
-    published: true,
-    is_seed: true,
-    created_at: '2026-03-04T13:00:00Z'
-  },
-  // NOIDA EXPRESSWAY - ADVANT NAVIS
-  {
-    id: 'prop-se-exp01',
-    title: '2,500 sq.ft Grade-A Office in Advant Navis Business Park',
-    slug: '2500-sqft-office-advant-navis-noida-expressway',
-    reference_number: 'SE-EXP01',
-    category: 'office-space',
-    property_type: 'Corporate Office',
-    listing_type: 'Rent',
-    status: 'Ready to Move',
-    price: 162500,
-    price_display: '₹1,62,500/month',
-    rate_per_sqft: '₹65/sq.ft',
-    rent_frequency: 'month',
-    location_id: 'loc-noida-exp',
-    location_name: 'Noida Expressway',
-    building_id: 'bld-advant-navis',
-    building_name: 'Advant Navis Business Park',
-    address: 'Advant Navis, Sector 142',
-    city: 'Noida',
-    built_up_area: 2500,
-    carpet_area: 1850,
-    area_unit: 'sq.ft',
-    floor: 8,
-    total_floors: 16,
-    furnishing: 'Furnished',
-    parking: '2 Reserved Multi-level Parking Slots',
-    power_load: '100% DG Backup',
-    possession: 'Ready to Move',
-    description: 'Prestigious corporate address right beside Sector 142 Metro Station. Furnished with 35 workstations, 3 glass cabins, conference room, and modern reception.',
-    features: ['35 Workstations', '3 Executive Glass Cabins', 'Expressway Facing View', 'Zero-distance to Metro'],
-    amenities: ['LEED Gold Certified', 'Central AC', 'Fine Dining Restaurants', 'Gym & Creche'],
-    primary_image: 'https://images.unsplash.com/photo-1577495508048-b635879837f1?auto=format&fit=crop&w=1000&q=80',
-    gallery: [
-      'https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=800&q=80'
-    ],
-    featured: true,
-    published: true,
-    is_seed: true,
-    created_at: '2026-03-05T10:00:00Z'
-  },
-  {
-    id: 'prop-se-exp02',
-    title: '8,000 sq.ft Plug-and-Play Corporate Suite on Noida Expressway',
-    slug: '8000-sqft-plug-and-play-office-noida-expressway',
-    reference_number: 'SE-EXP02',
-    category: 'it-business-parks',
-    property_type: 'Plug-and-Play Office',
-    listing_type: 'Rent',
-    status: 'Available',
-    price: 520000,
-    price_display: '₹5,20,000/month',
-    rate_per_sqft: '₹65/sq.ft',
-    rent_frequency: 'month',
-    location_id: 'loc-noida-exp',
-    location_name: 'Noida Expressway',
-    building_id: 'bld-advant-navis',
-    building_name: 'Advant Navis Business Park',
-    address: 'Advant Navis, Sector 142',
-    city: 'Noida',
-    built_up_area: 8000,
-    carpet_area: 6000,
-    area_unit: 'sq.ft',
-    floor: 12,
-    total_floors: 16,
-    furnishing: 'Plug-and-Play',
-    parking: '6 Reserved Slots',
-    power_load: '100% DG Backup',
-    possession: 'Ready to Move',
-    description: 'High-end tech setup ready for 100–120 team members. Features Cisco networking infrastructure, executive meeting lounges, dual phone booths, and cafeteria.',
-    features: ['110 Workstations', '6 Cabins', '2 Boardrooms', 'Wellness & Server Room'],
-    amenities: ['Modern Building Management System', 'Concierge Desk', 'Helipad'],
-    primary_image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1000&q=80',
-    gallery: [],
-    featured: true,
-    published: true,
-    is_seed: true,
-    created_at: '2026-03-05T11:00:00Z'
-  },
-  // SECTOR 83 - WAREHOUSE & LOGISTICS
-  {
-    id: 'prop-se-8301',
-    title: '4,500 sq.ft Commercial Storage Shed / Warehouse in Sector 83',
-    slug: '4500-sqft-warehouse-shed-sector-83-noida',
-    reference_number: 'SE-8301',
-    category: 'warehouses',
-    property_type: 'Storage Warehouse / Industrial Shed',
-    listing_type: 'Rent',
-    status: 'Ready to Move',
-    price: 180000,
-    price_display: '₹1,80,000/month',
-    rate_per_sqft: '₹40/sq.ft',
-    rent_frequency: 'month',
-    location_id: 'loc-sec-83',
-    location_name: 'Sector 83, Noida',
-    building_id: 'bld-sec83-logistics',
-    building_name: 'Sector 83 Logistics & Warehouse Park',
-    address: 'Plot 18, Block B, Sector 83, Noida',
-    city: 'Noida',
-    built_up_area: 4500,
-    land_area: 600,
-    area_unit: 'sq.ft',
-    floor: 'Ground Floor',
-    total_floors: 1,
-    furnishing: 'Bare Shell',
-    parking: 'Internal trailer maneuvering & loading bays',
-    power_load: '60 KVA Industrial Power',
-    road_width: '45 Feet Wide Road',
-    possession: 'Immediate',
-    description: '28-ft clear ceiling height insulated industrial shed ideal for logistics, supply chain distribution, and FMCG storage. Equipped with concrete hard-wearing floor and shutter doors.',
-    features: ['28-ft Clear Height', 'Wide 45-ft Front Road', 'Heavy Duty Flooring', 'Two Rolling Shutters'],
-    amenities: ['Gated Complex', '24/7 Security Guard', 'Weighbridge access nearby'],
-    primary_image: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1000&q=80',
-    gallery: [],
-    featured: true,
-    published: true,
-    is_seed: true,
-    created_at: '2026-03-06T10:00:00Z'
-  },
-  // SECTOR 85 - FACTORY & INDUSTRIAL
-  {
-    id: 'prop-se-8501',
-    title: '11,500 sq.ft Heavy Industrial Unit in Sector 85',
-    slug: '11500-sqft-industrial-factory-sector-85-noida',
-    reference_number: 'SE-8501',
-    category: 'factory-industrial',
-    property_type: 'Manufacturing Factory & Industrial Building',
-    listing_type: 'Rent',
-    status: 'Available',
-    price: 345000,
-    price_display: '₹3,45,000/month',
-    rate_per_sqft: '₹30/sq.ft',
-    rent_frequency: 'month',
-    location_id: 'loc-sec-85',
-    location_name: 'Sector 85, Noida',
-    building_id: 'bld-sec85-industrial',
-    building_name: 'Sector 85 Manufacturing Enclave',
-    address: 'C-Block, Industrial Area Phase II, Sector 85, Noida',
-    city: 'Noida',
-    built_up_area: 11500,
-    land_area: 1200,
-    area_unit: 'sq.ft',
-    floor: 'Basement, Ground + 1st Floor',
-    total_floors: 3,
-    furnishing: 'Bare Shell',
-    parking: 'Spacious truck loading dock inside premises',
-    power_load: '150 KVA Sanctioned Industrial Load',
-    road_width: '60 Feet Arterial Road',
-    possession: 'Immediate',
-    description: 'Fully compliant industrial building sanctioned for manufacturing, packaging, precision engineering, or electronics assembly. Complete with 2-ton goods elevator and administrative quarters.',
-    features: ['150 KVA Sanctioned Load', '60-ft Road Frontage', '2-Ton Goods Lift', 'Fire NOC in Place'],
-    amenities: ['Borewell & Water Treatment', '24/7 Security', 'Loading Ramps'],
-    primary_image: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=1000&q=80',
-    gallery: [
-      'https://images.unsplash.com/photo-1541888946425-d0fbb186f5f7?auto=format&fit=crop&w=800&q=80'
-    ],
-    featured: true,
-    published: true,
-    is_seed: true,
-    created_at: '2026-03-06T11:00:00Z'
-  },
-  // SECTOR 63 - INDUSTRIAL PROPERTY
-  {
-    id: 'prop-se-6301',
-    title: '6,500 sq.ft Industrial Facility in Sector 63',
-    slug: '6500-sqft-industrial-facility-sector-63-noida',
-    reference_number: 'SE-6301',
-    category: 'factory-industrial',
-    property_type: 'Industrial Building / Unit',
-    listing_type: 'Rent',
-    status: 'Ready to Move',
-    price: 195000,
-    price_display: '₹1,95,000/month',
-    rate_per_sqft: '₹30/sq.ft',
-    rent_frequency: 'month',
-    location_id: 'loc-sec-63',
-    location_name: 'Sector 63, Noida',
-    address: 'Block E, Sector 63 Industrial Area, Noida',
-    city: 'Noida',
-    built_up_area: 6500,
-    carpet_area: 5200,
-    area_unit: 'sq.ft',
-    floor: 'Ground + 1st Floor',
-    total_floors: 2,
-    furnishing: 'Semi-Furnished',
-    parking: 'Open parking inside front gate for 4 vehicles',
-    power_load: '80 KVA Industrial Connection',
-    road_width: '40 Feet Wide Road',
-    possession: 'Immediate',
-    description: 'Stand-alone industrial building in Sector 63. Ground floor has manufacturing workshop space while 1st floor houses executive cabins and accounts office.',
-    features: ['Combined Industrial & Office Setup', '80 KVA Power Load', 'Close to NH-24'],
-    amenities: ['Power Backup', 'Security Guard Cabin', 'Separate Staff Washrooms'],
-    primary_image: 'https://images.unsplash.com/photo-1541888946425-d0fbb186f5f7?auto=format&fit=crop&w=1000&q=80',
-    gallery: [],
-    featured: false,
-    published: true,
-    is_seed: true,
-    created_at: '2026-03-06T12:00:00Z'
-  },
-  // SECTOR 63 - COMMERCIAL LAND
-  {
-    id: 'prop-se-land01',
-    title: '1,000 sq.meter Commercial / Industrial Plot in Sector 63',
-    slug: '1000-sqm-commercial-plot-sector-63-noida',
-    reference_number: 'SE-LND01',
-    category: 'land',
-    property_type: 'Commercial / Industrial Plot',
-    listing_type: 'Sale',
-    status: 'Available',
-    price: 95000000,
-    price_display: '₹9.50 Cr',
-    rate_per_sqft: '₹88,000/sq.m',
-    location_id: 'loc-sec-63',
-    location_name: 'Sector 63, Noida',
-    address: 'Corner Plot, Block H, Sector 63, Noida',
-    city: 'Noida',
-    built_up_area: 10764,
-    land_area: 1000,
-    area_unit: 'sq.meter',
-    furnishing: 'Bare Shell',
-    parking: 'Freehold Open Plot',
-    road_width: '60 Feet Wide Road (Corner Facing)',
-    possession: 'Immediate Clear Title',
-    description: 'Rare 2-side open corner commercial/industrial land parcel in Sector 63. Suitable for building a 5-storey IT/ITES or industrial hub. Verified title deed with clean ownership documentation.',
-    features: ['Corner Plot with 2-Side Openings', 'Approved FAR for Commercial/IT', 'Direct Access to Delhi-Meerut Expressway'],
-    amenities: ['Underground Drainage', 'Piped Gas Line Available', 'Heavy Load Power Grid'],
-    primary_image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1000&q=80',
-    gallery: [],
-    featured: true,
-    published: true,
-    is_seed: true,
-    created_at: '2026-03-07T10:00:00Z'
   },
   // SECTOR 18 - SHOPS & RETAIL
   {
@@ -2026,7 +1504,7 @@ export const INITIAL_PROPERTIES: Property[] = [
     description: 'Prime ground-floor retail showroom unit situated on high footfall promenade in Sector 18. Superb frontage with full glass display, ideal for branded apparel, electronics, pharmacy, or specialty cafe.',
     features: ['18-ft Front Glass Facade', 'Massive Footfall Corridors', 'Direct Metro Access'],
     amenities: ['100% Power Backup', 'Common Restrooms', 'Escalator Connectivity'],
-    primary_image: 'https://images.unsplash.com/photo-1519999482648-25049ddd37b1?auto=format&fit=crop&w=1000&q=80',
+    primary_image: '/images/categories/shops-retail.webp',
     gallery: [],
     featured: true,
     published: true,
@@ -2044,13 +1522,13 @@ export const INITIAL_LEADS: Lead[] = [
     phone: '+91 98112 34567',
     preferred_contact_method: 'phone',
     message: 'Interested in the 1,150 sq.ft furnished office at I-Thum Sector 62. Need to move in within 15 days.',
-    property_id: 'prop-se-6201',
-    property_title: '1,150 sq.ft Furnished Corporate Office in I-Thum',
+    property_id: 'prop-bld-ithum-1200',
+    property_title: '1,200 sq.ft Furnished Corporate Suite in I-Thum',
     building_id: 'bld-ithum',
     building_name: 'I-Thum',
     location_id: 'loc-sec-62',
     location_name: 'Sector 62, Noida',
-    source_page: '/properties/1150-sqft-furnished-office-ithum-sector-62',
+    source_page: '/properties/1200-sqft-office-i-thum',
     lead_source: 'website',
     status: 'Qualified',
     notes: 'Called client on March 8. Looking for a 1-year lease with 18 seats. Scheduled visit for tomorrow 3 PM.',
@@ -2387,6 +1865,129 @@ export const INITIAL_INSTAGRAM_REELS: InstagramReel[] = [
     order: 7,
     featured: true,
     published: true
+  }
+];
+
+export const INITIAL_REVIEWS: ClientReview[] = [
+  {
+    id: 'rev-1',
+    client_name: 'Rajesh Malhotra',
+    client_role: 'VP, Infrastructure & Technology Operations',
+    company_name: 'NeuronWave Technologies Pvt. Ltd.',
+    avatar_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
+    rating: 5,
+    review_title: 'Seamless Corporate Relocation with 100% Genuine Inventory',
+    review_text: 'We relocated our 180-member product engineering team to The I-Thum Tower B in Sector 62. Shristi Estate’s commercial advisory ensured 100% on-ground verification of power load backups, dual fiber entries, and landlord terms before we signed. Completely bypassed the typical broker spam.',
+    space_leased: '14,500 sq.ft Furnished Corporate Suite',
+    building_name: 'The I-Thum (Tower B)',
+    location_name: 'Sector 62, Noida',
+    category: 'IT Park',
+    date: 'October 2026',
+    verified: true,
+    source: 'Google',
+    published: true,
+    order: 1,
+    featured: true
+  },
+  {
+    id: 'rev-2',
+    client_name: 'Sunita Narang',
+    client_role: 'Director of Workplace & Facilities',
+    company_name: 'Zenith Cloud Solutions',
+    avatar_url: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=200&q=80',
+    rating: 5,
+    review_title: 'Honest Lease Terms on Noida Expressway Without Surprises',
+    review_text: 'Finding a ready-to-move 85-workstation office on the Noida Expressway without getting trapped into inflated lease rates seemed daunting. Shristi Estate negotiated directly with institutional owners, secured transparent maintenance billing terms, and coordinated our fit-out team’s access seamlessly.',
+    space_leased: '7,200 sq.ft Plug & Play Office',
+    building_name: 'Advant Navis Business Park',
+    location_name: 'Sector 142, Expressway',
+    category: 'Office',
+    date: 'September 2026',
+    verified: true,
+    source: 'Google',
+    published: true,
+    order: 2,
+    featured: true
+  },
+  {
+    id: 'rev-3',
+    client_name: 'Amitabh Verma',
+    client_role: 'Co-Founder & Chief Technology Officer',
+    company_name: 'PaySprint FinTech',
+    avatar_url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80',
+    rating: 5,
+    review_title: 'End-to-End SEZ & STPI Regulatory Compliance Handled',
+    review_text: 'For a regulated FinTech enterprise, power redundancies, physical access controls, and compliance certifications are non-negotiable. Shristi Estate’s architectural building breakdown saved us weeks of futile site tours. We closed the lease in Candor TechSpace effortlessly.',
+    space_leased: '9,000 sq.ft SEZ / STPI Compliant Floor',
+    building_name: 'Candor TechSpace',
+    location_name: 'Sector 135, Noida',
+    category: 'IT Park',
+    date: 'August 2026',
+    verified: true,
+    source: 'Corporate',
+    published: true,
+    order: 3,
+    featured: true
+  },
+  {
+    id: 'rev-4',
+    client_name: 'Harpreet Singh Bhatia',
+    client_role: 'Managing Director',
+    company_name: 'Indo-German Precision Tools & Logistics',
+    avatar_url: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=200&q=80',
+    rating: 5,
+    review_title: 'Authentic Industrial Shed Inventory With 200 KVA Clear Power',
+    review_text: 'Most portals list outdated residential brokers claiming to know industrial sheds in Sector 63. Shristi Estate is the only advisory that understood heavy power sanctioned loads, crane ceiling clearances, and wide trailer turning radiuses. Genuine inventory and clean lease deeds.',
+    space_leased: '25,000 sq.ft Heavy Industrial Shed',
+    building_name: 'Industrial Complex Phase III',
+    location_name: 'Sector 63, Noida',
+    category: 'Industrial',
+    date: 'July 2026',
+    verified: true,
+    source: 'Direct',
+    published: true,
+    order: 4,
+    featured: true
+  },
+  {
+    id: 'rev-5',
+    client_name: 'Pooja Kashyap',
+    client_role: 'Regional Head of Real Estate',
+    company_name: 'Apex Global BPO Operations',
+    avatar_url: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=200&q=80',
+    rating: 5,
+    review_title: '24/7 Operations Ready With 100% DG Backup Guarantees',
+    review_text: 'Running a 24x7 night-shift BPO requires absolute certainty regarding HVAC chillers, backup generators, and employee transport accessibility near the Electronic City Metro. Shristi Estate delivered exactly what was promised at Noida One with zero hidden costs.',
+    space_leased: '16,800 sq.ft 24/7 Operational Floor',
+    building_name: 'Noida One',
+    location_name: 'Sector 62, Noida',
+    category: 'Office',
+    date: 'June 2026',
+    verified: true,
+    source: 'Google',
+    published: true,
+    order: 5,
+    featured: false
+  },
+  {
+    id: 'rev-6',
+    client_name: 'Vikramaditya Sengupta',
+    client_role: 'Chief Operating Officer',
+    company_name: 'Aura Dynamics Media Group',
+    avatar_url: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=200&q=80',
+    rating: 5,
+    review_title: 'Transparent Negotiations & Zero Broker Hassles',
+    review_text: 'The team provided authentic CAD floor layout diagrams and high-res video walkthroughs prior to physical inspection. Transparent pricing, no bogus negotiations, and instant possession assistance. Highly recommended for Delhi NCR commercial space seekers.',
+    space_leased: '4,500 sq.ft Modern Creative Studio',
+    building_name: 'Logix Cyber Park',
+    location_name: 'Sector 62, Noida',
+    category: 'Office',
+    date: 'May 2026',
+    verified: true,
+    source: 'Google',
+    published: true,
+    order: 6,
+    featured: false
   }
 ];
 

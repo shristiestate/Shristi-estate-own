@@ -12,7 +12,7 @@ export interface SeoStatusResult {
  */
 export function computeSeoStatus(
   entity: any,
-  type: 'building' | 'property'
+  type: 'building' | 'property' | 'guide'
 ): SeoStatusResult {
   const missing: string[] = [];
   if (!entity) {
@@ -24,7 +24,7 @@ export function computeSeoStatus(
   if (!hasTitle) missing.push('SEO Title');
 
   // Description / SEO Description
-  const hasDesc = Boolean(entity.seo_description?.trim() || entity.description?.trim() || entity.short_description?.trim());
+  const hasDesc = Boolean(entity.seo_description?.trim() || entity.description?.trim() || entity.short_description?.trim() || entity.excerpt?.trim());
   if (!hasDesc) missing.push('SEO Description');
 
   // Slug
@@ -33,18 +33,22 @@ export function computeSeoStatus(
   // Featured Image
   const hasImg = type === 'building' 
     ? Boolean(entity.hero_image?.trim())
+    : type === 'guide'
+    ? Boolean(entity.featured_image_url?.trim() || entity.image?.trim())
     : Boolean(entity.primary_image?.trim());
   if (!hasImg) missing.push('Featured Image');
 
   // Image Alt Text
   const hasAlt = type === 'building'
     ? Boolean(entity.hero_image_alt?.trim())
+    : type === 'guide'
+    ? Boolean(entity.featured_image_alt?.trim() || entity.title?.trim())
     : Boolean(entity.primary_image_alt?.trim());
   if (!hasAlt) missing.push('Image Alt Text');
 
   // Overview / Content
-  const hasContent = Boolean(entity.overview?.trim() || entity.description?.trim());
-  if (!hasContent) missing.push('Overview Content');
+  const hasContent = Boolean(entity.overview?.trim() || entity.description?.trim() || entity.content?.trim());
+  if (!hasContent) missing.push('Article Content');
 
   return {
     status: missing.length === 0 ? 'Complete' : 'Needs Attention',
@@ -106,7 +110,7 @@ export function generateTowerStructuredData(bld: Building, properties: Property[
     '@context': 'https://schema.org',
     '@graph': [
       {
-        '@type': 'Place',
+        '@type': ['CommercialBuilding', 'Place'],
         '@id': canonical,
         'name': bld.seo_title || bld.name,
         'description': bld.seo_description || bld.description,
@@ -123,6 +127,12 @@ export function generateTowerStructuredData(bld: Building, properties: Property[
           'url': bld.hero_image,
           'caption': bld.hero_image_caption || altText
         },
+        'amenityFeature': [
+          { '@type': 'LocationFeatureSpecification', 'name': '100% DG Power Backup', 'value': true },
+          { '@type': 'LocationFeatureSpecification', 'name': 'High-Speed Passenger Elevators', 'value': true },
+          { '@type': 'LocationFeatureSpecification', 'name': 'Multi-Tier Security & Access Control', 'value': true },
+          { '@type': 'LocationFeatureSpecification', 'name': 'Dedicated Visitor & Tenant Parking', 'value': true }
+        ],
         ...(properties.length > 0 ? {
           'containsPlace': properties.slice(0, 10).map(p => ({
             '@type': 'RealEstateListing',
@@ -182,12 +192,42 @@ export function generatePropertyStructuredData(prop: Property, building?: Buildi
         'url': canonical,
         'image': [prop.primary_image, ...(prop.gallery || [])].filter(Boolean),
         'datePosted': prop.created_at || new Date().toISOString(),
+        'itemOffered': {
+          '@type': 'Accommodation',
+          '@id': `${canonical}#unit`,
+          'name': prop.title,
+          'description': prop.short_description || prop.description,
+          ...(prop.built_up_area ? {
+            'floorSize': {
+              '@type': 'QuantitativeValue',
+              'value': prop.built_up_area,
+              'unitCode': 'FTK'
+            }
+          } : {}),
+          ...(prop.furnishing ? {
+            'amenityFeature': [{
+              '@type': 'LocationFeatureSpecification',
+              'name': 'Furnishing Status',
+              'value': prop.furnishing
+            }]
+          } : {}),
+          'address': {
+            '@type': 'PostalAddress',
+            'streetAddress': prop.address || prop.building_name || 'Sector 62',
+            'addressLocality': prop.location_name || 'Noida',
+            'addressRegion': 'Uttar Pradesh',
+            'addressCountry': 'IN'
+          }
+        },
         'offers': {
           '@type': 'Offer',
           'price': prop.price,
           'priceCurrency': 'INR',
           'availability': 'https://schema.org/InStock',
-          'businessFunction': prop.listing_type === 'Sale' ? 'https://schema.org/Sell' : 'https://schema.org/LeaseOut'
+          'businessFunction': prop.listing_type === 'Sale' ? 'https://schema.org/Sell' : 'https://schema.org/LeaseOut',
+          'seller': {
+            '@id': 'https://shristiestate.in/#organization'
+          }
         }
       },
       {

@@ -25,6 +25,7 @@ import {
   TrendingUp,
   ArrowUpRight,
   UploadCloud,
+  HardDrive,
   Copy,
   FileImage,
   ArrowLeftRight,
@@ -54,14 +55,18 @@ import {
   AlertCircle,
   Share2,
   Video,
-  Play
+  Play,
+  Star
 } from 'lucide-react';
 import { StorageService } from '../services/storageService';
-import { Property, Building, Location, Lead, LeadStatus, PropertyStatus, PropertyCategory, MarketGuide, HyperlinkConfig, ClientLogo, InstagramReel } from '../types';
+import { Property, Building, Location, Lead, LeadStatus, PropertyStatus, PropertyCategory, MarketGuide, HyperlinkConfig, ClientLogo, InstagramReel, ClientReview } from '../types';
 import { handleOverviewPaste, computeStructureDisplay, getBuildingStructureDisplay } from '../utils/textFormat';
 import { EditBuildingPropertiesModal } from '../components/modals/EditBuildingPropertiesModal';
 import { AdminClientsManager } from '../components/admin/AdminClientsManager';
+import { AdminReviewsManager } from '../components/admin/AdminReviewsManager';
 import { AdminReelsManager } from '../components/admin/AdminReelsManager';
+import { AdminUnitImagesManager } from '../components/admin/AdminUnitImagesManager';
+import { AdminLocalImagesManager } from '../components/admin/AdminLocalImagesManager';
 import { INTERNAL_PAGE_PRESETS, formatHyperlinkUrl, applyHyperlinksToContent, DEFAULT_GLOBAL_HYPERLINKS } from '../utils/hyperlinks';
 import { DEFAULT_BLOG_PLACEHOLDER_IMAGE, getBlogFeaturedImage, getBlogImageAlt, generateBlogSlug } from '../utils/blogConstants';
 import { AdminSeoPreviewSection } from '../components/common/AdminSeoPreviewSection';
@@ -259,7 +264,7 @@ export const AdminPage: React.FC = () => {
   const [authError, setAuthError] = useState('');
 
   // Active Tab
-  const [activeTab, setActiveTab] = useState<'leads' | 'properties' | 'buildings' | 'locations' | 'media' | 'guides' | 'clients' | 'reels' | 'hyperlinks'>('properties');
+  const [activeTab, setActiveTab] = useState<'leads' | 'properties' | 'buildings' | 'unit_images' | 'locations' | 'media' | 'guides' | 'clients' | 'reviews' | 'reels' | 'hyperlinks'>('properties');
 
   // Data
   const [properties, setProperties] = useState<Property[]>(() => StorageService.getInitialProperties());
@@ -268,6 +273,7 @@ export const AdminPage: React.FC = () => {
   const [leads, setLeads] = useState<Lead[]>(() => StorageService.getInitialLeads());
   const [guides, setGuides] = useState<MarketGuide[]>(() => StorageService.getInitialGuides());
   const [clients, setClients] = useState<ClientLogo[]>(() => StorageService.getInitialClients());
+  const [reviews, setReviews] = useState<ClientReview[]>(() => StorageService.getInitialReviews());
   const [reels, setReels] = useState<InstagramReel[]>(() => StorageService.getInitialInstagramReels());
   const [globalHyperlinks, setGlobalHyperlinks] = useState<HyperlinkConfig[]>(() => StorageService.getInitialGlobalHyperlinks());
   const [cascadeDeleteTarget, setCascadeDeleteTarget] = useState<CascadeDeleteTarget | null>(null);
@@ -315,11 +321,13 @@ export const AdminPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Search & Filter for Leads & Properties
+  // Search & Filter for Leads, Properties & Buildings
   const [leadStatusFilter, setLeadStatusFilter] = useState<string>('All');
   const [leadSearch, setLeadSearch] = useState('');
   const [propertySearch, setPropertySearch] = useState('');
   const [propertyCategoryFilter, setPropertyCategoryFilter] = useState<string>('all');
+  const [buildingSearch, setBuildingSearch] = useState('');
+  const [buildingCategoryFilter, setBuildingCategoryFilter] = useState<string>('all');
   const [newFeatureTag, setNewFeatureTag] = useState('');
   const [customPropertyTypeInput, setCustomPropertyTypeInput] = useState('');
 
@@ -535,6 +543,7 @@ export const AdminPage: React.FC = () => {
   const [mediaUploadTitle, setMediaUploadTitle] = useState('');
   const [mediaFilter, setMediaFilter] = useState<'all' | 'admin' | 'landlord'>('all');
   const [mediaUploadMode, setMediaUploadMode] = useState<'device' | 'url'>('device');
+  const [mediaTabMode, setMediaTabMode] = useState<'project_disk' | 'submissions'>('project_disk');
   const [newPropertyGalleryUrl, setNewPropertyGalleryUrl] = useState('');
   const [newBuildingGalleryUrl, setNewBuildingGalleryUrl] = useState('');
   const [viewingImageModal, setViewingImageModal] = useState<{ url: string; title: string; allImages?: string[]; activeIndex?: number } | null>(null);
@@ -848,13 +857,14 @@ export const AdminPage: React.FC = () => {
 
   const loadAllData = async () => {
     setLoading(true);
-    const [p, b, l, ld, gd, cl, rl, ghl] = await Promise.all([
+    const [p, b, l, ld, gd, cl, rv, rl, ghl] = await Promise.all([
       StorageService.getProperties(),
       StorageService.getBuildings(),
       StorageService.getLocations(),
       StorageService.getLeads(),
       StorageService.getGuides(),
       StorageService.getClients(),
+      StorageService.getReviews(),
       StorageService.getInstagramReels(),
       StorageService.getGlobalHyperlinks(),
     ]);
@@ -864,6 +874,7 @@ export const AdminPage: React.FC = () => {
     setLeads(ld);
     setGuides(gd);
     setClients(cl);
+    setReviews(rv);
     setReels(rl);
     setGlobalHyperlinks(ghl);
     setLoading(false);
@@ -1806,13 +1817,23 @@ export const AdminPage: React.FC = () => {
         setProperties(prev => prev.filter(p => 
           p.location_id !== locId && (!p.building_id || !relBuildingIds.has(p.building_id))
         ));
+        if (currentLocation?.id === locId) {
+          setShowLocationModal(false);
+        }
       } else {
         const bldId = cascadeDeleteTarget.id;
-        // Atomic database cascade delete via ON DELETE CASCADE foreign key
+        // Atomic database and local cascade delete with tombstoning
         await StorageService.deleteBuilding(bldId);
 
         setBuildings(prev => prev.filter(b => b.id !== bldId));
         setProperties(prev => prev.filter(p => p.building_id !== bldId));
+        if (managingBuildingProps?.id === bldId) {
+          setShowManagePropsModal(false);
+          setManagingBuildingProps(null);
+        }
+        if (currentBuilding?.id === bldId) {
+          setShowBuildingModal(false);
+        }
       }
       setCascadeDeleteTarget(null);
       setCascadeDeleteError(null);
@@ -1942,18 +1963,54 @@ export const AdminPage: React.FC = () => {
     );
   }
 
-  // Filtered Properties
+  // Filtered Properties / Units
   const filteredProperties = properties.filter(p => {
     if (propertyCategoryFilter !== 'all' && p.category !== propertyCategoryFilter) return false;
-    if (!propertySearch) return true;
-    const q = propertySearch.toLowerCase();
+    if (!propertySearch.trim()) return true;
+    const q = propertySearch.toLowerCase().trim();
     return (
-      p.title.toLowerCase().includes(q) ||
-      p.reference_number.toLowerCase().includes(q) ||
-      p.location_name.toLowerCase().includes(q) ||
+      (p.title && p.title.toLowerCase().includes(q)) ||
+      (p.reference_number && p.reference_number.toLowerCase().includes(q)) ||
+      (p.unit_number && p.unit_number.toLowerCase().includes(q)) ||
+      (p.location_name && p.location_name.toLowerCase().includes(q)) ||
       (p.property_type && p.property_type.toLowerCase().includes(q)) ||
       (p.category && p.category.toLowerCase().includes(q)) ||
-      (p.building_name && p.building_name.toLowerCase().includes(q))
+      (p.building_name && p.building_name.toLowerCase().includes(q)) ||
+      (p.status && p.status.toLowerCase().includes(q)) ||
+      (p.furnishing && p.furnishing.toLowerCase().includes(q)) ||
+      (p.address && p.address.toLowerCase().includes(q)) ||
+      (p.city && p.city.toLowerCase().includes(q)) ||
+      (p.built_up_area && String(p.built_up_area).includes(q)) ||
+      (p.floor !== undefined && String(p.floor).toLowerCase().includes(q)) ||
+      (p.slug && p.slug.toLowerCase().includes(q)) ||
+      (p.rate_per_sqft && p.rate_per_sqft.toLowerCase().includes(q)) ||
+      (p.price_display && p.price_display.toLowerCase().includes(q))
+    );
+  });
+
+  // Filtered Buildings
+  const filteredBuildings = buildings.filter(bld => {
+    if (buildingCategoryFilter !== 'all') {
+      const matchesCat = bld.category === buildingCategoryFilter || 
+                         (bld.categories && bld.categories.includes(buildingCategoryFilter as any));
+      if (!matchesCat) return false;
+    }
+    if (!buildingSearch.trim()) return true;
+    const q = buildingSearch.toLowerCase().trim();
+    return (
+      (bld.name && bld.name.toLowerCase().includes(q)) ||
+      (bld.location_name && bld.location_name.toLowerCase().includes(q)) ||
+      (bld.address && bld.address.toLowerCase().includes(q)) ||
+      (bld.sector && bld.sector.toLowerCase().includes(q)) ||
+      (bld.slug && bld.slug.toLowerCase().includes(q)) ||
+      (bld.structure_display && bld.structure_display.toLowerCase().includes(q)) ||
+      (bld.size_range && bld.size_range.toLowerCase().includes(q)) ||
+      (bld.rent_range && bld.rent_range.toLowerCase().includes(q)) ||
+      (bld.locations && bld.locations.some(loc => loc.toLowerCase().includes(q))) ||
+      (bld.location_names && bld.location_names.some(loc => loc.toLowerCase().includes(q))) ||
+      (bld.towers && bld.towers.some(t => t.toLowerCase().includes(q))) ||
+      (bld.amenities && bld.amenities.some(a => a.toLowerCase().includes(q))) ||
+      (bld.category && bld.category.toLowerCase().includes(q))
     );
   });
 
@@ -2342,7 +2399,16 @@ export const AdminPage: React.FC = () => {
               activeTab === 'properties' ? 'bg-brand-600 text-white shadow-md' : 'glass-card hover:bg-slate-100 dark:hover:bg-slate-800'
             }`}
           >
-            Properties & Tariffs ({properties.length})
+            Units & Properties ({properties.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('unit_images')}
+            className={`px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 sm:gap-2 ${
+              activeTab === 'unit_images' ? 'bg-brand-600 text-white shadow-md' : 'glass-card hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <Layers className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand-300" />
+            <span>Unit Images (Auto-Sync Across Buildings)</span>
           </button>
           <button
             onClick={() => setActiveTab('buildings')}
@@ -2350,7 +2416,7 @@ export const AdminPage: React.FC = () => {
               activeTab === 'buildings' ? 'bg-brand-600 text-white shadow-md' : 'glass-card hover:bg-slate-100 dark:hover:bg-slate-800'
             }`}
           >
-            Buildings & Rates ({buildings.length})
+            Buildings & Towers ({buildings.length})
           </button>
           <button
             onClick={() => setActiveTab('leads')}
@@ -2396,6 +2462,15 @@ export const AdminPage: React.FC = () => {
             <span>Clients & Brands ({clients.length})</span>
           </button>
           <button
+            onClick={() => setActiveTab('reviews')}
+            className={`px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 sm:gap-2 ${
+              activeTab === 'reviews' ? 'bg-brand-600 text-white shadow-md' : 'glass-card hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400" />
+            <span>Client Reviews ({reviews.length})</span>
+          </button>
+          <button
             onClick={() => setActiveTab('reels')}
             className={`px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 sm:gap-2 ${
               activeTab === 'reels' ? 'bg-brand-600 text-white shadow-md' : 'glass-card hover:bg-slate-100 dark:hover:bg-slate-800'
@@ -2425,32 +2500,68 @@ export const AdminPage: React.FC = () => {
         </button>
       </div>
 
+      {/* TAB: UNIT IMAGES & GLOBAL BUILDING AUTO-SYNC */}
+      {activeTab === 'unit_images' && (
+        <AdminUnitImagesManager
+          onRefreshProperties={async () => {
+            const props = await StorageService.getProperties();
+            setProperties(props);
+          }}
+        />
+      )}
+
       {/* TAB 1: PROPERTIES MANAGER WITH EDITABLE IMAGES, TARIFFS & SPECS */}
       {activeTab === 'properties' && (
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
             <div className="relative flex-1 max-w-md w-full">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5 pointer-events-none" />
               <input
                 type="text"
-                placeholder="Search property by title, ID, building, type, or sector..."
+                placeholder="Search units by title, unit #, ID, building, area (sq.ft), sector..."
                 value={propertySearch}
                 onChange={(e) => setPropertySearch(e.target.value)}
-                className="glass-input w-full pl-9 pr-3 py-2 rounded-xl text-xs"
+                className="glass-input w-full pl-9 pr-9 py-2 rounded-xl text-xs"
               />
+              {propertySearch && (
+                <button
+                  type="button"
+                  onClick={() => setPropertySearch('')}
+                  className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                  title="Clear unit search"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
 
-            <button
-              onClick={handleOpenAddProperty}
-              className="btn-glass-primary w-full sm:w-auto px-4 py-2.5 sm:py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 shrink-0 shadow-sm"
-            >
-              <Plus className="w-4 h-4" />
-              <span>
-                {propertyCategoryFilter !== 'all' 
-                  ? `Add ${CATEGORY_CONFIG[propertyCategoryFilter as PropertyCategory]?.label || 'Commercial'} Property`
-                  : 'Add Commercial Property'}
+            <div className="flex items-center gap-2.5 w-full sm:w-auto justify-between sm:justify-end">
+              <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                Showing <strong className="text-slate-900 dark:text-white font-semibold">{filteredProperties.length}</strong> of {properties.length} units
               </span>
-            </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('unit_images')}
+                className="px-3.5 py-2.5 sm:py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 shrink-0 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-all cursor-pointer"
+                title="Upload images for unit sizes that automatically update in every building"
+              >
+                <Layers className="w-4 h-4 text-brand-500" />
+                <span>Unit Images Auto-Sync</span>
+              </button>
+
+              <button
+                onClick={handleOpenAddProperty}
+                className="btn-glass-primary px-4 py-2.5 sm:py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 shrink-0 shadow-sm"
+              >
+                <Plus className="w-4 h-4" />
+                <span>
+                  {propertyCategoryFilter !== 'all' 
+                    ? `Add ${CATEGORY_CONFIG[propertyCategoryFilter as PropertyCategory]?.label || 'Commercial'} Property`
+                    : 'Add Commercial Property'}
+                </span>
+              </button>
+            </div>
           </div>
 
           {/* CATEGORY QUICK-FILTER TABS (ALL 6 ASSET CLASSES) */}
@@ -2714,6 +2825,33 @@ export const AdminPage: React.FC = () => {
                       </tr>
                     );
                   })}
+                  {filteredProperties.length === 0 && (
+                    <tr>
+                      <td colSpan={7} className="p-12 text-center text-slate-500 dark:text-slate-400">
+                        <div className="flex flex-col items-center justify-center gap-2">
+                          <Layers className="w-8 h-8 text-slate-300 dark:text-slate-600" />
+                          <p className="font-semibold text-slate-700 dark:text-slate-300 text-sm">No units / properties found</p>
+                          <p className="text-xs">
+                            {propertySearch 
+                              ? `No results matching "${propertySearch}". Try another search term or clear the filter.`
+                              : 'No properties found for the selected category filter.'}
+                          </p>
+                          {(propertySearch || propertyCategoryFilter !== 'all') && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setPropertySearch('');
+                                setPropertyCategoryFilter('all');
+                              }}
+                              className="mt-2 px-3 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-medium text-xs transition-colors"
+                            >
+                              Clear Search & Filters
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -2867,8 +3005,26 @@ export const AdminPage: React.FC = () => {
               );
             })}
             {filteredProperties.length === 0 && (
-              <div className="text-center py-10 glass-card rounded-2xl p-4 text-xs text-slate-400">
-                No properties matched your criteria.
+              <div className="text-center py-10 glass-card rounded-2xl p-6 text-xs text-slate-500 dark:text-slate-400 flex flex-col items-center justify-center gap-2">
+                <Layers className="w-8 h-8 text-slate-300 dark:text-slate-600" />
+                <p className="font-semibold text-slate-700 dark:text-slate-300 text-sm">No units / properties found</p>
+                <p className="text-xs">
+                  {propertySearch 
+                    ? `No results matching "${propertySearch}". Try another search term or clear the filter.`
+                    : 'No properties matched your criteria.'}
+                </p>
+                {(propertySearch || propertyCategoryFilter !== 'all') && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPropertySearch('');
+                      setPropertyCategoryFilter('all');
+                    }}
+                    className="mt-2 px-3 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-medium text-xs transition-colors"
+                  >
+                    Clear Search & Filters
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -2896,8 +3052,86 @@ export const AdminPage: React.FC = () => {
             </button>
           </div>
 
+          {/* SEARCH & FILTERS TOOLBAR FOR BUILDINGS */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
+            <div className="relative flex-1 max-w-md w-full">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Search building by name, sector, location, address, tower, or size..."
+                value={buildingSearch}
+                onChange={(e) => setBuildingSearch(e.target.value)}
+                className="glass-input w-full pl-9 pr-9 py-2 rounded-xl text-xs"
+              />
+              {buildingSearch && (
+                <button
+                  type="button"
+                  onClick={() => setBuildingSearch('')}
+                  className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                  title="Clear building search"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                Showing <strong className="text-slate-900 dark:text-white font-semibold">{filteredBuildings.length}</strong> of {buildings.length} buildings
+              </span>
+            </div>
+          </div>
+
+          {/* CATEGORY QUICK-FILTER TABS FOR BUILDINGS */}
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs">
+            <button
+              onClick={() => setBuildingCategoryFilter('all')}
+              className={`px-3 py-1.5 rounded-xl font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${
+                buildingCategoryFilter === 'all'
+                  ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-950 shadow-sm'
+                  : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
+              }`}
+            >
+              <Building2 className="w-3.5 h-3.5" />
+              <span>All Buildings</span>
+              <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                buildingCategoryFilter === 'all' 
+                  ? 'bg-white/20 text-white dark:bg-black/20 dark:text-slate-900' 
+                  : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200'
+              }`}>
+                {buildings.length}
+              </span>
+            </button>
+
+            {(['it-business-parks', 'office-space', 'warehouses', 'factory-industrial', 'land', 'shops-retail'] as PropertyCategory[]).map((cat) => {
+              const cfg = CATEGORY_CONFIG[cat];
+              const IconComp = cfg?.icon || Building2;
+              const count = buildings.filter(b => b.category === cat || (b.categories && b.categories.includes(cat))).length;
+              const isActive = buildingCategoryFilter === cat;
+              return (
+                <button
+                  key={cat}
+                  onClick={() => setBuildingCategoryFilter(cat)}
+                  className={`px-3 py-1.5 rounded-xl font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${
+                    isActive
+                      ? `${cfg?.badgeBg || 'bg-brand-600'} text-white shadow-md shadow-brand-500/20`
+                      : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
+                  }`}
+                >
+                  <IconComp className="w-3.5 h-3.5" />
+                  <span>{cfg?.label || cat}</span>
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                    isActive ? 'bg-black/25 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200'
+                  }`}>
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {buildings.map((bld) => (
+            {filteredBuildings.map((bld) => (
               <div key={bld.id} className="glass-card rounded-3xl overflow-hidden border border-slate-200/90 dark:border-slate-800 bg-white/70 dark:bg-[#0B132B]/75 flex flex-col justify-between shadow-md hover:shadow-xl transition-all duration-300 group">
                 {/* Card Image Header with Non-overlapping Badge and Actions */}
                 <div className="relative aspect-[16/10] overflow-hidden bg-slate-100 dark:bg-slate-800">
@@ -2943,11 +3177,15 @@ export const AdminPage: React.FC = () => {
                     {/* Compact Delete Button */}
                     <button
                       type="button"
-                      onClick={() => handlePromptDeleteBuilding(bld)}
-                      className="p-1.5 rounded-xl bg-slate-950/60 hover:bg-rose-600 text-white/90 hover:text-white shadow-md backdrop-blur-md transition-all active:scale-95 cursor-pointer shrink-0"
-                      title="Delete Commercial Building"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handlePromptDeleteBuilding(bld);
+                      }}
+                      className="p-1.5 sm:p-2 rounded-xl bg-slate-950/70 hover:bg-rose-600 text-white/90 hover:text-white shadow-md backdrop-blur-md transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer shrink-0 border border-white/10 hover:border-rose-500 flex items-center justify-center group/del"
+                      title={`Delete "${bld.name}" and all related spaces`}
+                      aria-label={`Delete commercial building ${bld.name}`}
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Trash2 className="w-3.5 h-3.5 transition-transform duration-200 group-hover/del:scale-110" />
                     </button>
                   </div>
 
@@ -3042,6 +3280,31 @@ export const AdminPage: React.FC = () => {
                 </div>
               </div>
             ))}
+            {filteredBuildings.length === 0 && (
+              <div className="col-span-full text-center py-12 glass-card rounded-2xl p-6 text-xs text-slate-500 dark:text-slate-400 flex flex-col items-center justify-center gap-3">
+                <Building2 className="w-10 h-10 text-slate-300 dark:text-slate-600" />
+                <div>
+                  <p className="font-semibold text-slate-700 dark:text-slate-300 text-sm">No commercial buildings found</p>
+                  <p className="mt-1">
+                    {buildingSearch 
+                      ? `No buildings matched "${buildingSearch}". Try adjusting your keywords or clearing the search.`
+                      : 'No buildings found for the selected category filter.'}
+                  </p>
+                </div>
+                {(buildingSearch || buildingCategoryFilter !== 'all') && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBuildingSearch('');
+                      setBuildingCategoryFilter('all');
+                    }}
+                    className="px-3.5 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-medium text-xs transition-colors"
+                  >
+                    Clear Search & Filters
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -3443,6 +3706,40 @@ export const AdminPage: React.FC = () => {
       {/* TAB 5: IMAGE UPLOADER & MEDIA LIBRARY */}
       {activeTab === 'media' && (
         <div className="space-y-6">
+          {/* View Toggle Bar */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-200 dark:border-slate-800">
+            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-800 self-start">
+              <button
+                type="button"
+                onClick={() => setMediaTabMode('project_disk')}
+                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                  mediaTabMode === 'project_disk'
+                    ? 'bg-brand-600 text-white shadow-sm'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <HardDrive className="w-3.5 h-3.5" />
+                <span>Project Disk Images (public/images/)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setMediaTabMode('submissions')}
+                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                  mediaTabMode === 'submissions'
+                    ? 'bg-brand-600 text-white shadow-sm'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <UploadCloud className="w-3.5 h-3.5" />
+                <span>Owner & Landlord Submissions ({allMediaItems.length})</span>
+              </button>
+            </div>
+          </div>
+
+          {mediaTabMode === 'project_disk' ? (
+            <AdminLocalImagesManager />
+          ) : (
+            <div className="space-y-6">
           {/* Top Info & Upload Action Card */}
           <div className="glass-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/90 dark:border-slate-800 bg-white/70 dark:bg-[#0B132B]/75 shadow-md space-y-4 sm:space-y-5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -3663,6 +3960,8 @@ export const AdminPage: React.FC = () => {
               <p className="text-xs text-slate-500 mt-0.5">
                 Upload images above or review landlord submissions.
               </p>
+            </div>
+          )}
             </div>
           )}
         </div>
@@ -3926,6 +4225,14 @@ export const AdminPage: React.FC = () => {
       {activeTab === 'clients' && (
         <AdminClientsManager 
           clients={clients} 
+          onRefresh={loadAllData} 
+        />
+      )}
+
+      {/* TAB: CLIENT REVIEWS MANAGER */}
+      {activeTab === 'reviews' && (
+        <AdminReviewsManager 
+          reviews={reviews} 
           onRefresh={loadAllData} 
         />
       )}
@@ -6256,36 +6563,55 @@ export const AdminPage: React.FC = () => {
               )}
 
               {/* ACTION BUTTONS */}
-              <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-3 pt-3 sm:pt-4 border-t border-slate-200 dark:border-slate-800 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setShowBuildingModal(false)}
-                  className="px-4 py-2.5 sm:py-2 rounded-xl text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 text-center"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSaving}
-                  className="px-6 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-brand-600 via-brand-500 to-cyan-600 hover:from-brand-500 hover:to-cyan-400 shadow-lg shadow-brand-500/25 active:scale-95 flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed group cursor-pointer"
-                >
-                  {isSaving ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 animate-spin text-white" />
-                      <span>Syncing to Supabase...</span>
-                    </>
-                  ) : isEditingBuilding ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
-                      <span>Update Tower SEO & Specs</span>
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle2 className="w-4 h-4" />
-                      <span>Save Commercial Tower</span>
-                    </>
+              <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2 sm:gap-3 pt-3 sm:pt-4 border-t border-slate-200 dark:border-slate-800 shrink-0">
+                <div>
+                  {isEditingBuilding && currentBuilding.id && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const targetBld = buildings.find(b => b.id === currentBuilding.id) || (currentBuilding as Building);
+                        setShowBuildingModal(false);
+                        handlePromptDeleteBuilding(targetBld);
+                      }}
+                      className="px-3.5 py-2.5 sm:py-2 rounded-xl text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-rose-200/80 dark:border-rose-900/50 flex items-center justify-center gap-1.5 transition-colors cursor-pointer w-full sm:w-auto"
+                      title="Permanently delete this building and all its units"
+                    >
+                      <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+                      <span>Delete Building</span>
+                    </button>
                   )}
-                </button>
+                </div>
+                <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowBuildingModal(false)}
+                    className="px-4 py-2.5 sm:py-2 rounded-xl text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 text-center"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSaving}
+                    className="px-6 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-brand-600 via-brand-500 to-cyan-600 hover:from-brand-500 hover:to-cyan-400 shadow-lg shadow-brand-500/25 active:scale-95 flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed group cursor-pointer"
+                  >
+                    {isSaving ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin text-white" />
+                        <span>Syncing to Supabase...</span>
+                      </>
+                    ) : isEditingBuilding ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
+                        <span>Update Tower SEO & Specs</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>Save Commercial Tower</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </form>
           </div>

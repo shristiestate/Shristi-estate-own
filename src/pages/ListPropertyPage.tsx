@@ -23,6 +23,7 @@ import { StorageService } from '../services/storageService';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
 import { handleOverviewPaste } from '../utils/textFormat';
 import { HyperlinkedText } from '../components/common/HyperlinkedText';
+import { updatePageSeo, getOrganizationSchema, getBreadcrumbSchema } from '../utils/seo';
 
 // Client-side image compressor: scales down high-res photos to prevent memory lag & storage quota issues
 const compressImage = (file: File, maxWidth = 1280, quality = 0.75): Promise<string> => {
@@ -67,6 +68,39 @@ const compressImage = (file: File, maxWidth = 1280, quality = 0.75): Promise<str
 };
 
 export const ListPropertyPage: React.FC = () => {
+  React.useEffect(() => {
+    const canonical = 'https://shristiestate.in/list-property';
+    const cleanup = updatePageSeo({
+      title: 'List Your Commercial Property for Lease or Sale | Shristi Estate',
+      description: 'List your corporate office space, IT park unit, warehouse, or commercial plot in Noida with Shristi Estate. Reach thousands of active corporate tenants and investors.',
+      canonicalUrl: canonical,
+      keywords: 'list commercial property noida, rent out office space noida, lease warehouse noida, commercial property owner listing',
+      ogType: 'website',
+      breadcrumbs: [
+        { name: 'Home', url: 'https://shristiestate.in' },
+        { name: 'List Property', url: canonical }
+      ],
+      structuredData: {
+        '@context': 'https://schema.org',
+        '@graph': [
+          getOrganizationSchema(),
+          {
+            '@type': 'WebPage',
+            '@id': `${canonical}#webpage`,
+            'url': canonical,
+            'name': 'List Your Commercial Property - Shristi Estate',
+            'description': 'Submission portal for commercial landlords and owners in Noida & Delhi NCR.'
+          },
+          getBreadcrumbSchema([
+            { name: 'Home', url: 'https://shristiestate.in' },
+            { name: 'List Property', url: canonical }
+          ])
+        ]
+      }
+    });
+    return cleanup;
+  }, []);
+
   const [formData, setFormData] = useState({
     ownerName: '',
     phone: '',
@@ -238,15 +272,15 @@ export const ListPropertyPage: React.FC = () => {
         ]}
       />
 
-      <div className="glass-card rounded-3xl p-6 sm:p-10 border border-slate-200/90 dark:border-slate-800 bg-white/80 dark:bg-[#0B132B]/85 shadow-2xl">
+      <div className="glass-card rounded-none p-6 sm:p-10 border border-slate-200/90 dark:border-slate-800 bg-white/80 dark:bg-[#0B132B]/85 shadow-2xl">
         {submitted ? (
           <div className="text-center py-10 space-y-6">
-            <div className="w-16 h-16 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center mx-auto border border-emerald-500/20 shadow-lg">
+            <div className="w-16 h-16 rounded-none bg-emerald-500/10 text-emerald-500 flex items-center justify-center mx-auto border border-emerald-500/20 shadow-lg">
               <CheckCircle2 className="w-9 h-9" />
             </div>
 
             <div className="space-y-2">
-              <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white font-['Outfit']">
+              <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white font-sans">
                 Listing Submitted for Verification
               </h2>
               <p className="text-sm text-slate-600 dark:text-slate-300 max-w-lg mx-auto leading-relaxed">
@@ -256,7 +290,7 @@ export const ListPropertyPage: React.FC = () => {
             </div>
 
             {/* Quick Summary Card */}
-            <div className="max-w-md mx-auto p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-left text-xs space-y-2">
+            <div className="max-w-md mx-auto p-4 rounded-none bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-left text-xs space-y-2">
               <div className="flex justify-between py-1 border-b border-slate-200/60 dark:border-slate-800">
                 <span className="text-slate-500 dark:text-slate-400">Category & Type:</span>
                 <span className="font-semibold text-slate-900 dark:text-white capitalize">{formData.category.replace(/-/g, ' ')} ({formData.listingType})</span>
@@ -277,13 +311,13 @@ export const ListPropertyPage: React.FC = () => {
 
             {/* Attached Photos Gallery on Success Card */}
             {images.length > 0 && (
-              <div className="max-w-md mx-auto p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 space-y-2">
+              <div className="max-w-md mx-auto p-4 rounded-none bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 space-y-2">
                 <div className="flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-slate-300">
                   <span className="flex items-center gap-1.5">
                     <ImageIcon className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
                     Uploaded Property Photos ({images.length})
                   </span>
-                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-none">
                     Saved in Record
                   </span>
                 </div>
@@ -291,11 +325,11 @@ export const ListPropertyPage: React.FC = () => {
                   {images.map((img, idx) => (
                     <div
                       key={idx}
-                      className="aspect-video rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 shadow-sm relative group"
+                      className="aspect-video rounded-none overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 shadow-sm relative group"
                     >
                       <img src={img} alt={`Uploaded ${idx + 1}`} className="w-full h-full object-cover" />
                       {idx === 0 && (
-                        <span className="absolute bottom-1 left-1 px-1 rounded bg-brand-600 text-white text-[8px] font-bold uppercase">
+                        <span className="absolute bottom-1 left-1 px-1 rounded-none bg-brand-600 text-white text-[8px] font-bold uppercase">
                           Cover
                         </span>
                       )}
@@ -311,7 +345,7 @@ export const ListPropertyPage: React.FC = () => {
                 href={`https://wa.me/918750098666?text=${whatsappMessage}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full sm:w-auto px-6 py-3 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center gap-2 shadow-lg transition-all"
+                className="btn-whatsapp w-full sm:w-auto px-6 py-3 rounded-none text-xs font-bold flex items-center justify-center gap-2 shadow-lg transition-all"
               >
                 <MessageSquare className="w-4 h-4" />
                 <span>Notify Team on WhatsApp</span>
@@ -319,13 +353,13 @@ export const ListPropertyPage: React.FC = () => {
               <button
                 type="button"
                 onClick={resetForm}
-                className="w-full sm:w-auto px-6 py-3 rounded-xl text-xs font-bold border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-all"
+                className="w-full sm:w-auto px-6 py-3 rounded-none text-xs font-bold border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-all"
               >
                 List Another Property
               </button>
               <Link
                 to="/properties"
-                className="w-full sm:w-auto px-6 py-3 rounded-xl text-xs font-bold btn-glass-primary flex items-center justify-center gap-1.5"
+                className="btn-glass-primary w-full sm:w-auto px-6 py-3 rounded-none text-xs font-bold flex items-center justify-center gap-1.5"
               >
                 <span>Browse Inventory</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -339,7 +373,7 @@ export const ListPropertyPage: React.FC = () => {
                 <Building2 className="w-3.5 h-3.5" />
                 Landlord & Asset Owner Portal
               </span>
-              <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white font-['Outfit'] mt-1">
+              <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white font-sans mt-1">
                 List Your Commercial Property
               </h1>
               <HyperlinkedText
@@ -733,7 +767,7 @@ export const ListPropertyPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading || isProcessingImages}
-                className="btn-glass-primary w-full py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2"
+                className="btn-glass-primary w-full py-3.5 rounded-none font-bold text-sm flex items-center justify-center gap-2 cursor-pointer"
               >
                 {loading ? (
                   <span className="flex items-center gap-2">

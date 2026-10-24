@@ -92,7 +92,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
     const ogImg = property.og_image || property.primary_image;
     const structuredData = generatePropertyStructuredData(property, building || undefined);
 
-    updatePageSeo({
+    const cleanup = updatePageSeo({
       title,
       description: desc,
       keywords: property.seo_keywords,
@@ -102,6 +102,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ onOpenEn
       ogImage: ogImg,
       structuredData
     });
+    return cleanup;
   }, [property, building]);
 
   if (!property && hasResolved) {

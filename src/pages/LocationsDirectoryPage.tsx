@@ -4,10 +4,44 @@ import { Location } from '../types';
 import { LocationCard } from '../components/common/LocationCard';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
 import { HyperlinkedText } from '../components/common/HyperlinkedText';
+import { updatePageSeo, getOrganizationSchema, getBreadcrumbSchema } from '../utils/seo';
 
 export const LocationsDirectoryPage: React.FC = () => {
   const [locations, setLocations] = useState<Location[]>(() => StorageService.getInitialLocations());
   const [cityFilter, setCityFilter] = useState<string>('All');
+
+  useEffect(() => {
+    const canonical = 'https://shristiestate.in/locations';
+    const cleanup = updatePageSeo({
+      title: 'Commercial Locations in Noida & NCR | IT Corridors & Expressway',
+      description: 'Directory of prime commercial real estate locations across Noida, Greater Noida, and Delhi NCR. Explore Sector 62, Expressway, Sector 16/18, and Yamuna Expressway.',
+      canonicalUrl: canonical,
+      keywords: 'commercial locations noida, it corridor noida, sector 62 noida office, noida expressway commercial, greater noida office space',
+      ogType: 'website',
+      breadcrumbs: [
+        { name: 'Home', url: 'https://shristiestate.in' },
+        { name: 'Locations', url: canonical }
+      ],
+      structuredData: {
+        '@context': 'https://schema.org',
+        '@graph': [
+          getOrganizationSchema(),
+          {
+            '@type': 'CollectionPage',
+            '@id': `${canonical}#collection`,
+            'url': canonical,
+            'name': 'Commercial Real Estate Locations in Noida & Delhi NCR',
+            'description': 'Directory of top commercial zones and IT corridors in Noida and Delhi NCR.'
+          },
+          getBreadcrumbSchema([
+            { name: 'Home', url: 'https://shristiestate.in' },
+            { name: 'Locations', url: canonical }
+          ])
+        ]
+      }
+    });
+    return cleanup;
+  }, []);
 
   useEffect(() => {
     let isMounted = true;

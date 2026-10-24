@@ -1,13 +1,49 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ShieldCheck, FileText, AlertTriangle } from 'lucide-react';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
+import { updatePageSeo, getOrganizationSchema, getBreadcrumbSchema } from '../utils/seo';
 
 export const LegalPage: React.FC = () => {
   const { docType } = useParams<{ docType?: string }>();
   const [activeTab, setActiveTab] = useState<'privacy' | 'terms' | 'disclaimer'>(
     (docType as any) || 'privacy'
   );
+
+  useEffect(() => {
+    const tabName = activeTab === 'privacy' ? 'Privacy Policy' : activeTab === 'terms' ? 'Terms of Service' : 'Commercial Disclaimer';
+    const canonical = `https://shristiestate.in/legal/${activeTab}`;
+    const cleanup = updatePageSeo({
+      title: `${tabName} | Legal & Disclosures | Shristi Estate`,
+      description: `Read Shristi Estate's ${tabName}, information governance, client confidentiality terms, and commercial real estate advisory disclaimers.`,
+      canonicalUrl: canonical,
+      ogType: 'website',
+      breadcrumbs: [
+        { name: 'Home', url: 'https://shristiestate.in' },
+        { name: 'Legal', url: 'https://shristiestate.in/legal' },
+        { name: tabName, url: canonical }
+      ],
+      structuredData: {
+        '@context': 'https://schema.org',
+        '@graph': [
+          getOrganizationSchema(),
+          {
+            '@type': 'WebPage',
+            '@id': `${canonical}#webpage`,
+            'url': canonical,
+            'name': `${tabName} - Shristi Estate`,
+            'description': `Legal agreements and compliance disclosures.`
+          },
+          getBreadcrumbSchema([
+            { name: 'Home', url: 'https://shristiestate.in' },
+            { name: 'Legal', url: 'https://shristiestate.in/legal' },
+            { name: tabName, url: canonical }
+          ])
+        ]
+      }
+    });
+    return cleanup;
+  }, [activeTab]);
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
@@ -72,7 +108,7 @@ export const LegalPage: React.FC = () => {
 
         {activeTab === 'terms' && (
           <div className="space-y-4">
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white font-['Outfit']">
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white font-sans">
               Terms of Service
             </h1>
             <p>
@@ -91,7 +127,7 @@ export const LegalPage: React.FC = () => {
 
         {activeTab === 'disclaimer' && (
           <div className="space-y-4">
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white font-['Outfit']">
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white font-sans">
               Commercial Property Disclaimer
             </h1>
             <p>

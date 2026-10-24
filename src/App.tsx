@@ -8,6 +8,7 @@ import { Header } from './components/layout/Header';
 import { Footer } from './components/layout/Footer';
 import { Property } from './types';
 import { SmokeBackground } from './components/common/SmokeBackground';
+import { updatePageSeo } from './utils/seo';
 
 // Lazy-load modals so their forms and logic don't bloat the critical initial JS bundle
 const EnquiryModal = React.lazy(() => import('./components/modals/EnquiryModal').then(m => ({ default: m.EnquiryModal })));
@@ -44,37 +45,8 @@ const ScrollToTop: React.FC = () => {
   return null;
 };
 
-// Professional 404 Error Page
-const NotFoundPage: React.FC = () => {
-  return (
-    <div className="min-h-[65vh] flex items-center justify-center px-4 py-16">
-      <div className="rounded-none p-8 sm:p-12 max-w-lg text-center space-y-4 border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B132B] shadow-none">
-        <span className="text-4xl text-brand-600 dark:text-brand-400 font-bold">404</span>
-        <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">
-          We couldn't find that property or page.
-        </h1>
-        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-sans">
-          The commercial unit or building you requested may have been leased, moved, or temporarily updated.
-        </p>
-
-        <div className="pt-4 flex flex-wrap items-center justify-center gap-2.5">
-          <Link to="/properties" className="btn-glass-primary px-4 py-2 rounded-none text-xs font-semibold uppercase tracking-wider">
-            Search Properties
-          </Link>
-          <Link to="/locations" className="px-4 py-2 rounded-none text-xs font-semibold border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#0B132B] hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 uppercase tracking-wider">
-            Browse Locations
-          </Link>
-          <Link to="/" className="px-4 py-2 rounded-none text-xs font-semibold border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#0B132B] hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 uppercase tracking-wider">
-            Go Home
-          </Link>
-          <Link to="/contact" className="px-4 py-2 rounded-none text-xs font-semibold border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#0B132B] hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 uppercase tracking-wider">
-            Contact
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
-};
+// Lazy load 404 page with basketball mini-game
+const NotFoundPage = React.lazy(() => import('./pages/NotFoundPage'));
 
 export const AppContent: React.FC = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -121,7 +93,7 @@ export const AppContent: React.FC = () => {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 relative z-10 w-full overflow-x-hidden">
+      <main className="flex-1 relative z-20 w-full overflow-x-hidden pb-12 sm:pb-16">
         <React.Suspense fallback={
           <div className="min-h-[50vh] flex items-center justify-center">
             <div className="w-8 h-8 rounded-full border-2 border-brand-500 border-t-transparent animate-spin" />
@@ -180,7 +152,10 @@ export const AppContent: React.FC = () => {
       <Footer />
 
       {/* STICKY BOTTOM ACTION BAR FOR MOBILE */}
-      <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 p-2.5 bg-white/95 dark:bg-[#0B132B]/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 shadow-lg flex items-center gap-2">
+      <div 
+        className="sm:hidden fixed bottom-0 left-0 right-0 z-40 p-2.5 bg-white/95 dark:bg-[#0B132B]/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 shadow-lg flex items-center gap-2"
+        style={{ paddingBottom: 'calc(0.625rem + env(safe-area-inset-bottom, 0px))' }}
+      >
         <a
           href="tel:+918750098666"
           className="flex-1 py-2.5 rounded-none bg-slate-50 dark:bg-[#070C1E] text-slate-900 dark:text-white text-xs font-semibold flex items-center justify-center gap-1.5 border border-slate-200 dark:border-slate-800 uppercase tracking-wider"

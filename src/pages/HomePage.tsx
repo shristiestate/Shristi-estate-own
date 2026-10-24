@@ -30,9 +30,11 @@ import { generateGeneralEnquiryWhatsAppLink } from '../utils/whatsapp';
 import { InteractiveHeroTexture } from '../components/common/InteractiveHeroTexture';
 import { InteractiveCategoryCard } from '../components/home/InteractiveCategoryCard';
 import { HyperlinkedText } from '../components/common/HyperlinkedText';
+import { updatePageSeo, getOrganizationSchema, getWebSiteSchema } from '../utils/seo';
 
 // Lazy-load non-critical below-the-fold media showcases
 const ClientsMarquee = React.lazy(() => import('../components/home/ClientsMarquee').then(m => ({ default: m.ClientsMarquee })));
+const ClientReviewsSection = React.lazy(() => import('../components/home/ClientReviewsSection').then(m => ({ default: m.ClientReviewsSection })));
 const InstagramReelsShowcase = React.lazy(() => import('../components/home/InstagramReelsShowcase').then(m => ({ default: m.InstagramReelsShowcase })));
 
 interface HomePageProps {
@@ -50,6 +52,25 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenEnquiry }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedLocation, setSelectedLocation] = useState<string>('');
   const [selectedBuilding, setSelectedBuilding] = useState<string>('');
+
+  useEffect(() => {
+    const cleanup = updatePageSeo({
+      title: 'Shristi Estate | Commercial Office Space & IT Parks in Noida',
+      description: 'Specialist commercial real estate discovery and advisory across Noida, Greater Noida, and Delhi NCR. Verified corporate office spaces, IT parks, retail shops, and warehouses.',
+      canonicalUrl: 'https://shristiestate.in/',
+      keywords: 'commercial office space noida, office for rent sector 62, it parks noida, corporate lease noida expressway, commercial properties noida, shristi estate',
+      ogType: 'website',
+      ogImage: 'https://shristiestate.in/hero-commercial-park.jpg',
+      structuredData: {
+        '@context': 'https://schema.org',
+        '@graph': [
+          getOrganizationSchema(),
+          getWebSiteSchema()
+        ]
+      }
+    });
+    return cleanup;
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -101,7 +122,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenEnquiry }) => {
       icon: Building2,
       path: '/office-space',
       badge: 'Rent / Sale / Lease',
-      image: '/images/categories/office-spaces.jpg'
+      image: '/images/categories/office-spaces.webp'
     },
     {
       id: 'it-business-parks',
@@ -110,7 +131,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenEnquiry }) => {
       icon: Cpu,
       path: '/it-business-parks',
       badge: 'Grade-A Campuses',
-      image: '/images/categories/it-business-parks.jpg'
+      image: '/images/categories/it-business-parks.webp'
     },
     {
       id: 'warehouses',
@@ -119,7 +140,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenEnquiry }) => {
       icon: Warehouse,
       path: '/warehouses',
       badge: 'Supply Chain Ready',
-      image: '/images/categories/warehouses.jpg'
+      image: '/images/categories/warehouses.webp'
     },
     {
       id: 'factory-industrial',
@@ -128,7 +149,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenEnquiry }) => {
       icon: Factory,
       path: '/factory-industrial',
       badge: 'Heavy Power Load',
-      image: '/images/categories/factory-industrial.jpg'
+      image: '/images/categories/factory-industrial.webp'
     },
     {
       id: 'land',
@@ -137,7 +158,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenEnquiry }) => {
       icon: Compass,
       path: '/land',
       badge: 'Freehold / Leasehold',
-      image: '/images/categories/commercial-land.jpg'
+      image: '/images/categories/commercial-land.webp'
     },
     {
       id: 'shops-retail',
@@ -146,12 +167,12 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenEnquiry }) => {
       icon: Store,
       path: '/shops',
       badge: 'Prime Footfall',
-      image: '/images/categories/shops-retail.jpg'
+      image: '/images/categories/shops-retail.webp'
     },
   ];
 
   return (
-    <div className="space-y-24 pb-24 overflow-hidden">
+    <div className="space-y-16 sm:space-y-20 pb-16 sm:pb-24 overflow-hidden">
       {/* 1. HERO SECTION WITH EDITORIAL ARCHITECTURAL STYLING */}
       <section className="relative pt-12 pb-20 lg:pt-16 lg:pb-28 px-4 sm:px-6 lg:px-8 overflow-hidden">
         {/* INTERACTIVE CURSOR-REACTIVE 3D COMMERCIAL PARK TEXTURE UNDER H1 */}
@@ -170,7 +191,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenEnquiry }) => {
             </div>
 
             {/* Master Headline (H1 - Strong Structured Geometric Sans) */}
-            <h1 className="text-[clamp(2.15rem,1.35rem+3.2vw,3.85rem)] font-bold tracking-tight text-slate-900 dark:text-white leading-[1.12]">
+            <h1 className="text-[clamp(2.15rem,1.35rem+3.2vw,3.85rem)] font-bold tracking-tight text-slate-900 dark:text-white leading-[1.22]">
               Find the Right <br className="hidden sm:inline" />
               Commercial Property
             </h1>
@@ -187,12 +208,15 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenEnquiry }) => {
               className="text-sm sm:text-base text-slate-600 dark:text-slate-400 leading-relaxed font-sans max-w-2xl"
               text="Explore verified office spaces, IT & business parks, warehouses, factory and industrial properties, commercial land, shops and prime corporate leasing opportunities across Noida and Delhi NCR."
             />
+          </div>
 
-            {/* Action Row - Architectural Sharp Buttons (0px corners, 1px borders) */}
-            <div className="flex flex-wrap items-center gap-3 pt-2">
+          {/* BOTTOM CENTER: Action Row + Search Panel */}
+          <div className="pt-10 sm:pt-14 flex flex-col items-center justify-center w-full mx-auto">
+            {/* Action Row - Architectural Sharp Buttons (Centered) */}
+            <div className="flex flex-wrap items-center justify-center gap-3 pb-5 sm:pb-6">
               <a
                 href="#search-panel"
-                className="btn-glass-primary rounded-none px-6 py-3 font-semibold text-xs uppercase tracking-wider flex items-center gap-2"
+                className="btn-glass-primary rounded-none px-6 py-3 font-semibold text-xs uppercase tracking-wider flex items-center gap-2 shadow-xs"
               >
                 <Search className="w-3.5 h-3.5" />
                 <span>Explore Properties</span>
@@ -200,7 +224,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenEnquiry }) => {
 
               <Link
                 to="/list-your-property"
-                className="rounded-none px-6 py-3 font-semibold text-xs uppercase tracking-wider bg-white dark:bg-[#0B132B] hover:bg-slate-50 dark:hover:bg-[#0E1838] text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 transition-all"
+                className="rounded-none px-6 py-3 font-semibold text-xs uppercase tracking-wider bg-white dark:bg-[#0B132B] hover:bg-slate-50 dark:hover:bg-[#0E1838] text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 transition-all shadow-xs"
               >
                 List Your Property
               </Link>
@@ -209,18 +233,16 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenEnquiry }) => {
                 href={generateGeneralEnquiryWhatsAppLink({ propertyName: 'Commercial Space in Noida / NCR' })}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn-whatsapp rounded-none px-6 py-3 font-semibold text-xs uppercase tracking-wider flex items-center gap-2"
+                className="btn-whatsapp rounded-none px-6 py-3 font-semibold text-xs uppercase tracking-wider flex items-center gap-2 shadow-xs"
               >
                 <WhatsAppIcon className="w-4 h-4" />
                 <span>WhatsApp Desk</span>
               </a>
             </div>
-          </div>
 
-          {/* SLIM PREMIUM GLASS SEARCH PANEL */}
-          {/* ARCHITECTURAL MONOLITHIC SEARCH PANEL (Corners: 0px, 1px subtle border) */}
-          <div id="search-panel" className="pt-6 sm:pt-8 max-w-4xl">
-            <div className="rounded-none p-4 sm:p-5 border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-[#0B132B]/95 shadow-sm">
+            {/* SLIM PREMIUM GLASS SEARCH PANEL (Centered at Bottom) */}
+            <div id="search-panel" className="w-full max-w-5xl mx-auto">
+              <div className="rounded-none p-4 sm:p-5 border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-[#0B132B]/95 shadow-lg backdrop-blur-md">
               {/* Architectural Tab Controls (Sharp 0px) */}
               <div className="flex items-center gap-1 border-b border-slate-200 dark:border-slate-800 pb-2.5 mb-3">
                 {(['Rent', 'Lease', 'Sale'] as const).map((tab) => (
@@ -333,12 +355,8 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenEnquiry }) => {
             </div>
           </div>
         </div>
-      </section>
-
-      {/* AUTO-ANIMATED CLIENTS & OCCUPIERS MARQUEE */}
-      <React.Suspense fallback={<div className="h-16" />}>
-        <ClientsMarquee />
-      </React.Suspense>
+      </div>
+    </section>
 
       {/* 2. HIERARCHICAL DISCOVERY PATH EXPLAINER (Architectural Monolith) */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -388,6 +406,11 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenEnquiry }) => {
           </div>
         </div>
       </section>
+
+      {/* OUR CLIENTS & CORPORATE OCCUPIERS (Below Structured Discovery Architecture) */}
+      <React.Suspense fallback={<div className="h-20" />}>
+        <ClientsMarquee />
+      </React.Suspense>
 
       {/* 3. PROPERTY CATEGORIES GRID (Layout: 3 cards in one row, Gap: 0px, 0px Sharp Corners) */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -633,6 +656,11 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenEnquiry }) => {
           </div>
         </div>
       </section>
+
+      {/* CUSTOMER REVIEWS / TESTIMONIALS (Directly Above Footer) */}
+      <React.Suspense fallback={<div className="h-28" />}>
+        <ClientReviewsSection />
+      </React.Suspense>
     </div>
   );
 };

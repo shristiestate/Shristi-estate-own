@@ -2,11 +2,28 @@ import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import fs from 'fs';
+import { imageApiMiddleware } from './server/imageApi.js';
 
 function localImageUploadPlugin(): Plugin {
   return {
     name: 'local-image-upload',
     configureServer(server) {
+      // Return true 404 for non-existent .well-known discovery files to prevent soft-404 traps
+      server.middlewares.use((req, res, next) => {
+        const url = req.url?.split('?')[0] || '';
+        if (url.startsWith('/.well-known/')) {
+          const publicFile = path.join(__dirname, 'public', url);
+          if (!fs.existsSync(publicFile)) {
+            res.statusCode = 404;
+            res.setHeader('Content-Type', 'text/plain');
+            res.end('404 Not Found');
+            return;
+          }
+        }
+        next();
+      });
+
+      server.middlewares.use(imageApiMiddleware);
       server.middlewares.use('/api/upload-image', async (req, res, next) => {
         if (req.method !== 'POST') {
           return next();
@@ -27,8 +44,15 @@ function localImageUploadPlugin(): Plugin {
             return;
           }
 
-          const safeFolders = ['towers', 'properties', 'uploads', 'categories'];
-          const targetDirName = safeFolders.includes(folder) ? folder : 'uploads';
+          const safeRoots = ['towers', 'properties', 'uploads', 'categories', 'units'];
+          const cleanFolder = String(folder || '').replace(/\\/g, '/').replace(/^\/+|\/+$/g, '');
+          let targetDirName = 'uploads';
+          if (!cleanFolder.includes('..')) {
+            const root = cleanFolder.split('/')[0];
+            if (safeRoots.includes(root)) {
+              targetDirName = cleanFolder;
+            }
+          }
           const targetDir = path.resolve(__dirname, 'public/images', targetDirName);
 
           if (!fs.existsSync(targetDir)) {
@@ -70,6 +94,9 @@ function localImageUploadPlugin(): Plugin {
           res.end(JSON.stringify({ error: err?.message || 'Upload failed' }));
         }
       });
+    },
+    configurePreviewServer(server) {
+      server.middlewares.use(imageApiMiddleware);
     }
   };
 }
@@ -91,10 +118,11 @@ export default defineConfig({
     },
   },
   server: {
+    host: '0.0.0.0',
     port: 3000,
     open: false,
     watch: {
-      ignored: ['**/dist/**', '**/.git/**'],
+      ignored: ['**/dist/**', '**/.git/**', '**/.agents/**', '**/*.~tmp*', '**/*.tmp*'],
     },
   },
   build: {

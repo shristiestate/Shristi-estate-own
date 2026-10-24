@@ -183,6 +183,7 @@ export interface Property {
 
 export type LeadStatus = 
   | 'New'
+  | 'New Requirement'
   | 'Contacted'
   | 'Qualified'
   | 'Visit Scheduled'
@@ -303,5 +304,27 @@ export interface InstagramReel {
   order?: number;
   featured?: boolean;
   published: boolean;
+}
+
+export interface ClientReview {
+  id: string;
+  client_name: string;
+  client_role: string;
+  company_name: string;
+  company_logo?: string;
+  avatar_url?: string;
+  rating: number; // 1 to 5
+  review_title: string;
+  review_text: string;
+  space_leased?: string;
+  building_name?: string;
+  location_name?: string;
+  category?: 'Office' | 'IT Park' | 'Industrial' | 'Retail' | 'Commercial';
+  date: string;
+  verified: boolean;
+  source?: 'Google' | 'Direct' | 'Corporate' | 'LinkedIn';
+  published: boolean;
+  order?: number;
+  featured?: boolean;
 }
 

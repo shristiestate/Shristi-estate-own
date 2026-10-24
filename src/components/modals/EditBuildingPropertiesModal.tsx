@@ -8,6 +8,7 @@ import {
   Layers, 
   Building2, 
   DollarSign, 
+  IndianRupee,
   SlidersHorizontal, 
   Save, 
   RefreshCw, 
@@ -34,64 +35,89 @@ import { compressImageFile } from '../../utils/imageCompression';
 
 export const CURATED_OFFICE_IMAGES = [
   {
-    title: 'Executive Furnished Suite',
-    tag: 'Furnished',
-    url: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=80',
+    title: 'Executive Furnished Suite (600 sq.ft)',
+    tag: '600 sq.ft',
+    url: '/images/units/600/unit-600-main.webp',
   },
   {
-    title: 'Plug & Play Workstations Hall',
-    tag: 'Plug & Play',
-    url: 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=1200&q=80',
+    title: 'Compact Corporate Office (700 sq.ft)',
+    tag: '700 sq.ft',
+    url: '/images/units/700/unit-700-main.webp',
   },
   {
-    title: 'Modern Tech Workspace',
-    tag: 'Workstations',
-    url: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1200&q=80',
+    title: 'Plug & Play Tech Suite (750 sq.ft)',
+    tag: '750 sq.ft',
+    url: '/images/units/750/unit-750-main.webp',
   },
   {
-    title: 'Boardroom & Conference Suite',
-    tag: 'Conference',
-    url: 'https://images.unsplash.com/photo-1517502884422-41eaead166d4?auto=format&fit=crop&w=1200&q=80',
+    title: 'Boutique Corporate Office (800 sq.ft)',
+    tag: '800 sq.ft',
+    url: '/images/units/800/unit-800-main.webp',
   },
   {
-    title: 'Director Cabin & Meeting Desk',
-    tag: 'Cabin',
-    url: 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&w=1200&q=80',
+    title: 'Modern Tech Workspace (900 sq.ft)',
+    tag: '900 sq.ft',
+    url: '/images/units/900/unit-900-main.webp',
   },
   {
-    title: 'Corporate Reception & Lounge',
-    tag: 'Reception',
-    url: 'https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1200&q=80',
+    title: 'Corporate Business Office (1,000 sq.ft)',
+    tag: '1,000 sq.ft',
+    url: '/images/units/1000/unit-1000-main.webp',
   },
   {
-    title: 'Enterprise Floor Plate',
-    tag: 'Enterprise',
-    url: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80',
+    title: 'Furnished Corporate Suite (1,200 sq.ft)',
+    tag: '1,200 sq.ft',
+    url: '/images/units/1200/unit-1200-main.webp',
   },
   {
-    title: 'Bare Shell Commercial Floor',
-    tag: 'Bare Shell',
-    url: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1200&q=80',
+    title: 'Enterprise Tech Suite (1,400 sq.ft)',
+    tag: '1,400 sq.ft',
+    url: '/images/units/1400/unit-1400-main.webp',
   },
   {
-    title: 'Semi-Furnished Office',
-    tag: 'Semi-Furnished',
-    url: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1200&q=80',
+    title: 'Executive Corporate Space (1,600 sq.ft)',
+    tag: '1,600 sq.ft',
+    url: '/images/units/1600/unit-1600-main.webp',
   },
   {
-    title: 'Breakout & Cafeteria Zone',
-    tag: 'Pantry/Breakout',
-    url: 'https://images.unsplash.com/photo-1554469384-e58fac16e23a?auto=format&fit=crop&w=1200&q=80',
+    title: 'Premium Corporate Suite (1,800 sq.ft)',
+    tag: '1,800 sq.ft',
+    url: '/images/units/1800/unit-1800-main.webp',
   },
   {
-    title: 'Glass Tower Skyline Office',
-    tag: 'Skyline View',
-    url: 'https://images.unsplash.com/photo-1577495508048-b635879837f1?auto=format&fit=crop&w=1200&q=80',
+    title: 'Mid-Size Corporate Office (2,000 sq.ft)',
+    tag: '2,000 sq.ft',
+    url: '/images/units/2000/unit-2000-main.webp',
   },
   {
-    title: 'Collaborative Innovation Lab',
-    tag: 'Open Plan',
-    url: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80',
+    title: 'Spacious Corporate Wing (2,600 sq.ft)',
+    tag: '2,600 sq.ft',
+    url: '/images/units/2600/unit-2600-main.webp',
+  },
+  {
+    title: 'Large Corporate Floor (5,000 sq.ft)',
+    tag: '5,000 sq.ft',
+    url: '/images/units/5000/unit-5000-main.webp',
+  },
+  {
+    title: 'Semi-Independent Corporate Wing (10,000 sq.ft)',
+    tag: '10,000 sq.ft',
+    url: '/images/units/10000/unit-10000-main.webp',
+  },
+  {
+    title: 'Full Floor Commercial Plate (20,000 sq.ft)',
+    tag: '20,000 sq.ft',
+    url: '/images/units/20000/unit-20000-main.webp',
+  },
+  {
+    title: 'Corporate Headquarters Floor (25,000 sq.ft)',
+    tag: '25,000 sq.ft',
+    url: '/images/units/25000/unit-25000-main.webp',
+  },
+  {
+    title: 'Enterprise Scale Floor Plate (30,000 sq.ft)',
+    tag: '30,000 sq.ft',
+    url: '/images/units/30000/unit-30000-main.webp',
   }
 ];
 
@@ -184,6 +210,20 @@ export const EditBuildingPropertiesModal: React.FC<EditBuildingPropertiesModalPr
 
     StorageService.getPropertiesByBuilding(building.id).then((props) => {
       setProperties(props);
+      if (props.length > 0) {
+        const rates = props
+          .map(p => {
+            const m = String(p.rate_per_sqft || '').match(/\d+/);
+            return m ? parseInt(m[0], 10) : 0;
+          })
+          .filter(r => r > 0);
+        if (rates.length > 0) {
+          rates.sort((a, b) => a - b);
+          const medianRate = rates[Math.floor(rates.length / 2)];
+          setBulkRate(String(medianRate));
+          setCustomRate(medianRate);
+        }
+      }
       setLoading(false);
     });
   }, [isOpen, building]);
@@ -215,16 +255,20 @@ export const EditBuildingPropertiesModal: React.FC<EditBuildingPropertiesModalPr
     }));
   };
 
-  // Bulk Apply Rate to All Units
-  const handleApplyBulkRate = () => {
-    const rateNum = parseInt(bulkRate, 10);
-    if (isNaN(rateNum) || rateNum <= 0) return;
+  // Bulk Apply Rate to All Units (with optional direct preset rate)
+  const handleApplyBulkRate = (customTargetRate?: number) => {
+    const target = customTargetRate !== undefined ? customTargetRate : parseInt(bulkRate, 10);
+    if (isNaN(target) || target <= 0) return;
+
+    if (customTargetRate !== undefined) {
+      setBulkRate(String(customTargetRate));
+    }
 
     setProperties(prev => prev.map(p => {
-      let unitRate = rateNum;
-      if (p.built_up_area <= 1000) unitRate = Math.round(rateNum * 1.08);
-      else if (p.built_up_area <= 2600) unitRate = rateNum;
-      else if (p.built_up_area >= 50000) unitRate = Math.max(35, Math.round(rateNum * 0.92));
+      let unitRate = target;
+      if (p.built_up_area <= 1000) unitRate = Math.round(target * 1.08);
+      else if (p.built_up_area <= 15000) unitRate = target;
+      else unitRate = Math.max(35, Math.round(target * 0.92));
 
       const newPrice = Math.round(p.built_up_area * unitRate);
       return {
@@ -234,6 +278,12 @@ export const EditBuildingPropertiesModal: React.FC<EditBuildingPropertiesModalPr
         rate_per_sqft: `₹${unitRate}/sq.ft`
       };
     }));
+
+    setFeedbackToast({
+      type: 'success',
+      message: `Base tariff ₹${target}/sq.ft applied to all ${properties.length} units.`
+    });
+    setTimeout(() => setFeedbackToast(null), 3000);
   };
 
   // Sync selected unit when image editor opens
@@ -449,9 +499,21 @@ export const EditBuildingPropertiesModal: React.FC<EditBuildingPropertiesModalPr
       // 2. Fast batch save all units in one operation
       await StorageService.saveProperties(properties);
 
-      // 3. Update parent building's deleted_unit_ids and property_count
+      // 3. Compute updated rent range from actual property rates
+      const rates = properties
+        .map(p => {
+          const m = String(p.rate_per_sqft || '').match(/\d+/);
+          return m ? parseInt(m[0], 10) : 0;
+        })
+        .filter(r => r > 0);
+      const minRate = rates.length > 0 ? Math.min(...rates) : extractBaseRate(building.rent_range);
+      const maxRate = rates.length > 0 ? Math.max(...rates) : minRate;
+      const computedRentRange = minRate === maxRate ? `₹${minRate}/sq.ft` : `₹${minRate} - ₹${maxRate}/sq.ft`;
+
+      // 4. Update parent building's rent_range, deleted_unit_ids and property_count
       const updatedBuilding: Building = {
         ...building,
+        rent_range: computedRentRange,
         property_count: properties.length,
         deleted_unit_ids: Array.from(new Set([...(building.deleted_unit_ids || []), ...deletedIds]))
       };
@@ -478,12 +540,15 @@ export const EditBuildingPropertiesModal: React.FC<EditBuildingPropertiesModalPr
   // Filtered and sorted properties for viewing
   const filteredUnits = properties
     .filter((p) => {
-      if (searchQuery) {
-        const q = searchQuery.toLowerCase();
-        const match = p.title.toLowerCase().includes(q) || 
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const match = (p.title && p.title.toLowerCase().includes(q)) || 
                       String(p.built_up_area).includes(q) || 
-                      p.reference_number.toLowerCase().includes(q) ||
-                      p.furnishing.toLowerCase().includes(q) ||
+                      (p.reference_number && p.reference_number.toLowerCase().includes(q)) ||
+                      (p.furnishing && p.furnishing.toLowerCase().includes(q)) ||
+                      (p.unit_number && p.unit_number.toLowerCase().includes(q)) ||
+                      (p.status && p.status.toLowerCase().includes(q)) ||
+                      (p.rate_per_sqft && p.rate_per_sqft.toLowerCase().includes(q)) ||
                       (p.floor !== undefined && String(p.floor).toLowerCase().includes(q));
         if (!match) return false;
       }
@@ -535,30 +600,65 @@ export const EditBuildingPropertiesModal: React.FC<EditBuildingPropertiesModalPr
 
         {/* Toolbar: Bulk Rate Calculator & Filters */}
         <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 space-y-3">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 flex-wrap">
             {/* Quick Bulk Rate Recalculator */}
-            <div className="flex items-center gap-2 p-2 rounded-2xl bg-brand-50/70 dark:bg-brand-950/40 border border-brand-200 dark:border-brand-900/60 flex-1 max-w-lg">
-              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 shrink-0 pl-1">
+            <div className="flex flex-wrap items-center gap-2 p-1.5 sm:p-2 rounded-xl bg-brand-50/70 dark:bg-brand-950/40 border border-brand-200 dark:border-brand-900/60 shrink-0 shadow-xs">
+              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 shrink-0 whitespace-nowrap pl-1">
                 Base Tariff (₹/sq.ft):
               </span>
-              <div className="relative flex-1">
-                <span className="absolute left-2.5 top-1.5 text-xs font-bold text-slate-400">₹</span>
-                <input
-                  type="number"
-                  value={bulkRate}
-                  onChange={(e) => setBulkRate(e.target.value)}
-                  placeholder="55"
-                  className="w-full pl-6 pr-2 py-1 rounded-xl text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"
-                />
+              <div className="flex items-center gap-2">
+                <div className="relative flex items-center">
+                  <div className="absolute left-2.5 pointer-events-none flex items-center text-slate-500 dark:text-slate-400">
+                    <IndianRupee className="w-3.5 h-3.5" />
+                  </div>
+                  <input
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={bulkRate}
+                    onChange={(e) => setBulkRate(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleApplyBulkRate();
+                      }
+                    }}
+                    placeholder="60"
+                    className="w-20 sm:w-24 pl-7 pr-2 py-1.5 rounded-lg text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-brand-500 shadow-inner"
+                    title="Enter base tariff and press Enter or click Apply"
+                  />
+                </div>
+
+                {/* Quick Presets */}
+                <div className="hidden md:flex items-center gap-1">
+                  {[50, 55, 60, 65, 70].map((rate) => (
+                    <button
+                      key={rate}
+                      type="button"
+                      onClick={() => handleApplyBulkRate(rate)}
+                      className={`px-2 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
+                        parseInt(bulkRate, 10) === rate
+                          ? 'bg-brand-600 text-white shadow-xs'
+                          : 'bg-white/80 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
+                      }`}
+                      title={`Quick apply ₹${rate}/sq.ft to all units`}
+                    >
+                      ₹{rate}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleApplyBulkRate()}
+                  className="px-3.5 py-1.5 rounded-lg text-xs font-bold text-white bg-brand-600 hover:bg-brand-500 active:scale-95 shadow-sm transition-all shrink-0 whitespace-nowrap cursor-pointer flex items-center gap-1.5"
+                  title="Recalculates all unit monthly rents based on this base rate"
+                >
+                  <Check className="w-3.5 h-3.5 shrink-0" />
+                  <span>Apply</span>
+                  <span className="hidden sm:inline">to All</span>
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={handleApplyBulkRate}
-                className="px-3 py-1.5 rounded-xl text-xs font-bold text-white bg-brand-600 hover:bg-brand-500 shadow-sm transition-all shrink-0 cursor-pointer"
-                title="Recalculates all unit monthly rents based on this base rate"
-              >
-                Apply to All Units
-              </button>
             </div>
 
             {/* Actions: Sync Building Photo & Add Custom Unit */}
@@ -664,14 +764,24 @@ export const EditBuildingPropertiesModal: React.FC<EditBuildingPropertiesModalPr
             </div>
 
             <div className="relative w-full sm:w-64">
-              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5 pointer-events-none" />
               <input
                 type="text"
-                placeholder="Search size, title, ref..."
+                placeholder="Search unit #, size, title, ref..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-8 pr-3 py-1.5 rounded-xl text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"
+                className="w-full pl-8 pr-8 py-1.5 rounded-xl text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-1 focus:ring-brand-500"
               />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                  title="Clear unit search"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -992,6 +1102,26 @@ export const EditBuildingPropertiesModal: React.FC<EditBuildingPropertiesModalPr
                   </div>
                 </div>
               ))}
+              {filteredUnits.length === 0 && (
+                <div className="py-12 text-center text-slate-500 dark:text-slate-400 flex flex-col items-center justify-center gap-2">
+                  <Layers className="w-8 h-8 text-slate-300 dark:text-slate-600" />
+                  <p className="font-semibold text-slate-700 dark:text-slate-300 text-sm">No units found</p>
+                  <p className="text-xs">
+                    {searchQuery 
+                      ? `No units matched "${searchQuery}". Try a different search term or clear the search.` 
+                      : 'No units match the selected filters.'}
+                  </p>
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery('')}
+                      className="mt-2 px-3 py-1.5 rounded-xl bg-brand-600 text-white font-medium text-xs transition-colors hover:bg-brand-500"
+                    >
+                      Clear Search
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>

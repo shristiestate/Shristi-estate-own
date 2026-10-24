@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MapPin, Phone, Mail, Clock, MessageSquare, Send, CheckCircle2 } from 'lucide-react';
 import { StorageService } from '../services/storageService';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
@@ -6,8 +6,56 @@ import { WhatsAppIcon } from '../components/common/SocialIcons';
 import { generateGeneralEnquiryWhatsAppLink } from '../utils/whatsapp';
 import { handleOverviewPaste } from '../utils/textFormat';
 import { HyperlinkedText } from '../components/common/HyperlinkedText';
+import { updatePageSeo, getOrganizationSchema, getBreadcrumbSchema } from '../utils/seo';
 
 export const ContactPage: React.FC = () => {
+  useEffect(() => {
+    const canonical = 'https://shristiestate.in/contact';
+    const cleanup = updatePageSeo({
+      title: 'Contact Shristi Estate | Commercial Real Estate Advisory Noida',
+      description: 'Get in touch with Shristi Estate for corporate office leasing, warehouse visits, and commercial property consultations in Noida & Delhi NCR. Call +91 98119 90055.',
+      canonicalUrl: canonical,
+      keywords: 'contact shristi estate, commercial property brokers noida contact, noida office leasing phone, commercial real estate consultant noida',
+      ogType: 'website',
+      breadcrumbs: [
+        { name: 'Home', url: 'https://shristiestate.in' },
+        { name: 'Contact', url: canonical }
+      ],
+      structuredData: {
+        '@context': 'https://schema.org',
+        '@graph': [
+          getOrganizationSchema(),
+          {
+            '@type': 'ContactPage',
+            '@id': `${canonical}#webpage`,
+            'url': canonical,
+            'name': 'Contact Shristi Estate',
+            'description': 'Direct contact details, office location, and enquiry channels for Shristi Estate commercial property advisory.',
+            'mainEntity': {
+              '@type': 'RealEstateAgent',
+              'name': 'Shristi Estate',
+              'telephone': '+91-8750098666',
+              'email': 'contact@shristiestate.in',
+              'address': {
+                '@type': 'PostalAddress',
+                'streetAddress': 'Unit No. 1035, 10th Floor, Tower-B, iThum Tower, Plot No. A-40, Sector-62',
+                'addressLocality': 'Noida',
+                'addressRegion': 'Uttar Pradesh',
+                'postalCode': '201309',
+                'addressCountry': 'IN'
+              }
+            }
+          },
+          getBreadcrumbSchema([
+            { name: 'Home', url: 'https://shristiestate.in' },
+            { name: 'Contact', url: canonical }
+          ])
+        ]
+      }
+    });
+    return cleanup;
+  }, []);
+
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -268,6 +316,69 @@ export const ContactPage: React.FC = () => {
                 </button>
               </form>
             )}
+          </div>
+        </div>
+      </div>
+
+      {/* Google Business Profile Map & Micro-Market Transit Landmarks */}
+      <div className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B132B] p-6 sm:p-8 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <span className="text-[10px] font-mono uppercase tracking-wider text-brand-600 dark:text-brand-400 font-semibold block mb-1">
+              Geographic Proximity &amp; Site Visits
+            </span>
+            <h2 className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-white">
+              Visit Our Sector-62 Headquarters
+            </h2>
+            <p className="text-xs text-slate-600 dark:text-slate-400 font-sans mt-0.5">
+              Unit No. 1035, 10th Floor, Tower-B, iThum Tower, Plot No. A-40, Sector-62, Noida 201309
+            </p>
+          </div>
+          <a
+            href="https://maps.google.com/?q=The+iThum+Plot+A-40+Sector+62+Noida"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-glass-primary px-4 py-2 rounded-none text-xs font-semibold uppercase tracking-wider self-start sm:self-auto shrink-0"
+          >
+            Open in Google Maps
+          </a>
+        </div>
+
+        {/* Responsive Google Maps Embed */}
+        <div className="aspect-[16/9] sm:aspect-[21/9] w-full border border-slate-200 dark:border-slate-800 overflow-hidden relative bg-slate-100 dark:bg-slate-950">
+          <iframe
+            title="Shristi Estate Office Location - The iThum Sector 62 Noida"
+            src="https://maps.google.com/maps?q=The%20iThum%20Tower%20B%20Sector%2062%20Noida&t=&z=16&ie=UTF8&iwloc=&output=embed"
+            className="w-full h-full border-0"
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+          />
+        </div>
+
+        {/* Transit & Strategic Landmark Highlights */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+          <div className="p-3 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#070C1E] text-left">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block mb-0.5">Metro Transit</span>
+            <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 block">Electronic City Metro</span>
+            <span className="text-[11px] text-emerald-600 dark:text-emerald-400">400m / 5 min walk</span>
+          </div>
+
+          <div className="p-3 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#070C1E] text-left">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block mb-0.5">Highway Link</span>
+            <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 block">Delhi-Meerut Expy</span>
+            <span className="text-[11px] text-emerald-600 dark:text-emerald-400">Direct 2-min merge</span>
+          </div>
+
+          <div className="p-3 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#070C1E] text-left">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block mb-0.5">Airport Corridor</span>
+            <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 block">Jewar International</span>
+            <span className="text-[11px] text-blue-600 dark:text-blue-400">45 mins via FNG / Expy</span>
+          </div>
+
+          <div className="p-3 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#070C1E] text-left">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block mb-0.5">Vehicular Parking</span>
+            <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 block">Multi-Level Parking</span>
+            <span className="text-[11px] text-slate-600 dark:text-slate-400">Visitor &amp; Valet Bay</span>
           </div>
         </div>
       </div>

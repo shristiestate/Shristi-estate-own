@@ -13,14 +13,17 @@ import {
   PhoneCall, 
   Calendar, 
   Compass, 
-  CheckCircle2
+  CheckCircle2,
+  FileText,
+  Sparkles,
+  Clock
 } from 'lucide-react';
 import { StorageService } from '../services/storageService';
 import { Building, Property } from '../types';
 import { PropertyCard } from '../components/common/PropertyCard';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
 import { WhatsAppIcon } from '../components/common/SocialIcons';
-import { generateBuildingWhatsAppLink } from '../utils/whatsapp';
+import { generateBuildingWhatsAppLink, buildWhatsAppUrl } from '../utils/whatsapp';
 import { getBuildingStructureDisplay } from '../utils/textFormat';
 import { resolveLocationSlug } from '../utils/propertyLocation';
 import { updatePageSeo } from '../utils/seo';
@@ -31,6 +34,7 @@ import {
 } from '../utils/seoHelpers';
 import { applyHyperlinksToContent } from '../utils/hyperlinks';
 import { HyperlinkedText } from '../components/common/HyperlinkedText';
+import { RequirementModal } from '../components/modals/RequirementModal';
 
 interface BuildingDetailPageProps {
   onOpenEnquiry: (property?: Property) => void;
@@ -46,8 +50,9 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
   );
   const [activeImage, setActiveImage] = useState<string>(() => initialBld?.hero_image || '');
   const [hasResolved, setHasResolved] = useState(() => Boolean(initialBld));
-  const [unitFilter, setUnitFilter] = useState<'all' | 'compact' | 'enterprise'>('all');
+  const [unitFilter, setUnitFilter] = useState<'all' | 'compact' | 'corporate' | 'enterprise'>('all');
   const [selectedArea, setSelectedArea] = useState<number | null>(null);
+  const [showRequirementModal, setShowRequirementModal] = useState(false);
 
   useEffect(() => {
     if (!buildingSlug) return;
@@ -78,7 +83,7 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
     const ogImg = building.og_image || building.hero_image;
     const structuredData = generateTowerStructuredData(building, properties);
 
-    updatePageSeo({
+    const cleanup = updatePageSeo({
       title,
       description: desc,
       keywords: building.seo_keywords,
@@ -88,6 +93,7 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
       ogImage: ogImg,
       structuredData
     });
+    return cleanup;
   }, [building, properties]);
 
   if (!building && hasResolved) {
@@ -130,6 +136,9 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
               title={building.hero_image_title || building.name}
               fetchPriority="high"
               decoding="async"
+              width="800"
+              height="500"
+              sizes="(max-width: 1024px) 100vw, 60vw"
               className="w-full h-full object-cover transition-all duration-300"
               onError={(e) => {
                 (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80';
@@ -284,6 +293,202 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
         </div>
       </div>
 
+      {/* MANDATORY HIERARCHY: AVAILABLE PROPERTIES IN THIS BUILDING */}
+      <section className="space-y-6" id="building-inventory">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-brand-600 dark:text-brand-400">
+                Immediate Verified Inventory
+              </span>
+            </div>
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-slate-900 dark:text-white tracking-tight mt-0.5">
+              Available Properties in {building.name} ({properties.length})
+            </h2>
+          </div>
+
+          {/* Category Tabs */}
+          <div className="flex items-center gap-1 p-1 rounded-none bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-xs self-start md:self-auto flex-wrap">
+            <button
+              onClick={() => { setUnitFilter('all'); setSelectedArea(null); }}
+              className={`px-3 py-1.5 rounded-none font-semibold transition-all uppercase tracking-wider text-[11px] ${
+                unitFilter === 'all' && selectedArea === null
+                  ? 'bg-brand-600 text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              All Units ({properties.length})
+            </button>
+            <button
+              onClick={() => { setUnitFilter('compact'); setSelectedArea(null); }}
+              className={`px-3 py-1.5 rounded-none font-semibold transition-all uppercase tracking-wider text-[11px] ${
+                unitFilter === 'compact' && selectedArea === null
+                  ? 'bg-brand-600 text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              Compact (Up to 1,000 sq.ft)
+            </button>
+            <button
+              onClick={() => { setUnitFilter('corporate'); setSelectedArea(null); }}
+              className={`px-3 py-1.5 rounded-none font-semibold transition-all uppercase tracking-wider text-[11px] ${
+                unitFilter === 'corporate' && selectedArea === null
+                  ? 'bg-brand-600 text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              Corporate (1,200 – 2,000 sq.ft)
+            </button>
+          </div>
+        </div>
+
+        {/* Quick Size Pills */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none text-xs">
+          <span className="text-slate-400 shrink-0 font-medium mr-1 uppercase tracking-wider text-[10px]">Filter Size:</span>
+          {[
+            { label: 'All', value: null },
+            { label: '250 sq.ft', value: 250 },
+            { label: '600 sq.ft', value: 600 },
+            { label: '800 sq.ft', value: 800 },
+            { label: '900 sq.ft', value: 900 },
+            { label: '1,000 sq.ft', value: 1000 },
+            { label: '1,200 sq.ft', value: 1200 },
+            { label: '1,500 sq.ft', value: 1500 },
+            { label: '1,800 sq.ft', value: 1800 },
+            { label: '2,000 sq.ft', value: 2000 },
+          ].map((pill, idx) => (
+            <button
+              key={idx}
+              onClick={() => {
+                setSelectedArea(pill.value);
+                if (pill.value === null) setUnitFilter('all');
+              }}
+              className={`px-2.5 py-1 rounded-none shrink-0 font-semibold transition-all border text-[11px] ${
+                selectedArea === pill.value
+                  ? 'bg-brand-600 text-white border-brand-600'
+                  : 'bg-white dark:bg-[#0B132B] border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-brand-500'
+              }`}
+            >
+              {pill.label}
+            </button>
+          ))}
+        </div>
+
+        {(() => {
+          const filtered = properties.filter((prop) => {
+            if (selectedArea !== null && prop.built_up_area !== selectedArea) return false;
+            if (unitFilter === 'compact') return prop.built_up_area <= 1000;
+            if (unitFilter === 'corporate') return prop.built_up_area > 1000;
+            return true;
+          });
+
+          if (filtered.length === 0) {
+            return (
+              <div className="py-12 text-center rounded-none p-8 space-y-3 border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B132B]">
+                <p className="text-base font-semibold text-slate-900 dark:text-white">
+                  No matching units found for selected size filter.
+                </p>
+                <div className="flex items-center justify-center gap-3 pt-2">
+                  <button
+                    onClick={() => { setUnitFilter('all'); setSelectedArea(null); }}
+                    className="btn-glass-primary px-5 py-2.5 rounded-none text-xs font-semibold uppercase tracking-wider"
+                  >
+                    View {properties.length === 1 ? 'Available Unit' : `All ${properties.length} Available Units`}
+                  </button>
+                  <button
+                    onClick={() => setShowRequirementModal(true)}
+                    className="px-5 py-2.5 rounded-none text-xs font-semibold uppercase tracking-wider border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200"
+                  >
+                    Submit Custom Requirement
+                  </button>
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0 border-t border-l border-slate-200 dark:border-slate-800">
+              {filtered.map((prop, idx) => (
+                <PropertyCard key={prop.id} property={prop} index={idx} onEnquire={onOpenEnquiry} />
+              ))}
+            </div>
+          );
+        })()}
+
+        {/* Can't Find Your Property? Custom Commercial Sourcing Banner (Sharp 0px Monolith) */}
+        <div className="relative overflow-hidden rounded-none border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B132B] p-6 sm:p-8 lg:p-9 shadow-sm">
+          {/* Ambient glow accent */}
+          <div className="absolute -right-16 -top-16 w-64 h-64 bg-brand-500/10 dark:bg-brand-500/15 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6 lg:gap-8">
+            {/* Left Column: Context, Heading, Value Propositions */}
+            <div className="space-y-3 flex-1 min-w-0">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-none text-[11px] font-mono font-semibold uppercase tracking-wider bg-brand-500/10 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 border border-brand-500/25">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Custom Space Sourcing</span>
+              </div>
+
+              <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold font-sans text-slate-900 dark:text-white tracking-tight">
+                Can’t Find Your Ideal Space in {building.name}?
+              </h3>
+
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-sans max-w-2xl">
+                Need a specific floorplate, custom bare-shell or plug-and-play layout in {building.name}? Submit your requirement and our corporate leasing team will source verified options within 2 hours.
+              </p>
+
+              {/* Trust Badges */}
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-2 pt-1 text-xs text-slate-600 dark:text-slate-400 font-medium">
+                <span className="flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <span>Verified Units in {building.name}</span>
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <span>Zero Advisory Fee for Tenants</span>
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Clock className="w-4 h-4 text-brand-500 shrink-0" />
+                  <span>2-Hour Rapid Response</span>
+                </span>
+              </div>
+            </div>
+
+            {/* Right Column: Clean Sharp 0px Action Buttons */}
+            <div className="flex flex-col sm:flex-row xl:flex-col gap-2.5 w-full xl:w-auto xl:min-w-[320px] shrink-0">
+              <button
+                onClick={() => setShowRequirementModal(true)}
+                className="btn-glass-primary w-full px-6 py-3.5 rounded-none font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer group"
+              >
+                <FileText className="w-4 h-4 text-white group-hover:scale-110 transition-transform" />
+                <span>Submit Your Requirement</span>
+                <ArrowRight className="w-4 h-4 ml-0.5 group-hover:translate-x-0.5 transition-transform" />
+              </button>
+
+              <div className="grid grid-cols-2 gap-2.5 w-full">
+                <a
+                  href="tel:+918750098666"
+                  className="px-3.5 py-2.5 rounded-none border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all shadow-2xs"
+                  title="Call Advisory: +91 87500 98666"
+                >
+                  <PhoneCall className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
+                  <span>Call Now</span>
+                </a>
+
+                <a
+                  href={buildWhatsAppUrl(`Hello Shristi Estate, I was reviewing available properties in ${building.name} and would like custom space requirements assistance.`)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-whatsapp px-3.5 py-2.5 rounded-none text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all shadow-2xs"
+                >
+                  <WhatsAppIcon className="w-4 h-4 text-white" />
+                  <span>WhatsApp</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Building Overview & Technical Specifications */}
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 rounded-none p-6 sm:p-8 bg-white dark:bg-[#0B132B] border border-slate-200 dark:border-slate-800 space-y-6">
@@ -422,134 +627,13 @@ export const BuildingDetailPage: React.FC<BuildingDetailPageProps> = ({ onOpenEn
         </div>
       </section>
 
-      {/* MANDATORY HIERARCHY: AVAILABLE PROPERTIES IN THIS BUILDING */}
-      <section className="space-y-6" id="building-inventory">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-brand-600 dark:text-brand-400">
-                Immediate Verified Inventory
-              </span>
-            </div>
-            <h2 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-slate-900 dark:text-white tracking-tight mt-0.5">
-              Available Properties in {building.name} ({properties.length})
-            </h2>
-          </div>
-
-          {/* Category Tabs */}
-          <div className="flex items-center gap-1 p-1 rounded-none bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-xs self-start md:self-auto flex-wrap">
-            <button
-              onClick={() => { setUnitFilter('all'); setSelectedArea(null); }}
-              className={`px-3 py-1.5 rounded-none font-semibold transition-all uppercase tracking-wider text-[11px] ${
-                unitFilter === 'all' && selectedArea === null
-                  ? 'bg-brand-600 text-white shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              All Units ({properties.length})
-            </button>
-            <button
-              onClick={() => { setUnitFilter('compact'); setSelectedArea(null); }}
-              className={`px-3 py-1.5 rounded-none font-semibold transition-all uppercase tracking-wider text-[11px] ${
-                unitFilter === 'compact' && selectedArea === null
-                  ? 'bg-brand-600 text-white shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              Compact & Mid-Size
-            </button>
-            <button
-              onClick={() => { setUnitFilter('enterprise'); setSelectedArea(null); }}
-              className={`px-3 py-1.5 rounded-none font-semibold transition-all uppercase tracking-wider text-[11px] ${
-                unitFilter === 'enterprise' && selectedArea === null
-                  ? 'bg-brand-600 text-white shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              Enterprise Floors
-            </button>
-          </div>
-        </div>
-
-        {/* Quick Size Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none text-xs">
-          <span className="text-slate-400 shrink-0 font-medium mr-1 uppercase tracking-wider text-[10px]">Filter Size:</span>
-          {[
-            { label: 'All', value: null },
-            { label: '600 sq.ft', value: 600 },
-            { label: '750 sq.ft', value: 750 },
-            { label: '900 sq.ft', value: 900 },
-            { label: '1,000 sq.ft', value: 1000 },
-            { label: '1,200 sq.ft', value: 1200 },
-            { label: '1,400 sq.ft', value: 1400 },
-            { label: '1,600 sq.ft', value: 1600 },
-            { label: '1,800 sq.ft', value: 1800 },
-            { label: '2,200 sq.ft', value: 2200 },
-            { label: '2,600 sq.ft', value: 2600 },
-            { label: '20,000 sq.ft', value: 20000 },
-            { label: '25,000 sq.ft', value: 25000 },
-            { label: '30,000 sq.ft', value: 30000 },
-            { label: '35,000 sq.ft', value: 35000 },
-            { label: '40,000 sq.ft', value: 40000 },
-            { label: '50,000 sq.ft', value: 50000 },
-            { label: '60,000 sq.ft', value: 60000 },
-            { label: '75,000 sq.ft', value: 75000 },
-            { label: '90,000 sq.ft', value: 90000 },
-            { label: '1,00,000+ sq.ft', value: 100000 },
-          ].map((pill, idx) => (
-            <button
-              key={idx}
-              onClick={() => {
-                setSelectedArea(pill.value);
-                if (pill.value === null) setUnitFilter('all');
-              }}
-              className={`px-2.5 py-1 rounded-none shrink-0 font-semibold transition-all border text-[11px] ${
-                selectedArea === pill.value
-                  ? 'bg-brand-600 text-white border-brand-600'
-                  : 'bg-white dark:bg-[#0B132B] border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-brand-500'
-              }`}
-            >
-              {pill.label}
-            </button>
-          ))}
-        </div>
-
-        {(() => {
-          const filtered = properties.filter((prop) => {
-            if (selectedArea !== null && prop.built_up_area !== selectedArea) return false;
-            if (unitFilter === 'compact') return prop.built_up_area <= 2600;
-            if (unitFilter === 'enterprise') return prop.built_up_area >= 20000;
-            return true;
-          });
-
-          if (filtered.length === 0) {
-            return (
-              <div className="py-12 text-center rounded-none p-8 space-y-3 border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B132B]">
-                <p className="text-base font-semibold text-slate-900 dark:text-white">
-                  No matching units found for selected size filter.
-                </p>
-                <div className="flex items-center justify-center gap-3 pt-2">
-                  <button
-                    onClick={() => { setUnitFilter('all'); setSelectedArea(null); }}
-                    className="btn-glass-primary px-5 py-2.5 rounded-none text-xs font-semibold uppercase tracking-wider"
-                  >
-                    View All {properties.length} Available Units
-                  </button>
-                </div>
-              </div>
-            );
-          }
-
-          return (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0 border-t border-l border-slate-200 dark:border-slate-800">
-              {filtered.map((prop, idx) => (
-                <PropertyCard key={prop.id} property={prop} index={idx} onEnquire={onOpenEnquiry} />
-              ))}
-            </div>
-          );
-        })()}
-      </section>
-
+      {/* Custom Requirement Sourcing Modal */}
+      <RequirementModal
+        isOpen={showRequirementModal}
+        onClose={() => setShowRequirementModal(false)}
+        defaultLocation={building.location_name || 'Noida'}
+        defaultCategory={building.name ? `Commercial Space in ${building.name}` : 'Office Space'}
+      />
     </div>
   );
 };

@@ -84,7 +84,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, index, onE
           </div>
 
           {/* Bottom Image Overlay: Price & Rate */}
-          <div className="p-2.5 pb-2.5 flex items-end justify-between gap-2 pointer-events-auto">
+          <div className="p-2.5 pb-4 sm:pb-4.5 flex items-end justify-between gap-2 pointer-events-auto">
             <div className="min-w-0">
               <div className="text-sm sm:text-[15px] font-bold text-white tracking-tight drop-shadow-sm truncate">
                 {property.price_display}

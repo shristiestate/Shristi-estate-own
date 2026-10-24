@@ -1,3 +1,8 @@
+export interface BreadcrumbItem {
+  name: string;
+  url: string;
+}
+
 export interface SeoMetadata {
   title: string;
   description?: string;
@@ -5,9 +10,11 @@ export interface SeoMetadata {
   ogTitle?: string;
   ogDescription?: string;
   ogImage?: string;
-  ogType?: 'website' | 'article';
+  ogType?: 'website' | 'article' | 'profile';
   keywords?: string;
   structuredData?: object;
+  noindex?: boolean;
+  breadcrumbs?: BreadcrumbItem[];
   article?: {
     publishedTime?: string;
     modifiedTime?: string;
@@ -16,6 +23,113 @@ export interface SeoMetadata {
   };
 }
 
+/**
+ * Standard Organization / RealEstateAgent Schema for Shristi Estate
+ * Conforms to Google Structured Data and LocalBusiness specifications.
+ */
+export function getOrganizationSchema() {
+  return {
+    '@type': 'RealEstateAgent',
+    '@id': 'https://shristiestate.in/#organization',
+    'name': 'Shristi Estate',
+    'alternateName': 'Shristi Estate Advisory',
+    'legalName': 'Shristi Estate Commercial Advisory',
+    'url': 'https://shristiestate.in',
+    'logo': {
+      '@type': 'ImageObject',
+      'url': 'https://shristiestate.in/logo-light.png',
+      'width': 512,
+      'height': 512
+    },
+    'image': 'https://shristiestate.in/hero-commercial-park.jpg',
+    'description': 'Premier commercial real estate consultancy in Noida & Delhi NCR, specializing in corporate office leasing, IT parks, retail shops, warehouses, and industrial properties.',
+    'telephone': '+91-8750098666',
+    'email': 'contact@shristiestate.in',
+    'founder': {
+      '@type': 'Person',
+      'name': 'Sanjeet Kumar',
+      'jobTitle': 'Founder & Principal Advisor',
+      'image': 'https://shristiestate.in/images/founder.jpg'
+    },
+    'address': {
+      '@type': 'PostalAddress',
+      'streetAddress': 'Unit No. 1035, 10th Floor, Tower-B, iThum Tower, Plot No. A-40, Sector-62',
+      'addressLocality': 'Noida',
+      'addressRegion': 'Uttar Pradesh',
+      'postalCode': '201309',
+      'addressCountry': 'IN'
+    },
+    'geo': {
+      '@type': 'GeoCoordinates',
+      'latitude': '28.6280',
+      'longitude': '77.3649'
+    },
+    'areaServed': [
+      { '@type': 'AdministrativeArea', 'name': 'Noida' },
+      { '@type': 'AdministrativeArea', 'name': 'Greater Noida' },
+      { '@type': 'AdministrativeArea', 'name': 'Yamuna Expressway' },
+      { '@type': 'AdministrativeArea', 'name': 'Delhi NCR' }
+    ],
+    'priceRange': '₹₹₹',
+    'openingHoursSpecification': [
+      {
+        '@type': 'OpeningHoursSpecification',
+        'dayOfWeek': ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+        'opens': '09:30',
+        'closes': '19:30'
+      }
+    ],
+    'sameAs': [
+      'https://www.linkedin.com/company/shristi-estate',
+      'https://www.instagram.com/shristiestate'
+    ]
+  };
+}
+
+/**
+ * Standard WebSite schema with Sitelinks Searchbox
+ */
+export function getWebSiteSchema() {
+  return {
+    '@type': 'WebSite',
+    '@id': 'https://shristiestate.in/#website',
+    'url': 'https://shristiestate.in',
+    'name': 'Shristi Estate',
+    'description': 'Commercial Real Estate Discovery and Advisory in Noida & Delhi NCR',
+    'publisher': {
+      '@id': 'https://shristiestate.in/#organization'
+    },
+    'potentialAction': {
+      '@type': 'SearchAction',
+      'target': {
+        '@type': 'EntryPoint',
+        'urlTemplate': 'https://shristiestate.in/properties?q={search_term_string}'
+      },
+      'query-input': 'required name=search_term_string'
+    }
+  };
+}
+
+/**
+ * Generates BreadcrumbList structured data
+ */
+export function getBreadcrumbSchema(items: BreadcrumbItem[]) {
+  return {
+    '@type': 'BreadcrumbList',
+    '@id': `${items[items.length - 1]?.url || 'https://shristiestate.in'}#breadcrumb`,
+    'itemListElement': items.map((item, idx) => ({
+      '@type': 'ListItem',
+      'position': idx + 1,
+      'name': item.name,
+      'item': item.url
+    }))
+  };
+}
+
+/**
+ * Updates DOM title, meta tags, and JSON-LD structured data for the active route.
+ * Returns a cleanup function to reset state on unmount.
+ */
 export function updatePageSeo(seo: SeoMetadata): () => void {
   if (typeof window === 'undefined' || typeof document === 'undefined') {
     return () => {};
@@ -51,94 +165,114 @@ export function updatePageSeo(seo: SeoMetadata): () => void {
     setMetaTag('meta[name="keywords"]', 'name', 'keywords', seo.keywords);
   }
 
-  // 4. Open Graph
-  setMetaTag('meta[property="og:type"]', 'property', 'og:type', seo.ogType || 'article');
-  if (seo.ogTitle || seo.title) {
-    setMetaTag('meta[property="og:title"]', 'property', 'og:title', seo.ogTitle || seo.title);
-  }
-  if (seo.ogDescription || seo.description) {
-    setMetaTag('meta[property="og:description"]', 'property', 'og:description', seo.ogDescription || seo.description);
-  }
-  if (seo.canonicalUrl) {
-    setMetaTag('meta[property="og:url"]', 'property', 'og:url', seo.canonicalUrl);
-  }
-  if (seo.ogImage) {
-    setMetaTag('meta[property="og:image"]', 'property', 'og:image', seo.ogImage);
+  // 4. Robots
+  if (seo.noindex) {
+    setMetaTag('meta[name="robots"]', 'name', 'robots', 'noindex, nofollow');
+  } else {
+    setMetaTag('meta[name="robots"]', 'name', 'robots', 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1');
   }
 
-  // 5. Twitter Card
+  // 5. Open Graph
+  setMetaTag('meta[property="og:locale"]', 'property', 'og:locale', 'en_IN');
+  setMetaTag('meta[property="og:site_name"]', 'property', 'og:site_name', 'Shristi Estate');
+  setMetaTag('meta[property="og:type"]', 'property', 'og:type', seo.ogType || 'website');
+  
+  const resolvedTitle = seo.ogTitle || (seo.title.includes('Shristi Estate') ? seo.title : `${seo.title} | Shristi Estate`);
+  setMetaTag('meta[property="og:title"]', 'property', 'og:title', resolvedTitle);
+  
+  const resolvedDesc = seo.ogDescription || seo.description || 'Specialist commercial real estate discovery and advisory across Noida, Greater Noida, and Delhi NCR.';
+  setMetaTag('meta[property="og:description"]', 'property', 'og:description', resolvedDesc);
+  
+  const canonical = seo.canonicalUrl || window.location.href;
+  setMetaTag('meta[property="og:url"]', 'property', 'og:url', canonical);
+
+  const ogImg = seo.ogImage || 'https://shristiestate.in/logo-light.png';
+  setMetaTag('meta[property="og:image"]', 'property', 'og:image', ogImg);
+
+  // 6. Twitter Card
   setMetaTag('meta[name="twitter:card"]', 'name', 'twitter:card', 'summary_large_image');
-  if (seo.ogTitle || seo.title) {
-    setMetaTag('meta[name="twitter:title"]', 'name', 'twitter:title', seo.ogTitle || seo.title);
-  }
-  if (seo.ogDescription || seo.description) {
-    setMetaTag('meta[name="twitter:description"]', 'name', 'twitter:description', seo.ogDescription || seo.description);
-  }
-  if (seo.ogImage) {
-    setMetaTag('meta[name="twitter:image"]', 'name', 'twitter:image', seo.ogImage);
-  }
+  setMetaTag('meta[name="twitter:title"]', 'name', 'twitter:title', resolvedTitle);
+  setMetaTag('meta[name="twitter:description"]', 'name', 'twitter:description', resolvedDesc);
+  setMetaTag('meta[name="twitter:image"]', 'name', 'twitter:image', ogImg);
 
-  // 6. Canonical Link
+  // 7. Canonical Link
   let canonicalEl = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
-  if (seo.canonicalUrl) {
+  if (canonical) {
     if (!canonicalEl) {
       canonicalEl = document.createElement('link');
       canonicalEl.setAttribute('rel', 'canonical');
       document.head.appendChild(canonicalEl);
     }
-    canonicalEl.setAttribute('href', seo.canonicalUrl);
+    canonicalEl.setAttribute('href', canonical);
   }
 
-  // 7. Structured Data (Schema.org)
+  // 8. Structured Data (Schema.org)
   const scriptId = 'shristi-schema-jsonld';
   let scriptEl = document.getElementById(scriptId) as HTMLScriptElement | null;
+  
+  let finalStructuredData: object | null = null;
+
   if (seo.structuredData) {
-    if (!scriptEl) {
-      scriptEl = document.createElement('script');
-      scriptEl.id = scriptId;
-      scriptEl.type = 'application/ld+json';
-      document.head.appendChild(scriptEl);
-    }
-    scriptEl.textContent = JSON.stringify(seo.structuredData);
+    finalStructuredData = seo.structuredData;
   } else if (seo.ogType === 'article') {
-    if (!scriptEl) {
-      scriptEl = document.createElement('script');
-      scriptEl.id = scriptId;
-      scriptEl.type = 'application/ld+json';
-      document.head.appendChild(scriptEl);
-    }
-
-    const structuredData = {
+    finalStructuredData = {
       '@context': 'https://schema.org',
-      '@type': 'BlogPosting',
-      'headline': seo.title,
-      'description': seo.description || '',
-      'image': seo.ogImage ? [seo.ogImage] : undefined,
-      'datePublished': seo.article?.publishedTime || new Date().toISOString(),
-      'dateModified': seo.article?.modifiedTime || seo.article?.publishedTime || new Date().toISOString(),
-      'author': {
-        '@type': 'Person',
-        'name': seo.article?.author || 'Shristi Estate Advisory Desk'
-      },
-      'publisher': {
-        '@type': 'Organization',
-        'name': 'Shristi Estate',
-        'url': 'https://shristiestate.in',
-        'logo': {
-          '@type': 'ImageObject',
-          'url': 'https://shristiestate.in/logo-light.png'
-        }
-      },
-      'mainEntityOfPage': {
-        '@type': 'WebPage',
-        '@id': seo.canonicalUrl || window.location.href
-      }
+      '@graph': [
+        {
+          '@type': 'BlogPosting',
+          '@id': `${canonical}#article`,
+          'headline': seo.title,
+          'description': seo.description || '',
+          'image': seo.ogImage ? [seo.ogImage] : ['https://shristiestate.in/hero-commercial-park.jpg'],
+          'datePublished': seo.article?.publishedTime || new Date().toISOString(),
+          'dateModified': seo.article?.modifiedTime || seo.article?.publishedTime || new Date().toISOString(),
+          'author': {
+            '@type': 'Person',
+            'name': seo.article?.author || 'Sanjeet Kumar',
+            'url': 'https://shristiestate.in/about'
+          },
+          'publisher': {
+            '@id': 'https://shristiestate.in/#organization'
+          },
+          'mainEntityOfPage': {
+            '@type': 'WebPage',
+            '@id': canonical
+          }
+        },
+        ...(seo.breadcrumbs && seo.breadcrumbs.length > 0 ? [getBreadcrumbSchema(seo.breadcrumbs)] : [])
+      ]
     };
-
-    scriptEl.textContent = JSON.stringify(structuredData);
+  } else {
+    // Default WebPage + Breadcrumbs if provided
+    finalStructuredData = {
+      '@context': 'https://schema.org',
+      '@graph': [
+        {
+          '@type': 'WebPage',
+          '@id': `${canonical}#webpage`,
+          'url': canonical,
+          'name': resolvedTitle,
+          'description': resolvedDesc,
+          'isPartOf': {
+            '@id': 'https://shristiestate.in/#website'
+          }
+        },
+        ...(seo.breadcrumbs && seo.breadcrumbs.length > 0 ? [getBreadcrumbSchema(seo.breadcrumbs)] : [])
+      ]
+    };
   }
 
-  // Cleanup on unmount
+  if (finalStructuredData) {
+    if (!scriptEl) {
+      scriptEl = document.createElement('script');
+      scriptEl.id = scriptId;
+      scriptEl.type = 'application/ld+json';
+      document.head.appendChild(scriptEl);
+    }
+    scriptEl.textContent = JSON.stringify(finalStructuredData);
+  }
+
+  // Cleanup on unmount / route transition
   return () => {
     document.title = prevTitle;
     const s = document.getElementById(scriptId);

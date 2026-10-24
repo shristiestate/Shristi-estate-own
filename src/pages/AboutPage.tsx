@@ -1,12 +1,68 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ShieldCheck, Building2, Users, Target, CheckCircle2, ArrowRight } from 'lucide-react';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
 import { HyperlinkedText } from '../components/common/HyperlinkedText';
 import { WhatsAppIcon } from '../components/common/SocialIcons';
 import { generateGeneralEnquiryWhatsAppLink } from '../utils/whatsapp';
+import { updatePageSeo, getOrganizationSchema, getBreadcrumbSchema } from '../utils/seo';
+import { getSiteImages } from '../utils/siteImages';
 
 export const AboutPage: React.FC = () => {
+  const [siteImages, setSiteImages] = useState(() => getSiteImages());
+
+  useEffect(() => {
+    const handleUpdate = (e: any) => {
+      if (e.detail) setSiteImages(e.detail);
+    };
+    window.addEventListener('shristi_site_images_updated', handleUpdate);
+    return () => window.removeEventListener('shristi_site_images_updated', handleUpdate);
+  }, []);
+
+  useEffect(() => {
+    const canonical = 'https://shristiestate.in/about';
+    const cleanup = updatePageSeo({
+      title: 'About Shristi Estate | Leading Commercial Real Estate Advisory Noida',
+      description: 'Discover Shristi Estate and founder Sanjeet Kumar. Specialized corporate office space advisory, IT parks leasing, and industrial property consulting in Noida & Delhi NCR.',
+      canonicalUrl: canonical,
+      keywords: 'about shristi estate, sanjeet kumar noida real estate, commercial property consultant noida, office leasing advisory noida',
+      ogType: 'website',
+      ogImage: 'https://shristiestate.in/images/founder.jpg',
+      breadcrumbs: [
+        { name: 'Home', url: 'https://shristiestate.in' },
+        { name: 'About Us', url: canonical }
+      ],
+      structuredData: {
+        '@context': 'https://schema.org',
+        '@graph': [
+          getOrganizationSchema(),
+          {
+            '@type': 'AboutPage',
+            '@id': `${canonical}#webpage`,
+            'url': canonical,
+            'name': 'About Shristi Estate - Commercial Advisory',
+            'description': 'About Shristi Estate, commercial real estate advisory firm founded by Sanjeet Kumar in Noida, Delhi NCR.',
+            'mainEntity': {
+              '@type': 'Person',
+              'name': 'Sanjeet Kumar',
+              'jobTitle': 'Founder & Principal Advisor',
+              'worksFor': {
+                '@id': 'https://shristiestate.in/#organization'
+              },
+              'image': 'https://shristiestate.in/images/founder.jpg',
+              'description': 'Commercial real estate specialist with over 15 years experience across corporate office parks and institutional leasing in Noida and Delhi NCR.'
+            }
+          },
+          getBreadcrumbSchema([
+            { name: 'Home', url: 'https://shristiestate.in' },
+            { name: 'About Us', url: canonical }
+          ])
+        ]
+      }
+    });
+    return cleanup;
+  }, []);
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
       <Breadcrumbs
@@ -42,8 +98,8 @@ export const AboutPage: React.FC = () => {
             <div className="relative border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#070C1E] p-2.5 sm:p-3 rounded-none shadow-xs">
               <div className="aspect-[4/5] sm:aspect-[3/4] lg:aspect-[4/5] w-full overflow-hidden relative bg-slate-900">
                 <img
-                  src="/images/founder.jpg"
-                  alt="Sanjeet Kumar - Founder of Shristi Estate"
+                  src={siteImages.founder?.image || '/images/founder.webp'}
+                  alt={siteImages.founder?.alt || 'Sanjeet Kumar - Founder of Shristi Estate'}
                   loading="eager"
                   className="w-full h-full object-cover object-top hover:scale-[1.02] transition-transform duration-500"
                 />
@@ -52,7 +108,7 @@ export const AboutPage: React.FC = () => {
                   <span className="inline-block px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider bg-brand-600 text-white font-semibold mb-1">
                     Founder &amp; Principal Advisor
                   </span>
-                  <div className="text-white text-base sm:text-lg font-bold font-['Outfit']">
+                  <div className="text-white text-base sm:text-lg font-bold font-sans">
                     Sanjeet Kumar
                   </div>
                   <p className="text-[11px] text-slate-300 font-sans">
@@ -82,7 +138,7 @@ export const AboutPage: React.FC = () => {
                 <ShieldCheck className="w-3.5 h-3.5 stroke-[1.75]" />
                 <span>Leadership &amp; Advisory</span>
               </div>
-              <h2 className="text-2xl sm:text-3xl lg:text-3xl font-bold tracking-tight text-slate-900 dark:text-white font-['Outfit']">
+              <h2 className="text-2xl sm:text-3xl lg:text-3xl font-bold tracking-tight text-slate-900 dark:text-white font-sans">
                 Meet the Founder of Shristi Estate
               </h2>
               <p className="text-sm sm:text-base font-semibold text-brand-600 dark:text-brand-400 mt-1">
@@ -118,7 +174,7 @@ export const AboutPage: React.FC = () => {
 
             {/* Featured Founder Pull-Quote */}
             <div className="p-4 sm:p-5 border-l-4 border-brand-600 bg-brand-50/60 dark:bg-brand-950/30 border border-slate-200/80 dark:border-slate-800/80 rounded-none my-4">
-              <p className="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-snug font-['Outfit']">
+              <p className="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-snug font-sans">
                 “Shristi Estate is committed to helping you find the right space for your next business move.”
               </p>
               <p className="text-xs sm:text-sm italic text-brand-700 dark:text-brand-300 mt-1.5 font-medium">

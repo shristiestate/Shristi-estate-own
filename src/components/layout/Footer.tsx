@@ -20,27 +20,27 @@ import { generateGeneralEnquiryWhatsAppLink } from '../../utils/whatsapp';
 
 export const Footer: React.FC = () => {
   return (
-    <footer className="bg-white dark:bg-[#070C1E] text-slate-600 dark:text-slate-300 border-t border-slate-200 dark:border-slate-800/80 pt-16 pb-12 relative overflow-hidden transition-colors duration-200">
+    <footer className="bg-white dark:bg-[#070C1E] text-slate-600 dark:text-slate-300 border-t border-slate-200 dark:border-slate-800/80 pt-16 pb-28 sm:pb-20 lg:pb-14 relative z-0 overflow-hidden transition-colors duration-200 isolate">
       {/* Decorative ambient glass glow */}
       <div className="absolute top-0 right-1/4 w-96 h-96 bg-brand-500/5 dark:bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 left-10 w-96 h-96 bg-accent-teal/5 dark:bg-accent-teal/10 rounded-full blur-3xl pointer-events-none" />
 
       {/* Container */}
-      <div className="max-w-7xl xl:max-w-[1380px] 2xl:max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 relative z-10">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-10 lg:gap-8 xl:gap-10 pb-12 border-b border-slate-200 dark:border-slate-800">
+      <div className="max-w-7xl xl:max-w-[1380px] 2xl:max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 relative z-0">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 xl:grid-cols-5 gap-10 lg:gap-8 xl:gap-8 pb-12 border-b border-slate-200 dark:border-slate-800">
           
           {/* Col 1: Brand & Corporate Overview */}
-          <div className="space-y-4">
+          <div className="space-y-4 sm:col-span-2 lg:col-span-6 xl:col-span-1 min-w-0">
             <Logo theme="auto" />
             
-            <p className="text-xs sm:text-[13px] text-slate-600 dark:text-slate-400 leading-relaxed">
+            <p className="text-xs sm:text-[13px] text-slate-600 dark:text-slate-400 leading-relaxed break-words">
               Premier commercial real estate consultancy in Noida &amp; Delhi NCR. Specializing in corporate leasing, IT parks, warehousing, and commercial investment advisory.
             </p>
 
             {/* Accreditation Badge */}
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-none bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-[11px] text-slate-700 dark:text-slate-300 font-medium">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-none bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-[11px] text-slate-700 dark:text-slate-300 font-medium max-w-full">
               <ShieldCheck className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400 shrink-0" />
-              <span>Verified Commercial Advisory</span>
+              <span className="truncate sm:whitespace-normal">Verified Commercial Advisory</span>
             </div>
             
             {/* Social Media & Instant Channels */}
@@ -55,10 +55,10 @@ export const Footer: React.FC = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Chat direct on WhatsApp"
-                  className="w-10 h-10 rounded-none bg-slate-100 hover:bg-[#25D366] text-slate-700 hover:text-white dark:bg-slate-900 dark:text-slate-300 dark:hover:text-white flex items-center justify-center transition-all duration-200 border border-slate-200 hover:border-[#25D366] dark:border-slate-800 dark:hover:border-[#25D366] group"
+                  className="w-10 h-10 shrink-0 rounded-none bg-slate-100 hover:bg-[#25D366] text-slate-700 hover:text-white dark:bg-slate-900 dark:text-slate-300 dark:hover:text-white flex items-center justify-center transition-all duration-200 border border-slate-200 hover:border-[#25D366] dark:border-slate-800 dark:hover:border-[#25D366] group"
                   title="WhatsApp: +91 87500 98666"
                 >
-                  <WhatsAppIcon className="w-[18px] h-[18px] transition-transform duration-200 group-hover:scale-110" />
+                  <WhatsAppIcon className="w-[18px] h-[18px] shrink-0 transition-transform duration-200 group-hover:scale-110" />
                 </a>
 
                 {/* LinkedIn */}
@@ -67,10 +67,10 @@ export const Footer: React.FC = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Follow Sanjeet Kumar on LinkedIn"
-                  className="w-10 h-10 rounded-none bg-slate-100 hover:bg-[#0A66C2] text-slate-700 hover:text-white dark:bg-slate-900 dark:text-slate-300 dark:hover:text-white flex items-center justify-center transition-all duration-200 border border-slate-200 hover:border-[#0A66C2] dark:border-slate-800 dark:hover:border-[#0A66C2] group"
+                  className="w-10 h-10 shrink-0 rounded-none bg-slate-100 hover:bg-[#0A66C2] text-slate-700 hover:text-white dark:bg-slate-900 dark:text-slate-300 dark:hover:text-white flex items-center justify-center transition-all duration-200 border border-slate-200 hover:border-[#0A66C2] dark:border-slate-800 dark:hover:border-[#0A66C2] group"
                   title="LinkedIn: Sanjeet Kumar"
                 >
-                  <LinkedInIcon className="w-[18px] h-[18px] transition-transform duration-200 group-hover:scale-110" />
+                  <LinkedInIcon className="w-[18px] h-[18px] shrink-0 transition-transform duration-200 group-hover:scale-110" />
                 </a>
 
                 {/* Instagram */}
@@ -79,10 +79,10 @@ export const Footer: React.FC = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Follow Shristi Estate on Instagram"
-                  className="w-10 h-10 rounded-none bg-slate-100 hover:bg-[#DD2A7B] text-slate-700 hover:text-white dark:bg-slate-900 dark:text-slate-300 dark:hover:text-white flex items-center justify-center transition-all duration-200 border border-slate-200 hover:border-pink-500 dark:border-slate-800 dark:hover:border-pink-500 group"
+                  className="w-10 h-10 shrink-0 rounded-none bg-slate-100 hover:bg-[#DD2A7B] text-slate-700 hover:text-white dark:bg-slate-900 dark:text-slate-300 dark:hover:text-white flex items-center justify-center transition-all duration-200 border border-slate-200 hover:border-pink-500 dark:border-slate-800 dark:hover:border-pink-500 group"
                   title="Instagram: @shristi_estate01"
                 >
-                  <InstagramIcon className="w-[18px] h-[18px] transition-transform duration-200 group-hover:scale-110" />
+                  <InstagramIcon className="w-[18px] h-[18px] shrink-0 transition-transform duration-200 group-hover:scale-110" />
                 </a>
 
                 {/* YouTube */}
@@ -91,10 +91,10 @@ export const Footer: React.FC = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Subscribe to Shristi Estate on YouTube"
-                  className="w-10 h-10 rounded-none bg-slate-100 hover:bg-[#FF0000] text-slate-700 hover:text-white dark:bg-slate-900 dark:text-slate-300 dark:hover:text-white flex items-center justify-center transition-all duration-200 border border-slate-200 hover:border-[#FF0000] dark:border-slate-800 dark:hover:border-[#FF0000] group"
+                  className="w-10 h-10 shrink-0 rounded-none bg-slate-100 hover:bg-[#FF0000] text-slate-700 hover:text-white dark:bg-slate-900 dark:text-slate-300 dark:hover:text-white flex items-center justify-center transition-all duration-200 border border-slate-200 hover:border-[#FF0000] dark:border-slate-800 dark:hover:border-[#FF0000] group"
                   title="YouTube: Shristi Estate Channel"
                 >
-                  <YouTubeIcon className="w-[18px] h-[18px] transition-transform duration-200 group-hover:scale-110" />
+                  <YouTubeIcon className="w-[18px] h-[18px] shrink-0 transition-transform duration-200 group-hover:scale-110" />
                 </a>
 
                 {/* Facebook */}
@@ -103,139 +103,139 @@ export const Footer: React.FC = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Follow Shristi Estate on Facebook"
-                  className="w-10 h-10 rounded-none bg-slate-100 hover:bg-[#1877F2] text-slate-700 hover:text-white dark:bg-slate-900 dark:text-slate-300 dark:hover:text-white flex items-center justify-center transition-all duration-200 border border-slate-200 hover:border-[#1877F2] dark:border-slate-800 dark:hover:border-[#1877F2] group"
+                  className="w-10 h-10 shrink-0 rounded-none bg-slate-100 hover:bg-[#1877F2] text-slate-700 hover:text-white dark:bg-slate-900 dark:text-slate-300 dark:hover:text-white flex items-center justify-center transition-all duration-200 border border-slate-200 hover:border-[#1877F2] dark:border-slate-800 dark:hover:border-[#1877F2] group"
                   title="Facebook: Shristi Estate Official"
                 >
-                  <FacebookIcon className="w-[18px] h-[18px] transition-transform duration-200 group-hover:scale-110" />
+                  <FacebookIcon className="w-[18px] h-[18px] shrink-0 transition-transform duration-200 group-hover:scale-110" />
                 </a>
               </div>
             </div>
           </div>
 
           {/* Col 2: Commercial Spaces Silo */}
-          <div className="space-y-3.5">
+          <div className="space-y-3.5 sm:col-span-1 lg:col-span-4 xl:col-span-1 min-w-0">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-none bg-brand-500 dark:bg-brand-400 shrink-0" />
               <span>Commercial Spaces</span>
             </h3>
             <ul className="space-y-2.5 text-xs sm:text-[13px] text-slate-600 dark:text-slate-400">
               <li>
-                <Link to="/office-space" className="hover:text-slate-900 dark:hover:text-white hover:translate-x-0.5 transition-all duration-150 block">
+                <Link to="/office-space" className="hover:text-slate-900 dark:hover:text-white hover:translate-x-0.5 transition-all duration-150 inline-block leading-relaxed break-words">
                   Office Spaces
                 </Link>
               </li>
               <li>
-                <Link to="/it-business-parks" className="hover:text-slate-900 dark:hover:text-white hover:translate-x-0.5 transition-all duration-150 block">
+                <Link to="/it-business-parks" className="hover:text-slate-900 dark:hover:text-white hover:translate-x-0.5 transition-all duration-150 inline-block leading-relaxed break-words">
                   IT &amp; Business Parks
                 </Link>
               </li>
               <li>
-                <Link to="/warehouses" className="hover:text-slate-900 dark:hover:text-white hover:translate-x-0.5 transition-all duration-150 block">
+                <Link to="/warehouses" className="hover:text-slate-900 dark:hover:text-white hover:translate-x-0.5 transition-all duration-150 inline-block leading-relaxed break-words">
                   Warehouses &amp; Logistics
                 </Link>
               </li>
               <li>
-                <Link to="/factory-industrial" className="hover:text-slate-900 dark:hover:text-white hover:translate-x-0.5 transition-all duration-150 block">
+                <Link to="/factory-industrial" className="hover:text-slate-900 dark:hover:text-white hover:translate-x-0.5 transition-all duration-150 inline-block leading-relaxed break-words">
                   Factory &amp; Industrial Units
                 </Link>
               </li>
               <li>
-                <Link to="/land" className="hover:text-slate-900 dark:hover:text-white hover:translate-x-0.5 transition-all duration-150 block">
+                <Link to="/land" className="hover:text-slate-900 dark:hover:text-white hover:translate-x-0.5 transition-all duration-150 inline-block leading-relaxed break-words">
                   Commercial Land Parcels
                 </Link>
               </li>
               <li>
-                <Link to="/shops" className="hover:text-slate-900 dark:hover:text-white hover:translate-x-0.5 transition-all duration-150 block">
+                <Link to="/shops" className="hover:text-slate-900 dark:hover:text-white hover:translate-x-0.5 transition-all duration-150 inline-block leading-relaxed break-words">
                   Shops &amp; Retail Outlets
                 </Link>
               </li>
               <li>
-                <Link to="/properties" className="text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 font-semibold flex items-center gap-1 pt-1 transition-colors">
-                  View All Listings <ArrowUpRight className="w-3.5 h-3.5" />
+                <Link to="/properties" className="text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 font-semibold inline-flex items-center gap-1 pt-1 transition-colors leading-relaxed">
+                  View All Listings <ArrowUpRight className="w-3.5 h-3.5 shrink-0" />
                 </Link>
               </li>
             </ul>
           </div>
 
           {/* Col 3: Prime Locations Silo */}
-          <div className="space-y-3.5">
+          <div className="space-y-3.5 sm:col-span-1 lg:col-span-4 xl:col-span-1 min-w-0">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-none bg-brand-500 dark:bg-brand-400 shrink-0" />
               <span>Prime Locations</span>
             </h3>
             <ul className="space-y-2.5 text-xs sm:text-[13px] text-slate-600 dark:text-slate-400">
               <li>
-                <Link to="/locations/sector-62" className="hover:text-slate-900 dark:hover:text-white hover:translate-x-0.5 transition-all duration-150 block">
+                <Link to="/locations/sector-62" className="hover:text-slate-900 dark:hover:text-white hover:translate-x-0.5 transition-all duration-150 inline-block leading-relaxed break-words">
                   Sector 62, Noida
                 </Link>
               </li>
               <li>
-                <Link to="/locations/sector-63" className="hover:text-slate-900 dark:hover:text-white hover:translate-x-0.5 transition-all duration-150 block">
+                <Link to="/locations/sector-63" className="hover:text-slate-900 dark:hover:text-white hover:translate-x-0.5 transition-all duration-150 inline-block leading-relaxed break-words">
                   Sector 63, Noida
                 </Link>
               </li>
               <li>
-                <Link to="/locations/noida-expressway" className="hover:text-slate-900 dark:hover:text-white hover:translate-x-0.5 transition-all duration-150 block">
+                <Link to="/locations/noida-expressway" className="hover:text-slate-900 dark:hover:text-white hover:translate-x-0.5 transition-all duration-150 inline-block leading-relaxed break-words">
                   Noida Expressway
                 </Link>
               </li>
               <li>
-                <Link to="/locations/sector-18" className="hover:text-slate-900 dark:hover:text-white hover:translate-x-0.5 transition-all duration-150 block">
+                <Link to="/locations/sector-18" className="hover:text-slate-900 dark:hover:text-white hover:translate-x-0.5 transition-all duration-150 inline-block leading-relaxed break-words">
                   Sector 18 (Retail Hub)
                 </Link>
               </li>
               <li>
-                <Link to="/locations/sector-83" className="hover:text-slate-900 dark:hover:text-white hover:translate-x-0.5 transition-all duration-150 block">
+                <Link to="/locations/sector-83" className="hover:text-slate-900 dark:hover:text-white hover:translate-x-0.5 transition-all duration-150 inline-block leading-relaxed break-words">
                   Sector 83 (Logistics Hub)
                 </Link>
               </li>
               <li>
-                <Link to="/locations/sector-85" className="hover:text-slate-900 dark:hover:text-white hover:translate-x-0.5 transition-all duration-150 block">
+                <Link to="/locations/sector-85" className="hover:text-slate-900 dark:hover:text-white hover:translate-x-0.5 transition-all duration-150 inline-block leading-relaxed break-words">
                   Sector 85 (Industrial Zone)
                 </Link>
               </li>
               <li>
-                <Link to="/locations" className="text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 font-semibold flex items-center gap-1 pt-1 transition-colors">
-                  All Noida Locations <ArrowUpRight className="w-3.5 h-3.5" />
+                <Link to="/locations" className="text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 font-semibold inline-flex items-center gap-1 pt-1 transition-colors leading-relaxed">
+                  All Noida Locations <ArrowUpRight className="w-3.5 h-3.5 shrink-0" />
                 </Link>
               </li>
             </ul>
           </div>
 
           {/* Col 4: Company & Advisory */}
-          <div className="space-y-3.5">
+          <div className="space-y-3.5 sm:col-span-1 lg:col-span-4 xl:col-span-1 min-w-0">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-none bg-brand-500 dark:bg-brand-400 shrink-0" />
               <span>Company &amp; Advisory</span>
             </h3>
             <ul className="space-y-2.5 text-xs sm:text-[13px] text-slate-600 dark:text-slate-400">
               <li>
-                <Link to="/about" className="hover:text-slate-900 dark:hover:text-white hover:translate-x-0.5 transition-all duration-150 block">
+                <Link to="/about" className="hover:text-slate-900 dark:hover:text-white hover:translate-x-0.5 transition-all duration-150 inline-block leading-relaxed break-words">
                   About Shristi Estate
                 </Link>
               </li>
               <li>
-                <Link to="/services" className="hover:text-slate-900 dark:hover:text-white hover:translate-x-0.5 transition-all duration-150 block">
+                <Link to="/services" className="hover:text-slate-900 dark:hover:text-white hover:translate-x-0.5 transition-all duration-150 inline-block leading-relaxed break-words">
                   Consulting Services
                 </Link>
               </li>
               <li>
-                <Link to="/list-your-property" className="hover:text-slate-900 dark:hover:text-white hover:translate-x-0.5 transition-all duration-150 block">
+                <Link to="/list-your-property" className="hover:text-slate-900 dark:hover:text-white hover:translate-x-0.5 transition-all duration-150 inline-block leading-relaxed break-words">
                   List Your Property
                 </Link>
               </li>
               <li>
-                <Link to="/tell-us-requirement" className="hover:text-slate-900 dark:hover:text-white hover:translate-x-0.5 transition-all duration-150 block">
+                <Link to="/tell-us-requirement" className="hover:text-slate-900 dark:hover:text-white hover:translate-x-0.5 transition-all duration-150 inline-block leading-relaxed break-words">
                   Post Your Requirement
                 </Link>
               </li>
               <li>
-                <Link to="/contact" className="hover:text-slate-900 dark:hover:text-white hover:translate-x-0.5 transition-all duration-150 block">
+                <Link to="/contact" className="hover:text-slate-900 dark:hover:text-white hover:translate-x-0.5 transition-all duration-150 inline-block leading-relaxed break-words">
                   Contact Advisory Desk
                 </Link>
               </li>
               <li>
-                <Link to="/blog" className="hover:text-slate-900 dark:hover:text-white hover:translate-x-0.5 transition-all duration-150 block">
+                <Link to="/blog" className="hover:text-slate-900 dark:hover:text-white hover:translate-x-0.5 transition-all duration-150 inline-block leading-relaxed break-words">
                   Market Insights &amp; Guides
                 </Link>
               </li>
@@ -244,16 +244,16 @@ export const Footer: React.FC = () => {
                   href="/sitemap.xml" 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className="text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 font-semibold flex items-center gap-1 pt-1 transition-colors"
+                  className="text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 font-semibold inline-flex items-center gap-1 pt-1 transition-colors leading-relaxed"
                 >
-                  XML Sitemap <ArrowUpRight className="w-3.5 h-3.5" />
+                  XML Sitemap <ArrowUpRight className="w-3.5 h-3.5 shrink-0" />
                 </a>
               </li>
             </ul>
           </div>
 
           {/* Col 5: Registered Office & Helpdesk */}
-          <div className="space-y-3.5">
+          <div className="space-y-3.5 sm:col-span-1 lg:col-span-6 xl:col-span-1 min-w-0">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-none bg-emerald-500 shrink-0" />
               <span>Registered Office</span>
@@ -262,18 +262,18 @@ export const Footer: React.FC = () => {
               {/* Address card */}
               <div className="flex items-start gap-2.5 text-slate-600 dark:text-slate-300">
                 <MapPin className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0 mt-0.5" />
-                <div className="text-xs leading-snug">
+                <div className="text-xs leading-relaxed min-w-0 flex-1">
                   <span className="font-semibold text-slate-900 dark:text-white block">Tower-B, iThum Tower</span>
-                  <span className="text-slate-500 dark:text-slate-400">Unit 1035, 10th Floor, Plot A-40, Sector-62, Noida 201309</span>
+                  <span className="text-slate-500 dark:text-slate-400 block break-words">Unit 1035, 10th Floor, Plot A-40, Sector-62, Noida 201309</span>
                 </div>
               </div>
 
               {/* Direct phone */}
               <div className="flex items-center gap-2.5 text-slate-600 dark:text-slate-300">
                 <Phone className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0" />
-                <div>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider block font-semibold">Direct Advisory Line</span>
-                  <a href="tel:+918750098666" className="text-xs sm:text-[13px] font-bold text-slate-900 dark:text-white hover:text-brand-600 dark:hover:text-brand-400 transition-colors tracking-wide">
+                <div className="min-w-0 flex-1">
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider block font-semibold leading-normal">Direct Advisory Line</span>
+                  <a href="tel:+918750098666" className="text-xs sm:text-[13px] font-bold text-slate-900 dark:text-white hover:text-brand-600 dark:hover:text-brand-400 transition-colors tracking-wide block leading-normal">
                     +91 87500 98666
                   </a>
                 </div>
@@ -282,9 +282,9 @@ export const Footer: React.FC = () => {
               {/* Official email */}
               <div className="flex items-center gap-2.5 text-slate-600 dark:text-slate-300">
                 <Mail className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0" />
-                <div>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider block font-semibold">Official Inquiries</span>
-                  <a href="mailto:contact@shristiestate.in" className="text-xs sm:text-[13px] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors font-medium">
+                <div className="min-w-0 flex-1">
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider block font-semibold leading-normal">Official Inquiries</span>
+                  <a href="mailto:contact@shristiestate.in" className="text-xs sm:text-[13px] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors font-medium break-all block leading-normal">
                     contact@shristiestate.in
                   </a>
                 </div>
@@ -293,10 +293,10 @@ export const Footer: React.FC = () => {
               {/* Consultation hours */}
               <div className="flex items-start gap-2.5 text-slate-600 dark:text-slate-300">
                 <Clock className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0 mt-0.5" />
-                <div className="text-xs">
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider block font-semibold">Consultation Hours</span>
-                  <span className="text-slate-700 dark:text-slate-300 block font-medium">Mon – Sat: 9:30 AM – 7:30 PM</span>
-                  <span className="text-slate-500 dark:text-slate-400 text-[11px]">Sunday by Appointment</span>
+                <div className="text-xs leading-relaxed min-w-0 flex-1">
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider block font-semibold leading-normal">Consultation Hours</span>
+                  <span className="text-slate-700 dark:text-slate-300 block font-medium leading-normal">Mon – Sat: 9:30 AM – 7:30 PM</span>
+                  <span className="text-slate-500 dark:text-slate-400 text-[11px] block leading-normal">Sunday by Appointment</span>
                 </div>
               </div>
 
@@ -306,10 +306,10 @@ export const Footer: React.FC = () => {
                   href={generateGeneralEnquiryWhatsAppLink({ propertyName: 'Commercial Property Consultation' })}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-none bg-slate-100 hover:bg-[#25D366] text-slate-800 hover:text-white dark:bg-slate-900 dark:text-slate-200 dark:hover:text-white text-xs font-semibold border border-slate-200 hover:border-[#25D366] dark:border-slate-800 dark:hover:border-[#25D366] transition-all duration-200 uppercase tracking-wider group"
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-none bg-slate-100 hover:bg-[#25D366] text-slate-800 hover:text-white dark:bg-slate-900 dark:text-slate-200 dark:hover:text-white text-xs font-semibold border border-slate-200 hover:border-[#25D366] dark:border-slate-800 dark:hover:border-[#25D366] transition-all duration-200 uppercase tracking-wide group"
                 >
-                  <WhatsAppIcon className="w-4 h-4 text-emerald-500 group-hover:text-white transition-colors" />
-                  <span>Instant Consultation Desk</span>
+                  <WhatsAppIcon className="w-4 h-4 text-emerald-500 group-hover:text-white transition-colors shrink-0" />
+                  <span className="truncate text-center">Instant Consultation Desk</span>
                 </a>
               </div>
             </div>
@@ -318,34 +318,34 @@ export const Footer: React.FC = () => {
         </div>
 
         {/* Disclaimer & Legal Links */}
-        <div className="pt-8 flex flex-col lg:flex-row items-center justify-between gap-6 text-xs text-slate-500 dark:text-slate-400">
-          <p className="leading-relaxed text-center lg:text-left max-w-3xl text-xs text-slate-500 dark:text-slate-400">
+        <div className="pt-8 flex flex-col xl:flex-row items-center xl:items-start justify-between gap-6 text-xs text-slate-500 dark:text-slate-400">
+          <p className="leading-relaxed text-center xl:text-left flex-1 min-w-0 max-w-4xl text-xs text-slate-500 dark:text-slate-400">
             <strong className="text-slate-800 dark:text-slate-200 font-semibold">Regulatory Disclaimer:</strong> Shristi Estate is an independent commercial real estate advisory consultancy. All property listings, floor areas, lease tariffs, and building specifications are indicative and subject to formal verification, due diligence, and mutual agreements between landlords, buyers, and tenants.
           </p>
-          <div className="flex flex-wrap items-center justify-center lg:justify-end gap-x-5 gap-y-2 shrink-0 font-medium text-xs text-slate-600 dark:text-slate-400">
-            <Link to="/legal/privacy" className="hover:text-slate-900 dark:hover:text-white transition-colors">Privacy Policy</Link>
-            <span className="text-slate-300 dark:text-slate-700 select-none hidden sm:inline">•</span>
-            <Link to="/legal/terms" className="hover:text-slate-900 dark:hover:text-white transition-colors">Terms of Service</Link>
-            <span className="text-slate-300 dark:text-slate-700 select-none hidden sm:inline">•</span>
-            <Link to="/legal/disclaimer" className="hover:text-slate-900 dark:hover:text-white transition-colors">Disclaimer</Link>
-            <span className="text-slate-300 dark:text-slate-700 select-none hidden sm:inline">•</span>
+          <div className="flex flex-wrap items-center justify-center xl:justify-end gap-x-5 gap-y-2 shrink-0 font-medium text-xs text-slate-600 dark:text-slate-400 w-full xl:w-auto">
+            <Link to="/legal/privacy" className="hover:text-slate-900 dark:hover:text-white transition-colors whitespace-nowrap">Privacy Policy</Link>
+            <span className="text-slate-300 dark:text-slate-700 select-none hidden sm:inline" aria-hidden="true">•</span>
+            <Link to="/legal/terms" className="hover:text-slate-900 dark:hover:text-white transition-colors whitespace-nowrap">Terms of Service</Link>
+            <span className="text-slate-300 dark:text-slate-700 select-none hidden sm:inline" aria-hidden="true">•</span>
+            <Link to="/legal/disclaimer" className="hover:text-slate-900 dark:hover:text-white transition-colors whitespace-nowrap">Disclaimer</Link>
+            <span className="text-slate-300 dark:text-slate-700 select-none hidden sm:inline" aria-hidden="true">•</span>
             <a 
               href="/sitemap.xml" 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white font-semibold transition-colors flex items-center gap-1"
+              className="text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white font-semibold transition-colors flex items-center gap-1 whitespace-nowrap"
             >
-              XML Sitemap <ArrowUpRight className="w-3.5 h-3.5" />
+              XML Sitemap <ArrowUpRight className="w-3.5 h-3.5 shrink-0" />
             </a>
           </div>
         </div>
 
         {/* Copyright & Accreditation */}
-        <div className="pt-6 mt-6 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400">
-          <p>© {new Date().getFullYear()} Shristi Estate (shristiestate.in). All rights reserved.</p>
-          <div className="flex items-center gap-2">
+        <div className="pt-6 mt-6 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-500 dark:text-slate-400">
+          <p className="text-center md:text-left leading-normal">© {new Date().getFullYear()} Shristi Estate (shristiestate.in). All rights reserved.</p>
+          <div className="flex items-center justify-center md:justify-end gap-2 shrink-0">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-none bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-[11px] text-slate-600 dark:text-slate-400 font-medium">
-              <ShieldCheck className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
+              <ShieldCheck className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400 shrink-0" />
               <span>Grade-A Commercial Advisory • Noida &amp; Delhi NCR</span>
             </span>
           </div>

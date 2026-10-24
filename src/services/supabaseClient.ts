@@ -1,14 +1,26 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl = 
-  import.meta.env.VITE_SUPABASE_URL || 
-  'https://vdrqvvxvvuqqgxwqjfyy.supabase.co';
+const envUrl = (import.meta.env.VITE_SUPABASE_URL || '').trim();
+const envKey = (import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim();
 
-const supabaseAnonKey = 
-  import.meta.env.VITE_SUPABASE_ANON_KEY || 
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkcnF2dnh2dnVxcWd4d3FqZnl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5NzQwOTMsImV4cCI6MjEwNDU1MDA5M30.ulf1wysrZSTp4tWKozQC0-AVHarj0-u8pMjTUjCJCe8';
+// Treat template/placeholder strings as unconfigured to prevent network fetch failures to fake domains
+const isPlaceholderUrl = !envUrl || envUrl.includes('your-project.supabase.co');
+const isPlaceholderKey = !envKey || envKey === 'your-anon-key-here';
 
-export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
+const supabaseUrl = !isPlaceholderUrl 
+  ? envUrl 
+  : 'https://vdrqvvxvvuqqgxwqjfyy.supabase.co';
+
+const supabaseAnonKey = !isPlaceholderKey 
+  ? envKey 
+  : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkcnF2dnh2dnVxcWd4d3FqZnl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5NzQwOTMsImV4cCI6MjEwNDU1MDA5M30.ulf1wysrZSTp4tWKozQC0-AVHarj0-u8pMjTUjCJCe8';
+
+export const isSupabaseConfigured = Boolean(
+  supabaseUrl && 
+  supabaseAnonKey && 
+  !supabaseUrl.includes('your-project.supabase.co') &&
+  supabaseAnonKey !== 'your-anon-key-here'
+);
 
 let _clientInstance: SupabaseClient | null = null;
 let _initPromise: Promise<SupabaseClient | null> | null = null;

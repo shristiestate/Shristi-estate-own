@@ -28,12 +28,17 @@ export const BlogPage: React.FC = () => {
 
   // SEO update for the main blog archive page
   useEffect(() => {
+    const canonical = 'https://shristiestate.in/blog';
     const cleanup = updatePageSeo({
       title: 'Commercial Real Estate Guides & Insights Noida | Shristi Estate',
       description: 'In-depth market research, leasing guidelines, institutional IT park reviews, and micro-market commercial analyses for Noida and Delhi NCR.',
-      canonicalUrl: 'https://shristiestate.in/blog',
+      canonicalUrl: canonical,
       ogType: 'website',
-      keywords: 'commercial real estate blog noida, office space guide sector 62, warehouse leasing noida, commercial market research delhi ncr'
+      keywords: 'commercial real estate blog noida, office space guide sector 62, warehouse leasing noida, commercial market research delhi ncr',
+      breadcrumbs: [
+        { name: 'Home', url: 'https://shristiestate.in' },
+        { name: 'Blog & Market Guides', url: canonical }
+      ]
     });
     return cleanup;
   }, []);

@@ -34,7 +34,7 @@
     letter-spacing: -0.005em;
   }
 
-  /* Structured Architectural Headings Hierarchy */
+  /* Structured Architectural Headings Hierarchy with Safe Vertical Spacing */
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
     text-wrap: balance;
@@ -42,31 +42,37 @@
     color: inherit;
   }
 
+  /* Universal enforcement: Ensure any element tagged with font-['Outfit'] renders in the site's Space Grotesk font */
+  [class*="font-['Outfit']"],
+  .font-\[\'Outfit\'\] {
+    font-family: var(--font-heading) !important;
+  }
+
   h1 {
     font-size: var(--text-h1);
     font-weight: 700;
-    line-height: 1.15;
-    letter-spacing: -0.025em;
+    line-height: 1.24;
+    letter-spacing: -0.015em;
   }
 
   h2 {
     font-size: var(--text-h2);
     font-weight: 600;
-    line-height: 1.22;
-    letter-spacing: -0.02em;
+    line-height: 1.28;
+    letter-spacing: -0.012em;
   }
 
   h3 {
     font-size: var(--text-h3);
     font-weight: 600;
-    line-height: 1.28;
-    letter-spacing: -0.015em;
+    line-height: 1.32;
+    letter-spacing: -0.01em;
   }
 
   h4, h5, h6 {
     font-weight: 600;
-    line-height: 1.32;
-    letter-spacing: -0.01em;
+    line-height: 1.36;
+    letter-spacing: -0.005em;
   }
 
   p {
@@ -83,8 +89,8 @@
   .card-title {
     font-size: var(--text-card-title);
     font-weight: 600;
-    line-height: 1.32;
-    letter-spacing: -0.015em;
+    line-height: 1.35;
+    letter-spacing: -0.01em;
     overflow-wrap: break-word;
   }
 
@@ -263,14 +269,14 @@
     margin-bottom: 0;
   }
 
-  /* Line-clamped cards with preserved whitespace and natural left-aligned word spacing */
+  /* Line-clamped cards with natural left-aligned word spacing and safe clamp bounds */
   .overview-card-text {
     text-align: left !important;
     word-break: break-word;
     overflow-wrap: anywhere;
     word-spacing: normal;
     letter-spacing: normal;
-    white-space: pre-wrap;
+    white-space: normal;
   }
 
   /* Overview Textarea Inputs */
@@ -329,24 +335,116 @@
 
   /* Infinite Marquee Animations */
   @keyframes marquee {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
+    0% { transform: translate3d(0, 0, 0); }
+    100% { transform: translate3d(-50%, 0, 0); }
   }
 
   @keyframes marquee-reverse {
-    0% { transform: translateX(-50%); }
-    100% { transform: translateX(0); }
+    0% { transform: translate3d(-50%, 0, 0); }
+    100% { transform: translate3d(0, 0, 0); }
   }
 
   .animate-marquee {
     animation: marquee 35s linear infinite;
+    will-change: transform;
   }
 
   .animate-marquee-slow {
     animation: marquee 50s linear infinite;
+    will-change: transform;
   }
 
   .animate-marquee-reverse {
     animation: marquee-reverse 35s linear infinite;
+    will-change: transform;
+  }
+
+  /* Seamless Hardware-Accelerated Sliding Track */
+  @keyframes marquee-slide-left {
+    0% { transform: translate3d(0, 0, 0); }
+    100% { transform: translate3d(-50%, 0, 0); }
+  }
+
+  @keyframes marquee-slide-right {
+    0% { transform: translate3d(-50%, 0, 0); }
+    100% { transform: translate3d(0, 0, 0); }
+  }
+
+  .animate-slide-left {
+    display: flex;
+    width: max-content;
+    animation: marquee-slide-left 32s linear infinite;
+    will-change: transform;
+  }
+
+  .animate-slide-right {
+    display: flex;
+    width: max-content;
+    animation: marquee-slide-right 36s linear infinite;
+    will-change: transform;
+  }
+
+  .animate-slide-left-slow {
+    display: flex;
+    width: max-content;
+    animation: marquee-slide-left 48s linear infinite;
+    will-change: transform;
+  }
+
+  /* Pop-up animation effects */
+  @keyframes popUpSpringBounce {
+    0% {
+      opacity: 0;
+      transform: translate3d(-50%, 12px, 0) scale(0.75);
+    }
+    65% {
+      opacity: 1;
+      transform: translate3d(-50%, -4px, 0) scale(1.06);
+    }
+    100% {
+      opacity: 1;
+      transform: translate3d(-50%, 0, 0) scale(1);
+    }
+  }
+
+  .animate-popup-spring {
+    animation: popUpSpringBounce 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+
+  /* Review Cards Staggered Slide In Animations */
+  @keyframes reviewSlideInRight {
+    from {
+      opacity: 0;
+      transform: translate3d(28px, 0, 0);
+    }
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+    }
+  }
+
+  @keyframes reviewSlideInLeft {
+    from {
+      opacity: 0;
+      transform: translate3d(-28px, 0, 0);
+    }
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+    }
+  }
+
+  .animate-review-in-right {
+    animation: reviewSlideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .animate-review-in-left {
+    animation: reviewSlideInLeft 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  /* Pause sliding on hover */
+  .pause-on-hover:hover,
+  .group:hover .pause-on-hover {
+    animation-play-state: paused !important;
   }
 }

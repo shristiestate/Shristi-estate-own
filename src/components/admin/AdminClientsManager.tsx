@@ -13,11 +13,16 @@ import {
   Eye,
   EyeOff,
   Globe,
-  Briefcase
+  Briefcase,
+  Building2,
+  Zap,
+  AlertCircle,
+  CheckCircle2
 } from 'lucide-react';
 import { ClientLogo } from '../../types';
 import { StorageService } from '../../services/storageService';
 import { compressImageFile } from '../../utils/imageCompression';
+import { ClientsMarquee } from '../home/ClientsMarquee';
 
 interface AdminClientsManagerProps {
   clients: ClientLogo[];
@@ -32,8 +37,37 @@ const COMMON_INDUSTRIES = [
   'Fintech & Digital Payments',
   'Engineering & Industrial Tech',
   'Banking & Financial Services',
-  'Telecom & Mobility'
+  'Telecom & Mobility',
+  'Real Estate & Infrastructure'
 ];
+
+const cleanDomain = (input: string): string => {
+  if (!input) return '';
+  let d = input.trim().toLowerCase();
+  d = d.replace(/^https?:\/\//i, '').replace(/^www\./i, '');
+  d = d.split('/')[0].split('?')[0].split('#')[0];
+  if (!d.includes('.') && d.length > 2) {
+    d = `${d.replace(/\s+/g, '')}.com`;
+  }
+  return d;
+};
+
+const isWebpageUrl = (url: string): boolean => {
+  if (!url || !url.trim()) return false;
+  const clean = url.trim().toLowerCase();
+  if (clean.startsWith('data:image/') || clean.startsWith('/')) return false;
+  const imageExts = ['.png', '.jpg', '.jpeg', '.svg', '.webp', '.ico', '.gif', '.avif'];
+  if (imageExts.some(ext => clean.includes(ext))) return false;
+  if (clean.includes('google.com/s2/favicons') || clean.includes('unavatar.io') || clean.includes('ui-avatars.com')) return false;
+  if (clean.startsWith('http://') || clean.startsWith('https://')) return true;
+  if (/^[a-z0-9-]+(\.[a-z0-9-]+)+/i.test(clean)) return true;
+  return false;
+};
+
+const getFaviconUrl = (domainOrUrl: string): string => {
+  const domain = cleanDomain(domainOrUrl);
+  return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+};
 
 export const AdminClientsManager: React.FC<AdminClientsManagerProps> = ({ clients, onRefresh }) => {
   const [search, setSearch] = useState('');
@@ -41,6 +75,8 @@ export const AdminClientsManager: React.FC<AdminClientsManagerProps> = ({ client
   const [isEditing, setIsEditing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [logoLoadError, setLogoLoadError] = useState(false);
+  const [showLiveMarqueePreview, setShowLiveMarqueePreview] = useState(false);
 
   const [formData, setFormData] = useState<Partial<ClientLogo>>({
     name: '',
@@ -55,6 +91,7 @@ export const AdminClientsManager: React.FC<AdminClientsManagerProps> = ({ client
 
   const handleOpenAdd = () => {
     setIsEditing(false);
+    setLogoLoadError(false);
     setFormData({
       id: `client-${Date.now()}`,
       name: '',
@@ -71,6 +108,7 @@ export const AdminClientsManager: React.FC<AdminClientsManagerProps> = ({ client
 
   const handleOpenEdit = (client: ClientLogo) => {
     setIsEditing(true);
+    setLogoLoadError(false);
     setFormData({ 
       ...client,
       website: client.website || client.website_url || '',
@@ -79,10 +117,37 @@ export const AdminClientsManager: React.FC<AdminClientsManagerProps> = ({ client
     setShowModal(true);
   };
 
+  const handleAutoFetchLogo = (targetDomainOrName?: string) => {
+    const raw = targetDomainOrName || formData.website || formData.website_url || formData.logo || formData.name || '';
+    if (!raw.trim()) {
+      alert('Please enter a company name or website domain first.');
+      return;
+    }
+    const faviconUrl = getFaviconUrl(raw);
+    setLogoLoadError(false);
+    setFormData(prev => ({
+      ...prev,
+      logo: faviconUrl,
+      website: prev.website || (cleanDomain(raw) ? `https://${cleanDomain(raw)}` : '')
+    }));
+  };
+
+  const handleUseShristiLogo = () => {
+    setLogoLoadError(false);
+    setFormData(prev => ({
+      ...prev,
+      logo: '/logo-light.png',
+      website: prev.website || 'https://shristiestate.in',
+      website_url: prev.website_url || 'https://shristiestate.in',
+      industry: prev.industry || 'Real Estate & Infrastructure'
+    }));
+  };
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setIsUploading(true);
+    setLogoLoadError(false);
     try {
       const compressedDataUrl = await compressImageFile(file, 600, 0.9);
       if (compressedDataUrl) {
@@ -102,18 +167,26 @@ export const AdminClientsManager: React.FC<AdminClientsManagerProps> = ({ client
       alert('Please enter a company name.');
       return;
     }
-    if (!formData.logo?.trim()) {
-      alert('Please provide a logo image or URL.');
-      return;
+
+    let finalLogo = (formData.logo || '').trim();
+    if (!finalLogo) {
+      const fallbackDomain = formData.website || formData.website_url || formData.name || '';
+      finalLogo = getFaviconUrl(fallbackDomain);
+    } else if (isWebpageUrl(finalLogo)) {
+      finalLogo = getFaviconUrl(finalLogo);
+    }
+
+    let siteUrl = formData.website?.trim() || formData.website_url?.trim() || '';
+    if (siteUrl && !/^https?:\/\//i.test(siteUrl)) {
+      siteUrl = `https://${siteUrl}`;
     }
 
     setIsSaving(true);
     try {
-      const siteUrl = formData.website?.trim() || formData.website_url?.trim() || '';
       const clientToSave: ClientLogo = {
         id: formData.id || `client-${Date.now()}`,
         name: formData.name.trim(),
-        logo: formData.logo.trim(),
+        logo: finalLogo,
         industry: formData.industry?.trim() || '',
         website: siteUrl,
         website_url: siteUrl,
@@ -177,6 +250,15 @@ export const AdminClientsManager: React.FC<AdminClientsManagerProps> = ({ client
         <div className="flex items-center gap-3">
           <button
             type="button"
+            onClick={() => setShowLiveMarqueePreview(!showLiveMarqueePreview)}
+            className="glass-card hover:border-brand-500/50 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-1.5 transition-colors text-slate-700 dark:text-slate-200"
+          >
+            <Sparkles className="w-4 h-4 text-brand-500" />
+            <span>{showLiveMarqueePreview ? 'Hide Marquee Preview' : 'Preview Live Marquee'}</span>
+          </button>
+
+          <button
+            type="button"
             onClick={handleOpenAdd}
             className="btn-glass-primary px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 shadow-md hover:scale-[1.02] transition-transform"
           >
@@ -230,6 +312,19 @@ export const AdminClientsManager: React.FC<AdminClientsManagerProps> = ({ client
           Showing {filteredClients.length} of {clients.length}
         </span>
       </div>
+
+      {/* Live Marquee Preview Banner */}
+      {showLiveMarqueePreview && (
+        <div className="p-4 sm:p-6 rounded-2xl border border-brand-500/30 bg-slate-50/70 dark:bg-slate-900/70 shadow-inner">
+          <div className="flex items-center justify-between mb-3 px-2">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-brand-500" /> Live Marquee & Name Pop-up Preview
+            </span>
+            <span className="text-[11px] text-brand-600 dark:text-brand-400 font-mono">Real-time Homepage Rendering</span>
+          </div>
+          <ClientsMarquee />
+        </div>
+      )}
 
       {/* Clients Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
@@ -287,7 +382,10 @@ export const AdminClientsManager: React.FC<AdminClientsManagerProps> = ({ client
                 {/* Company Info */}
                 <div>
                   <div className="flex items-center justify-between gap-1">
-                    <h3 className="font-bold text-slate-900 dark:text-white text-sm sm:text-base truncate" title={client.name}>
+                    <h3 
+                      className="font-bold text-slate-900 dark:text-white text-sm sm:text-base truncate group-hover:text-brand-600 dark:group-hover:text-brand-400 group-hover:-translate-y-0.5 group-hover:scale-105 origin-left transition-all duration-300 ease-out" 
+                      title={client.name}
+                    >
                       {client.name}
                     </h3>
                     {client.featured && (
@@ -385,17 +483,40 @@ export const AdminClientsManager: React.FC<AdminClientsManagerProps> = ({ client
             <form onSubmit={handleSave} className="space-y-4">
               {/* Company Name */}
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
-                  Company / Brand Name *
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500">
+                    Company / Brand Name *
+                  </label>
+                  {formData.name && !formData.logo && (
+                    <button
+                      type="button"
+                      onClick={() => handleAutoFetchLogo(formData.name)}
+                      className="text-[10px] font-semibold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1"
+                    >
+                      <Zap className="w-3 h-3 text-amber-500" />
+                      <span>Fetch Logo</span>
+                    </button>
+                  )}
+                </div>
                 <input
                   type="text"
                   required
-                  placeholder="e.g., Microsoft Corporation"
+                  placeholder="e.g., Microsoft Corporation or Shristi Estate"
                   value={formData.name || ''}
                   onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                   className="glass-input w-full px-3 py-2 rounded-xl text-xs sm:text-sm"
                 />
+                {/* Quick Shristi Estate Preset */}
+                {formData.name?.toLowerCase().includes('shristi') && (
+                  <button
+                    type="button"
+                    onClick={handleUseShristiLogo}
+                    className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold bg-brand-50 dark:bg-brand-950/70 text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-brand-800 hover:bg-brand-100 transition-colors"
+                  >
+                    <Building2 className="w-3.5 h-3.5 text-brand-500" />
+                    <span>Use Official Shristi Estate Logo & Details</span>
+                  </button>
+                )}
               </div>
 
               {/* Industry */}
@@ -411,7 +532,7 @@ export const AdminClientsManager: React.FC<AdminClientsManagerProps> = ({ client
                   className="glass-input w-full px-3 py-2 rounded-xl text-xs sm:text-sm"
                 />
                 <div className="flex flex-wrap gap-1.5 mt-2">
-                  {COMMON_INDUSTRIES.slice(0, 4).map((ind) => (
+                  {COMMON_INDUSTRIES.slice(0, 5).map((ind) => (
                     <button
                       type="button"
                       key={ind}
@@ -426,18 +547,38 @@ export const AdminClientsManager: React.FC<AdminClientsManagerProps> = ({ client
 
               {/* Logo URL & File Upload */}
               <div className="space-y-2">
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500">
-                  Brand Logo Image *
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500">
+                    Brand Logo Image *
+                  </label>
+                  <span className="text-[10px] text-slate-400">Accepts image URL, website domain, or file</span>
+                </div>
                 <div className="flex items-center gap-2">
                   <input
-                    type="url"
-                    placeholder="https://... or upload below"
+                    type="text"
+                    placeholder="https://... or domain e.g. microsoft.com"
                     value={formData.logo || ''}
-                    onChange={(e) => setFormData(prev => ({ ...prev, logo: e.target.value }))}
+                    onChange={(e) => {
+                      setLogoLoadError(false);
+                      setFormData(prev => ({ ...prev, logo: e.target.value }));
+                    }}
+                    onBlur={() => {
+                      if (formData.logo && isWebpageUrl(formData.logo)) {
+                        handleAutoFetchLogo(formData.logo);
+                      }
+                    }}
                     className="glass-input flex-1 px-3 py-2 rounded-xl text-xs font-mono"
                   />
-                  <label className="btn-glass-primary px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
+                  <button
+                    type="button"
+                    onClick={() => handleAutoFetchLogo()}
+                    title="Automatically fetch brand logo icon from domain"
+                    className="btn-glass-primary px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap cursor-pointer shadow-xs"
+                  >
+                    <Zap className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Auto Logo</span>
+                  </button>
+                  <label className="btn-glass-primary px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer whitespace-nowrap shadow-xs">
                     <UploadCloud className="w-3.5 h-3.5" />
                     <span>{isUploading ? 'Uploading...' : 'Upload'}</span>
                     <input
@@ -452,21 +593,59 @@ export const AdminClientsManager: React.FC<AdminClientsManagerProps> = ({ client
 
                 {/* Logo Live Preview */}
                 {formData.logo && (
-                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center gap-3">
-                    <div className="h-12 w-28 bg-white dark:bg-slate-800 rounded-lg p-1.5 border border-slate-200/80 flex items-center justify-center shrink-0">
-                      <img
-                        src={formData.logo}
-                        alt="Preview"
-                        className="max-h-full max-w-full object-contain"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = 'https://placehold.co/120x40?text=Preview+Error';
-                        }}
-                      />
+                  <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
+                    <div className="flex items-center gap-3">
+                      <div className="h-12 w-28 bg-white dark:bg-slate-800 rounded-lg p-1.5 border border-slate-200/80 flex items-center justify-center shrink-0 overflow-hidden shadow-xs">
+                        {logoLoadError ? (
+                          <div className="flex items-center justify-center w-full h-full bg-brand-500/10 text-brand-600 font-bold text-xs uppercase font-['Outfit']">
+                            {formData.name ? formData.name.slice(0, 2) : 'LOGO'}
+                          </div>
+                        ) : (
+                          <img
+                            src={formData.logo}
+                            alt="Logo Preview"
+                            className="max-h-full max-w-full object-contain"
+                            onError={() => {
+                              if (isWebpageUrl(formData.logo || '')) {
+                                const fallback = getFaviconUrl(formData.logo || '');
+                                setFormData(prev => ({ ...prev, logo: fallback }));
+                              } else {
+                                setLogoLoadError(true);
+                              }
+                            }}
+                          />
+                        )}
+                      </div>
+                      <div className="text-[11px] text-slate-500 overflow-hidden flex-1 min-w-0">
+                        <p className="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                          <span>Logo Live Preview</span>
+                          {!logoLoadError && (
+                            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5 font-normal">
+                              <CheckCircle2 className="w-3 h-3" /> Ready
+                            </span>
+                          )}
+                        </p>
+                        <p className="truncate text-slate-400 font-mono text-[10px]">{formData.logo}</p>
+                      </div>
                     </div>
-                    <div className="text-[11px] text-slate-500 overflow-hidden">
-                      <p className="font-semibold text-slate-700 dark:text-slate-300">Logo Live Preview</p>
-                      <p className="truncate text-slate-400 font-mono text-[10px]">{formData.logo}</p>
-                    </div>
+
+                    {/* Helpful banner if user entered webpage or error occurred */}
+                    {(logoLoadError || isWebpageUrl(formData.logo)) && (
+                      <div className="pt-2 border-t border-slate-200/70 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs">
+                        <span className="text-amber-600 dark:text-amber-400 text-[11px] flex items-center gap-1">
+                          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                          <span>Website link detected. Convert to brand logo?</span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleAutoFetchLogo(formData.logo)}
+                          className="px-2.5 py-1 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-[10px] font-bold flex items-center gap-1 shadow-xs cursor-pointer"
+                        >
+                          <Zap className="w-3 h-3 text-amber-300" />
+                          <span>Convert to Brand Icon</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -477,14 +656,31 @@ export const AdminClientsManager: React.FC<AdminClientsManagerProps> = ({ client
                   Website URL (Optional)
                 </label>
                 <input
-                  type="url"
-                  placeholder="https://company.com"
+                  type="text"
+                  placeholder="e.g., shristiestate.in or https://company.com"
                   value={formData.website || formData.website_url || ''}
-                  onChange={(e) => setFormData(prev => ({ 
-                    ...prev, 
-                    website: e.target.value,
-                    website_url: e.target.value 
-                  }))}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setFormData(prev => ({ 
+                      ...prev, 
+                      website: val,
+                      website_url: val 
+                    }));
+                  }}
+                  onBlur={() => {
+                    const raw = (formData.website || '').trim();
+                    if (raw && !/^https?:\/\//i.test(raw)) {
+                      const withHttps = `https://${raw}`;
+                      setFormData(prev => ({
+                        ...prev,
+                        website: withHttps,
+                        website_url: withHttps
+                      }));
+                    }
+                    if (!formData.logo && raw) {
+                      handleAutoFetchLogo(raw);
+                    }
+                  }}
                   className="glass-input w-full px-3 py-2 rounded-xl text-xs sm:text-sm"
                 />
               </div>

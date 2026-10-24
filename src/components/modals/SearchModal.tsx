@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { Search, MapPin, Building2, ArrowRight, X } from 'lucide-react';
 import { toSafeInternalPath } from '../../utils/navigation';
@@ -16,6 +17,16 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
   const [buildings, setBuildings] = useState<Building[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
   const navigate = useNavigate();
+
+  // Lock body scroll while search modal is open
+  useEffect(() => {
+    if (!isOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen) {
@@ -56,11 +67,13 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
     navigate(toSafeInternalPath(url));
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center p-4 sm:p-6 pt-16 sm:pt-24">
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-start justify-center p-4 sm:p-6 pt-16 sm:pt-24 isolate">
       {/* Frosted Backdrop */}
       <div 
-        className="fixed inset-0 bg-slate-950/70 backdrop-blur-md transition-opacity"
+        className="fixed inset-0 bg-slate-950/80 backdrop-blur-md transition-opacity"
         onClick={onClose}
       />
 
@@ -197,6 +210,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

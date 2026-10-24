@@ -14,14 +14,76 @@
     <meta name="description" content="Discover verified office spaces, IT & business parks, warehouses, factories, and commercial land in Noida, Greater Noida, and Delhi-NCR with Shristi Estate." />
     <meta name="keywords" content="commercial real estate noida, office space for rent sector 62, it parks noida, warehouse sector 83, factory sector 85, commercial land noida expressway, ithum office space" />
     
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://shristiestate.in/" />
+    
     <!-- Open Graph / Meta -->
+    <meta property="og:site_name" content="Shristi Estate" />
+    <meta property="og:locale" content="en_IN" />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Shristi Estate - Commercial Real Estate Consultants" />
+    <meta property="og:title" content="Shristi Estate - Commercial Real Estate Consultants Noida" />
     <meta property="og:description" content="Specialist commercial real estate discovery and advisory across Noida, Greater Noida, and Delhi NCR." />
-    <meta property="og:url" content="https://shristiestate.in" />
+    <meta property="og:url" content="https://shristiestate.in/" />
     <meta property="og:image" content="https://shristiestate.in/logo-light.png" />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Shristi Estate - Commercial Real Estate Consultants Noida" />
+    <meta name="twitter:description" content="Specialist commercial real estate discovery and advisory across Noida, Greater Noida, and Delhi NCR." />
     <meta name="twitter:image" content="https://shristiestate.in/logo-light.png" />
+
+    <!-- Local SEO Geo Meta Tags (LocalBusiness & Proximity Signals) -->
+    <meta name="geo.region" content="IN-UP" />
+    <meta name="geo.placename" content="Noida, Uttar Pradesh" />
+    <meta name="geo.position" content="28.6280;77.3649" />
+    <meta name="ICBM" content="28.6280, 77.3649" />
+
+    <!-- Static Structured Data for Instant Search Engine Discovery -->
+    <script type="application/ld+json" id="shristi-schema-jsonld">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "RealEstateAgent",
+          "@id": "https://shristiestate.in/#organization",
+          "name": "Shristi Estate",
+          "url": "https://shristiestate.in",
+          "logo": "https://shristiestate.in/logo-light.png",
+          "image": "https://shristiestate.in/hero-commercial-park.jpg",
+          "telephone": "+91-8750098666",
+          "email": "contact@shristiestate.in",
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "Unit No. 1035, 10th Floor, Tower-B, iThum Tower, Plot No. A-40, Sector-62",
+            "addressLocality": "Noida",
+            "addressRegion": "Uttar Pradesh",
+            "postalCode": "201309",
+            "addressCountry": "IN"
+          },
+          "geo": {
+            "@type": "GeoCoordinates",
+            "latitude": "28.6280",
+            "longitude": "77.3649"
+          }
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://shristiestate.in/#website",
+          "url": "https://shristiestate.in",
+          "name": "Shristi Estate",
+          "publisher": {
+            "@id": "https://shristiestate.in/#organization"
+          },
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": "https://shristiestate.in/properties?q={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
+          }
+        }
+      ]
+    }
+    </script>
 
     <!-- Early Theme Detection (Prevents white flash before first paint) -->
     <script>
@@ -42,19 +104,49 @@
     <meta http-equiv="x-dns-prefetch-control" content="on">
     <link rel="dns-prefetch" href="https://images.unsplash.com">
     <link rel="preconnect" href="https://images.unsplash.com" crossorigin>
-    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
-    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-    <!-- Preload Desktop Hero Texture (Desktop only; on mobile, zero network competition for CSS) -->
-    <link rel="preload" as="image" href="/hero-commercial-park.jpg" media="(min-width: 769px)">
+    <!-- Preload Desktop Hero Texture with High Fetch Priority (WebP) -->
+    <link rel="preload" as="image" href="/hero-commercial-park.webp" type="image/webp" media="(min-width: 769px)" fetchpriority="high">
 
-    <!-- High-Performance Architectural Geometric Typography (Single Primary WOFF2 Family with font-display: swap) -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap">
+    <!-- Speculation Rules API for Near-Instant Route Transitions -->
+    <script type="speculationrules">
+    {
+      "prerender": [
+        {
+          "source": "list",
+          "urls": [
+            "/properties",
+            "/office-space",
+            "/it-business-parks",
+            "/locations"
+          ],
+          "eagerness": "moderate"
+        }
+      ]
+    }
+    </script>
+
+    <!-- Self-Hosted Architectural Geometric Typography (Zero 3rd-party DNS latency, font-display: swap) -->
+    <link rel="stylesheet" href="/fonts/space-grotesk.css">
   </head>
   <body class="bg-slate-50 text-slate-900 dark:bg-[#070C1E] dark:text-slate-100 antialiased selection:bg-brand-500 selection:text-white">
-    <div id="root"></div>
+    <div id="root">
+      <!-- Semantic Fallback for Non-JS Crawlers & Search Engines -->
+      <div style="display:none">
+        <h1>Shristi Estate | Premium Commercial Real Estate Noida & Delhi NCR</h1>
+        <p>Specialist commercial real estate discovery and advisory across Noida, Greater Noida, and Delhi NCR. Verified office spaces, IT and business parks, warehouses, factories, and commercial land plots.</p>
+        <nav aria-label="Commercial Directory">
+          <ul>
+            <li><a href="/office-space">Office Spaces for Rent</a></li>
+            <li><a href="/it-business-parks">IT &amp; Business Parks</a></li>
+            <li><a href="/warehouses">Warehouses &amp; Logistics</a></li>
+            <li><a href="/factory-industrial">Industrial &amp; Factories</a></li>
+            <li><a href="/locations">Commercial Locations</a></li>
+            <li><a href="/properties">All Commercial Properties</a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

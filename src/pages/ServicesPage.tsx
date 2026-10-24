@@ -1,10 +1,79 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Building2, Key, Handshake, Search, CalendarCheck, FileText, ArrowRight } from 'lucide-react';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
 import { HyperlinkedText } from '../components/common/HyperlinkedText';
+import { updatePageSeo, getOrganizationSchema, getBreadcrumbSchema } from '../utils/seo';
 
 export const ServicesPage: React.FC = () => {
+  useEffect(() => {
+    const canonical = 'https://shristiestate.in/services';
+    const cleanup = updatePageSeo({
+      title: 'Commercial Real Estate Services | Corporate Leasing & Advisory Noida',
+      description: 'Full-cycle commercial real estate services: corporate office leasing, warehouse & industrial space leasing, sales & acquisitions, and landlord representation in Noida & Delhi NCR.',
+      canonicalUrl: canonical,
+      keywords: 'commercial real estate services noida, corporate office leasing noida, warehouse leasing noida, tenant representation noida, landlord representation',
+      ogType: 'website',
+      breadcrumbs: [
+        { name: 'Home', url: 'https://shristiestate.in' },
+        { name: 'Services', url: canonical }
+      ],
+      structuredData: {
+        '@context': 'https://schema.org',
+        '@graph': [
+          getOrganizationSchema(),
+          {
+            '@type': 'Service',
+            '@id': `${canonical}#service`,
+            'name': 'Commercial Real Estate Advisory & Leasing',
+            'provider': {
+              '@id': 'https://shristiestate.in/#organization'
+            },
+            'areaServed': [
+              { '@type': 'AdministrativeArea', 'name': 'Noida' },
+              { '@type': 'AdministrativeArea', 'name': 'Greater Noida' },
+              { '@type': 'AdministrativeArea', 'name': 'Delhi NCR' }
+            ],
+            'hasOfferCatalog': {
+              '@type': 'OfferCatalog',
+              'name': 'Commercial Real Estate Services',
+              'itemListElement': [
+                {
+                  '@type': 'Offer',
+                  'itemOffered': {
+                    '@type': 'Service',
+                    'name': 'Corporate Office Leasing',
+                    'description': 'Full-cycle office space discovery, lease negotiations, and tenant representation.'
+                  }
+                },
+                {
+                  '@type': 'Offer',
+                  'itemOffered': {
+                    '@type': 'Service',
+                    'name': 'Commercial Sales & Acquisitions',
+                    'description': 'Strategic property buying, investment modeling, and Noida authority title clearance.'
+                  }
+                },
+                {
+                  '@type': 'Offer',
+                  'itemOffered': {
+                    '@type': 'Service',
+                    'name': 'Warehousing & Industrial Leasing',
+                    'description': 'Industrial shed, manufacturing plant, and logistics warehouse leasing across Noida corridors.'
+                  }
+                }
+              ]
+            }
+          },
+          getBreadcrumbSchema([
+            { name: 'Home', url: 'https://shristiestate.in' },
+            { name: 'Services', url: canonical }
+          ])
+        ]
+      }
+    });
+    return cleanup;
+  }, []);
   const services = [
     {
       title: 'Corporate Office Leasing',

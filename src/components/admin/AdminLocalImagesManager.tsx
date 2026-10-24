@@ -120,6 +120,18 @@ export const AdminLocalImagesManager: React.FC = () => {
     'Authorization': 'Bearer shristi-admin-authorized'
   });
 
+  const safeParseJson = async (res: Response, fallbackError: string = 'Invalid server response') => {
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      throw new Error('Image Management Backend (server.js) is not reachable on this server. If hosted on Hostinger, ensure the Node.js application is running to enable local disk image uploads.');
+    }
+    try {
+      return await res.json();
+    } catch {
+      throw new Error(fallbackError);
+    }
+  };
+
   const fetchImages = async () => {
     setLoading(true);
     setError('');
@@ -127,7 +139,7 @@ export const AdminLocalImagesManager: React.FC = () => {
       const res = await fetch('/api/admin/images', {
         headers: getAuthHeaders()
       });
-      const data = await res.json();
+      const data = await safeParseJson(res, 'Failed to load local images');
       if (!res.ok || !data.success) {
         throw new Error(data.error || 'Failed to load local images');
       }
@@ -145,7 +157,7 @@ export const AdminLocalImagesManager: React.FC = () => {
       const res = await fetch('/api/admin/images/trash', {
         headers: getAuthHeaders()
       });
-      const data = await res.json();
+      const data = await safeParseJson(res);
       if (res.ok && data.success && Array.isArray(data.trash)) {
         setTrashItems(data.trash);
       }
@@ -166,7 +178,7 @@ export const AdminLocalImagesManager: React.FC = () => {
         },
         body: JSON.stringify({ path: itemOrPath })
       });
-      const data = await res.json();
+      const data = await safeParseJson(res, 'Failed to restore image');
       if (!res.ok || !data.success) {
         throw new Error(data.error || 'Failed to restore image');
       }
@@ -189,13 +201,13 @@ export const AdminLocalImagesManager: React.FC = () => {
         method: 'DELETE',
         headers: getAuthHeaders()
       });
-      const data = await res.json();
+      const data = await safeParseJson(res, 'Failed to empty recycle bin');
       if (res.ok && data.success) {
         setSuccessMessage('Recycle Bin emptied successfully.');
         setTrashItems([]);
       }
     } catch (err: any) {
-      setError('Failed to empty recycle bin');
+      setError(err?.message || 'Failed to empty recycle bin');
     }
   };
 
@@ -204,7 +216,7 @@ export const AdminLocalImagesManager: React.FC = () => {
       const res = await fetch('/api/admin/site-images', {
         headers: getAuthHeaders()
       });
-      const json = await res.json();
+      const json = await safeParseJson(res);
       if (res.ok && json.success && json.data) {
         setSiteConfig(prev => ({ ...prev, ...json.data }));
       }
@@ -339,7 +351,7 @@ export const AdminLocalImagesManager: React.FC = () => {
         body: formData
       });
 
-      const data = await res.json();
+      const data = await safeParseJson(res, 'Failed to upload images');
       if (!res.ok || !data.success) {
         throw new Error(data.error || 'Failed to upload images');
       }
@@ -373,7 +385,7 @@ export const AdminLocalImagesManager: React.FC = () => {
         body: formData
       });
 
-      const data = await res.json();
+      const data = await safeParseJson(res, 'Failed to replace image');
       if (!res.ok || !data.success) {
         throw new Error(data.error || 'Failed to replace image');
       }
@@ -402,7 +414,7 @@ export const AdminLocalImagesManager: React.FC = () => {
         headers: getAuthHeaders()
       });
 
-      const data = await res.json();
+      const data = await safeParseJson(res, 'Failed to delete image');
       if (!res.ok || !data.success) {
         throw new Error(data.error || 'Failed to delete image');
       }
@@ -536,7 +548,7 @@ export const AdminLocalImagesManager: React.FC = () => {
         body: JSON.stringify(siteConfig)
       });
 
-      const data = await res.json();
+      const data = await safeParseJson(res, 'Failed to write data/site-images.json');
       if (!res.ok || !data.success) {
         throw new Error(data.error || 'Failed to write data/site-images.json');
       }
@@ -585,7 +597,7 @@ export const AdminLocalImagesManager: React.FC = () => {
         headers: getAuthHeaders()
       });
 
-      const data = await res.json();
+      const data = await safeParseJson(res, 'Failed to delete selected images');
       if (!res.ok || !data.success) {
         throw new Error(data.error || 'Failed to delete selected images');
       }

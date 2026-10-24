@@ -496,7 +496,7 @@ export async function imageApiMiddleware(req, res, next) {
     if (err) {
       res.status(500).json({ success: false, error: err.message || 'Internal Server Error' });
     } else {
-      next();
+      res.status(404).json({ success: false, error: `Admin API route not found: ${url}` });
     }
   });
 }

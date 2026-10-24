@@ -94,9 +94,21 @@ function localImageUploadPlugin(): Plugin {
           res.end(JSON.stringify({ error: err?.message || 'Upload failed' }));
         }
       });
+
+      // Guard: Ensure any unhandled /api call returns JSON 404 instead of falling through to Vite's index.html
+      server.middlewares.use('/api', (req, res) => {
+        res.statusCode = 404;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({ success: false, error: `API endpoint not found: ${req.url}` }));
+      });
     },
     configurePreviewServer(server) {
       server.middlewares.use(imageApiMiddleware);
+      server.middlewares.use('/api', (req, res) => {
+        res.statusCode = 404;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({ success: false, error: `API endpoint not found: ${req.url}` }));
+      });
     }
   };
 }

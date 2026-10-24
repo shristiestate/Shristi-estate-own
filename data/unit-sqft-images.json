@@ -11,96 +11,123 @@
     "updated_at": "2026-10-23T17:05:03.643Z"
   },
   "600": {
-    "primary_image": "/images/units/600/unit-600-600-700-sqft-cafeteria-food-court-1792171140031.jpg",
+    "primary_image": "/images/units/600/unit-600-600-700-sqft-conference-room-1792854846473.jpg",
     "gallery": [
-      "/images/units/600/unit-600-600-700-sqft-cafeteria-food-court-1792171140031.jpg",
-      "/images/units/600/unit-600-600-700-sqft-cafeteria-food-court-2-1792171140036.jpg",
-      "/images/units/600/unit-600-600-700-sqft-conference-room-1792171140047.jpg"
+      "/images/units/600/unit-600-600-700-sqft-conference-room-1792854846473.jpg",
+      "/images/units/600/unit-600-600-700-sqft-entrance-lobby-1792854846501.jpg",
+      "/images/units/600/unit-600-600-700-sqft-exterior-facade-2-1792854846522.jpg",
+      "/images/units/600/unit-600-600-700-sqft-exterior-facade-3-1792854846531.jpg"
     ],
-    "unit_count": 36,
-    "updated_at": "2026-10-17T11:56:40.758Z"
+    "unit_count": 20,
+    "updated_at": "2026-10-24T15:14:17.270Z"
   },
   "750": {
-    "primary_image": "/images/units/750/unit-750-800-900-sqft-exterior-facade-1792171284933.jpg",
+    "primary_image": "/images/units/750/unit-750-600-700-sqft-exterior-facade-1792854889927.jpg",
     "gallery": [
-      "/images/units/750/unit-750-800-900-sqft-exterior-facade-1792171284933.jpg",
-      "/images/units/750/unit-750-800-900-sqft-floor-plan-1792171284937.jpg",
-      "/images/units/750/unit-750-800-900-sqft-office-workspace-1792171284941.jpg"
+      "/images/units/750/unit-750-600-700-sqft-exterior-facade-1792854889927.jpg",
+      "/images/units/750/unit-750-600-700-sqft-high-speed-elevators-2-1792854889941.jpg",
+      "/images/units/750/unit-750-600-700-sqft-office-workspace-3-1792854889961.jpg"
     ],
-    "unit_count": 37,
-    "updated_at": "2026-10-17T11:57:29.553Z"
+    "unit_count": 0,
+    "updated_at": "2026-10-24T15:15:00.288Z"
+  },
+  "800": {
+    "primary_image": "/images/units/800/unit-800-600-700-sqft-parking-facility-1792854926589.jpg",
+    "gallery": [
+      "/images/units/800/unit-800-600-700-sqft-parking-facility-1792854926589.jpg",
+      "/images/units/800/unit-800-600-700-sqft-parking-facility-2-1792854926617.jpg",
+      "/images/units/800/unit-800-800-900-sqft-exterior-facade-1792854926632.jpg",
+      "/images/units/800/unit-800-800-900-sqft-floor-plan-1792854926646.jpg"
+    ],
+    "unit_count": 22,
+    "updated_at": "2026-10-24T15:15:26.668Z"
   },
   "900": {
-    "primary_image": "/images/units/900/unit-900-office-space-entrance-lobby-3-1792171634697.jpg",
+    "primary_image": "/images/units/900/unit-900-600-700-sqft-conference-room-2-1792854988595.jpg",
     "gallery": [
-      "/images/units/900/unit-900-office-space-entrance-lobby-3-1792171634697.jpg",
-      "/images/units/900/unit-900-office-space-entrance-lobby-4-1792171634700.jpg",
-      "/images/units/900/unit-900-office-space-entrance-lobby-5-1792171634705.jpg"
+      "/images/units/900/unit-900-600-700-sqft-conference-room-2-1792854988595.jpg",
+      "/images/units/900/unit-900-600-700-sqft-entrance-lobby-2-1792854988612.jpg",
+      "/images/units/900/unit-900-600-700-sqft-high-speed-elevators-2-1792854988630.jpg"
     ],
-    "unit_count": 34,
-    "updated_at": "2026-10-17T11:57:40.577Z"
+    "unit_count": 18,
+    "updated_at": "2026-10-24T15:16:45.719Z"
   },
   "1000": {
-    "primary_image": "/images/units/1000/unit-1000-office-space-conference-room-6-1792171704175.jpg",
+    "primary_image": "/images/units/1000/unit-1000-1400-1600-sqft-entrance-lobby-1792855037753.jpg",
     "gallery": [
-      "/images/units/1000/unit-1000-office-space-conference-room-4-1792171704170.jpg",
-      "/images/units/1000/unit-1000-office-space-conference-room-6-1792171704175.jpg",
-      "/images/units/1000/unit-1000-office-space-conference-room-7-1792171704178.jpg",
-      "/images/units/1000/unit-1000-office-space-entrance-lobby-5-1792171704183.jpg"
+      "/images/units/1000/unit-1000-1400-1600-sqft-entrance-lobby-1792855037753.jpg",
+      "/images/units/1000/unit-1000-1400-1600-sqft-exterior-facade-2-1792855037766.jpg",
+      "/images/units/1000/unit-1000-1400-1600-sqft-floor-plan-1792855037784.jpg",
+      "/images/units/1000/unit-1000-1400-1600-sqft-high-speed-elevators-1792855037794.jpg"
     ],
-    "unit_count": 35,
-    "updated_at": "2026-10-17T11:58:05.082Z"
+    "unit_count": 17,
+    "updated_at": "2026-10-24T15:17:30.193Z"
   },
   "1200": {
-    "primary_image": "/images/units/1200/unit-1200-office-space-high-speed-elevators-1792171811587.jpg",
+    "primary_image": "/images/units/1200/unit-1200-1000-1200-sqft-cafeteria-food-court-1792855075932.jpg",
     "gallery": [
-      "/images/units/1200/unit-1200-office-space-floor-plan-5-1792171811583.jpg",
-      "/images/units/1200/unit-1200-office-space-high-speed-elevators-1792171811587.jpg",
-      "/images/units/1200/unit-1200-office-space-high-speed-elevators-2-1792171811590.jpg"
+      "/images/units/1200/unit-1200-1000-1200-sqft-cafeteria-food-court-1792855075932.jpg",
+      "/images/units/1200/unit-1200-1000-1200-sqft-high-speed-elevators-1792855075949.jpg",
+      "/images/units/1200/unit-1200-1400-1600-sqft-cafeteria-food-court-1792855075971.jpg",
+      "/images/units/1200/unit-1200-1400-1600-sqft-conference-room-1792855075988.jpg"
     ],
-    "unit_count": 37,
-    "updated_at": "2026-10-17T11:58:41.770Z"
+    "unit_count": 19,
+    "updated_at": "2026-10-24T15:18:08.552Z"
   },
   "1400": {
-    "primary_image": "/images/units/1400/unit-1400-1400-1600-sqft-conference-room-1792172020133.jpg",
+    "primary_image": "/images/units/1400/unit-1400-1700-2000-sqft-entrance-lobby-1792855137787.jpg",
     "gallery": [
-      "/images/units/1400/unit-1400-1400-1600-sqft-conference-room-1792172020133.jpg",
-      "/images/units/1400/unit-1400-1400-1600-sqft-entrance-lobby-1792172020136.jpg",
-      "/images/units/1400/unit-1400-1400-1600-sqft-exterior-facade-2-1792172020139.jpg",
-      "/images/units/1400/unit-1400-1400-1600-sqft-floor-plan-1792172020142.jpg"
+      "/images/units/1400/unit-1400-1000-1200-sqft-conference-room-1792855153297.jpg",
+      "/images/units/1400/unit-1400-1700-2000-sqft-entrance-lobby-1792855137787.jpg",
+      "/images/units/1400/unit-1400-1700-2000-sqft-entrance-lobby-2-1792855137802.jpg"
     ],
-    "unit_count": 39,
-    "updated_at": "2026-10-17T11:59:25.944Z"
+    "unit_count": 0,
+    "updated_at": "2026-10-24T15:19:16.194Z"
+  },
+  "1500": {
+    "primary_image": "/images/units/1500/unit-1500-office-space-office-workspace-6-1792855223203.jpg",
+    "gallery": [
+      "/images/units/1500/unit-1500-office-space-office-workspace-6-1792855223203.jpg",
+      "/images/units/1500/unit-1500-office-space-office-workspace-7-1792855223225.jpg",
+      "/images/units/1500/unit-1500-office-space-office-workspace-8-1792855223238.jpg",
+      "/images/units/1500/unit-1500-office-space-parking-facility-1792855223244.jpg"
+    ],
+    "unit_count": 23,
+    "updated_at": "2026-10-24T15:20:23.334Z"
   },
   "1600": {
-    "primary_image": "/images/units/1600/unit-1600-office-space-high-speed-elevators-8-1792172120129.jpg",
+    "primary_image": "/images/units/1600/unit-1600-office-space-high-speed-elevators-1792855255566.jpg",
     "gallery": [
-      "/images/units/1600/unit-1600-office-space-high-speed-elevators-8-1792172120129.jpg",
-      "/images/units/1600/unit-1600-office-space-office-workspace-2-1792172120132.jpg",
-      "/images/units/1600/unit-1600-office-space-office-workspace-4-1792172120135.jpg"
+      "/images/units/1600/unit-1600-office-space-floor-plan-4-1792855255534.jpg",
+      "/images/units/1600/unit-1600-office-space-floor-plan-8-1792855255543.jpg",
+      "/images/units/1600/unit-1600-office-space-high-speed-elevators-1792855255566.jpg",
+      "/images/units/1600/unit-1600-office-space-high-speed-elevators-2-1792855255581.jpg"
     ],
-    "unit_count": 39,
-    "updated_at": "2026-10-17T12:05:32.947Z"
+    "unit_count": 0,
+    "updated_at": "2026-10-24T15:21:18.913Z"
   },
   "1800": {
-    "primary_image": "/images/units/1800/unit-1800-office-space-office-workspace-6-1792238449643.jpg",
+    "primary_image": "/images/units/1800/unit-1800-office-space-entrance-lobby-1792855318004.jpg",
     "gallery": [
-      "/images/units/1800/unit-1800-office-space-office-workspace-6-1792238449643.jpg",
-      "/images/units/1800/unit-1800-office-space-office-workspace-7-1792172368291.jpg",
-      "/images/units/1800/unit-1800-office-space-office-workspace-8-1792172368307.jpg"
+      "/images/units/1800/unit-1800-office-space-entrance-lobby-1792855318004.jpg",
+      "/images/units/1800/unit-1800-office-space-entrance-lobby-2-1792855318025.jpg",
+      "/images/units/1800/unit-1800-office-space-entrance-lobby-3-1792855318034.jpg",
+      "/images/units/1800/unit-1800-office-space-entrance-lobby-4-1792855318045.jpg",
+      "/images/units/1800/unit-1800-office-space-entrance-lobby-6-1792855318057.jpg"
     ],
-    "unit_count": 30,
-    "updated_at": "2026-10-17T12:05:21.899Z"
+    "unit_count": 22,
+    "updated_at": "2026-10-24T15:22:59.769Z"
   },
   "2000": {
-    "primary_image": "/images/units/2000/unit-2000-2000-sqft-exterior-facade-1792493409027.jpg",
+    "primary_image": "/images/units/2000/unit-2000-office-space-conference-room-2-1792855427173.jpg",
     "gallery": [
-      "/images/units/2000/unit-2000-2000-sqft-exterior-facade-1792493409027.jpg",
-      "/images/units/2000/unit-2000-2000-sqft-floor-plan-1792493409037.jpg",
-      "/images/units/2000/unit-2000-2000-sqft-office-workspace-1792493409038.jpg"
+      "/images/units/2000/unit-2000-office-space-conference-room-2-1792855427173.jpg",
+      "/images/units/2000/unit-2000-office-space-conference-room-4-1792855427175.jpg",
+      "/images/units/2000/unit-2000-office-space-conference-room-6-1792855427194.jpg",
+      "/images/units/2000/unit-2000-office-space-conference-room-8-1792855427201.jpg"
     ],
-    "unit_count": 38,
-    "updated_at": "2026-10-20T10:50:37.566Z"
+    "unit_count": 21,
+    "updated_at": "2026-10-24T15:23:59.583Z"
   },
   "100000": {
     "primary_image": "/images/units/100000/unit-100000-office-space-conference-room-8-1792238672074.jpg",

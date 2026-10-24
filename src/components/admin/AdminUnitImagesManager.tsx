@@ -36,7 +36,8 @@ import {
   resetAllUnitImagesMap,
   normalizeSqFtKey,
   SqFtImageEntry,
-  getAdminHeaders
+  getAdminHeaders,
+  safeParseJson
 } from '../../utils/unitSqftImages';
 import { AutoUploadSqFtImagesModal } from './AutoUploadSqFtImagesModal';
 
@@ -289,23 +290,54 @@ export const AdminUnitImagesManager: React.FC<AdminUnitImagesManagerProps> = ({
         formData.append('images', f);
       });
 
-      const res = await fetch(`/api/admin/images/upload?subfolder=${encodeURIComponent(subfolder)}`, {
-        method: 'POST',
-        headers: getAdminHeaders(),
-        body: formData
-      });
+      let uploadedList: Array<{ url: string; path: string }> = [];
+      let savedToDisk = false;
 
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Failed to upload files to local project directory');
+      // 1. Attempt to upload directly to local disk directory via backend API
+      try {
+        const res = await fetch(`/api/admin/images/upload?subfolder=${encodeURIComponent(subfolder)}`, {
+          method: 'POST',
+          headers: getAdminHeaders(),
+          body: formData
+        });
+
+        const contentType = res.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+          const data = await res.json();
+          if (res.ok && data.success) {
+            uploadedList = Array.isArray(data.files) && data.files.length > 0
+              ? data.files
+              : (data.url ? [{ url: data.url, path: data.url }] : []);
+            if (uploadedList.length > 0) {
+              savedToDisk = true;
+            }
+          }
+        }
+      } catch (backendErr) {
+        console.warn('Backend server upload offline, switching to seamless client fallback:', backendErr);
       }
 
-      const uploadedList: Array<{ url: string; path: string }> = Array.isArray(data.files) && data.files.length > 0
-        ? data.files
-        : (data.url ? [{ url: data.url, path: data.url }] : []);
+      // 2. Offline / Static host fallback: convert images into high-quality WebP Data URLs
+      if (!savedToDisk || uploadedList.length === 0) {
+        setUploadProgressText(`Processing ${validFiles.length} image(s) for instant local & building sync...`);
+        const fallbackUrls: string[] = [];
+        for (const file of validFiles) {
+          const dataUrl = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve((reader.result as string) || '');
+            reader.onerror = () => resolve('');
+            reader.readAsDataURL(file);
+          });
+          if (dataUrl) {
+            fallbackUrls.push(dataUrl);
+          }
+        }
 
-      if (uploadedList.length === 0) {
-        throw new Error('No uploaded file URLs returned from local server');
+        if (fallbackUrls.length === 0) {
+          throw new Error('Could not process the selected image files.');
+        }
+
+        uploadedList = fallbackUrls.map(url => ({ url, path: url }));
       }
 
       const primaryUrl = uploadedList[0].url;
@@ -327,7 +359,9 @@ export const AdminUnitImagesManager: React.FC<AdminUnitImagesManagerProps> = ({
 
       setSqFtMap(updatedMap);
       setStatusMessage({
-        text: `✓ Successfully uploaded ${validFiles.length} image(s) to /public/images/units/${area}/ and synced across all ${area.toLocaleString('en-IN')} sq.ft. units in all buildings!`,
+        text: savedToDisk
+          ? `✓ Successfully uploaded ${validFiles.length} image(s) to /public/images/units/${area}/ and synced across all ${area.toLocaleString('en-IN')} sq.ft. units in all buildings!`
+          : `✓ Successfully synced ${validFiles.length} image(s) across all ${area.toLocaleString('en-IN')} sq.ft. units in all buildings! (Saved to local browser storage; start "node server.js" to write files to disk)`,
         type: 'success'
       });
 

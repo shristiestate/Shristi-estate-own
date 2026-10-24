@@ -55,6 +55,26 @@ export function getSqFtImageForArea(area: number | string | undefined | null): S
 }
 
 /**
+ * Safely parses response as JSON, throwing a human-friendly error if server returned HTML
+ */
+export async function safeParseJson<T = any>(
+  res: Response,
+  fallbackError: string = 'Invalid server response'
+): Promise<T> {
+  const contentType = res.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    throw new Error(
+      'Image Management Backend (server.js) is not reachable on this server. If hosted on Hostinger, ensure the Node.js application is running to enable local disk image uploads.'
+    );
+  }
+  try {
+    return (await res.json()) as T;
+  } catch {
+    throw new Error(fallbackError);
+  }
+}
+
+/**
  * Fetches latest sq.ft. images mapping from backend API with localStorage caching
  */
 export async function fetchSqFtImagesMap(): Promise<Record<string, SqFtImageEntry>> {
@@ -62,7 +82,8 @@ export async function fetchSqFtImagesMap(): Promise<Record<string, SqFtImageEntr
     const res = await fetch('/api/admin/unit-sqft-images', {
       headers: getAdminHeaders()
     });
-    if (res.ok) {
+    const contentType = res.headers.get('content-type') || '';
+    if (res.ok && contentType.includes('application/json')) {
       const json = await res.json();
       if (json && json.success && json.data) {
         if (typeof window !== 'undefined') {

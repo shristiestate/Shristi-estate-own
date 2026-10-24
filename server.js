@@ -22,6 +22,11 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 // - GET/PUT /api/admin/site-images
 app.use(imageApiMiddleware);
 
+// Guard: Ensure any unhandled /api/* call returns JSON 404 instead of falling through to index.html
+app.all('/api/*', (req, res) => {
+  res.status(404).json({ success: false, error: `API endpoint ${req.method} ${req.path} not found` });
+});
+
 // Serve static assets from public/ (including /images/...)
 app.use(express.static(path.join(__dirname, 'public')));
 

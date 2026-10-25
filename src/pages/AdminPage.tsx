@@ -285,9 +285,10 @@ export const AdminPage: React.FC = () => {
   const [guideCategoryFilter, setGuideCategoryFilter] = useState('All');
   const [showGuideModal, setShowGuideModal] = useState(false);
   const [isEditingGuide, setIsEditingGuide] = useState(false);
-  const [guideModalTab, setGuideModalTab] = useState<'edit' | 'preview'>('edit');
+  const [guideModalTab, setGuideModalTab] = useState<'edit' | 'seo' | 'preview'>('edit');
   const [guidePreviewSubTab, setGuidePreviewSubTab] = useState<'card' | 'article'>('card');
   const [isUploadingGuideImage, setIsUploadingGuideImage] = useState(false);
+  const [isUploadingGuideOgImg, setIsUploadingGuideOgImg] = useState(false);
   const [showHyperlinkForm, setShowHyperlinkForm] = useState(false);
   const [editingHyperlinkIndex, setEditingHyperlinkIndex] = useState<number | null>(null);
   const [hyperlinkInput, setHyperlinkInput] = useState<HyperlinkConfig>({
@@ -313,6 +314,11 @@ export const AdminPage: React.FC = () => {
     featured_image_caption: '',
     seo_title: '',
     seo_description: '',
+    seo_keywords: '',
+    canonical_url: '',
+    og_title: '',
+    og_description: '',
+    og_image: '',
     hyperlinks: [],
     published: true,
     featured: false,
@@ -921,6 +927,25 @@ export const AdminPage: React.FC = () => {
     }));
   };
 
+  const handleGuideOgImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploadingGuideOgImg(true);
+    try {
+      const uploadedUrl = await StorageService.uploadBlogImage(file, currentGuide.og_image);
+      setCurrentGuide(prev => ({
+        ...prev,
+        og_image: uploadedUrl
+      }));
+    } catch (err) {
+      console.error('Guide OG image upload failed:', err);
+      alert('Failed to upload OG image. Please try again.');
+    } finally {
+      setIsUploadingGuideOgImg(false);
+      e.target.value = '';
+    }
+  };
+
   const handleOpenAddGuide = () => {
     setIsEditingGuide(false);
     setGuideModalTab('edit');
@@ -941,6 +966,11 @@ export const AdminPage: React.FC = () => {
       featured_image_caption: '',
       seo_title: '',
       seo_description: '',
+      seo_keywords: '',
+      canonical_url: '',
+      og_title: '',
+      og_description: '',
+      og_image: '',
       hyperlinks: [],
       published: true,
       featured: false,
@@ -963,6 +993,11 @@ export const AdminPage: React.FC = () => {
       featured_image_caption: guide.featured_image_caption || '',
       seo_title: guide.seo_title || '',
       seo_description: guide.seo_description || '',
+      seo_keywords: guide.seo_keywords || '',
+      canonical_url: guide.canonical_url || '',
+      og_title: guide.og_title || '',
+      og_description: guide.og_description || '',
+      og_image: guide.og_image || '',
       hyperlinks: Array.isArray(guide.hyperlinks) ? [...guide.hyperlinks] : []
     });
     setShowGuideModal(true);
@@ -996,6 +1031,11 @@ export const AdminPage: React.FC = () => {
         featured_image_caption: currentGuide.featured_image_caption?.trim() || '',
         seo_title: currentGuide.seo_title?.trim() || '',
         seo_description: currentGuide.seo_description?.trim() || '',
+        seo_keywords: currentGuide.seo_keywords?.trim() || '',
+        canonical_url: currentGuide.canonical_url?.trim() || '',
+        og_title: currentGuide.og_title?.trim() || '',
+        og_description: currentGuide.og_description?.trim() || '',
+        og_image: currentGuide.og_image?.trim() || '',
         hyperlinks: currentGuide.hyperlinks || [],
         published: currentGuide.published ?? true,
         featured: currentGuide.featured ?? false,
@@ -7007,7 +7047,7 @@ export const AdminPage: React.FC = () => {
                 </h2>
               </div>
 
-              {/* View Switcher: Editor Form vs Live Preview */}
+              {/* View Switcher: Editor Form vs SEO vs Live Preview */}
               <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 self-start sm:self-auto">
                 <button
                   type="button"
@@ -7018,7 +7058,22 @@ export const AdminPage: React.FC = () => {
                       : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
                   }`}
                 >
-                  📝 Editor Form
+                  📝 Content & Article
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setGuideModalTab('seo')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                    guideModalTab === 'seo'
+                      ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm'
+                      : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                  }`}
+                >
+                  <Search className="w-3.5 h-3.5 text-brand-500" />
+                  <span>🔍 SEO & Social</span>
+                  {currentGuide.seo_title && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
+                  )}
                 </button>
                 <button
                   type="button"
@@ -7260,20 +7315,33 @@ export const AdminPage: React.FC = () => {
                   />
                 </div>
 
-                {/* SEO METADATA */}
+                {/* SEO METADATA QUICK PREVIEW & LINK */}
                 <div className="glass-card p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/30 space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                      SEO Metadata
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                      <Search className="w-3.5 h-3.5 text-brand-500" />
+                      <span>SEO Metadata & Social Preview</span>
                     </span>
-                    <span className="text-[10px] text-slate-400">
-                      Defaults automatically to Title and Excerpt
-                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setGuideModalTab('seo')}
+                      className="text-[11px] font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <Sparkles className="w-3 h-3" />
+                      <span>Open Full SEO & Social Suite →</span>
+                    </button>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[11px] font-semibold mb-1">Custom SEO Title</label>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-[11px] font-semibold">Custom SEO Title</label>
+                        <span className={`text-[10px] font-mono ${
+                          (currentGuide.seo_title?.length || 0) > 60 ? 'text-amber-500 font-bold' : 'text-slate-400'
+                        }`}>
+                          {currentGuide.seo_title?.length || 0}/60
+                        </span>
+                      </div>
                       <input
                         type="text"
                         value={currentGuide.seo_title || ''}
@@ -7283,7 +7351,14 @@ export const AdminPage: React.FC = () => {
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-semibold mb-1">Custom Meta Description</label>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-[11px] font-semibold">Custom Meta Description</label>
+                        <span className={`text-[10px] font-mono ${
+                          (currentGuide.seo_description?.length || 0) > 160 ? 'text-amber-500 font-bold' : 'text-slate-400'
+                        }`}>
+                          {currentGuide.seo_description?.length || 0}/160
+                        </span>
+                      </div>
                       <input
                         type="text"
                         value={currentGuide.seo_description || ''}
@@ -7620,7 +7695,361 @@ export const AdminPage: React.FC = () => {
               </form>
             )}
 
-            {/* TAB 2: LIVE ADMIN PREVIEW */}
+            {/* TAB 2: EDITABLE SEO & SOCIAL SECTION */}
+            {guideModalTab === 'seo' && (
+              <form onSubmit={handleSaveGuide} className="space-y-4 overflow-y-auto pr-2 flex-1 -mr-1">
+                {/* Real-time Google SERP & Social Sharing Card Preview */}
+                <AdminSeoPreviewSection
+                  title={currentGuide.title || ''}
+                  seoTitle={currentGuide.seo_title}
+                  description={currentGuide.excerpt || currentGuide.content || ''}
+                  seoDescription={currentGuide.seo_description}
+                  slug={currentGuide.slug || ''}
+                  urlPrefix="https://shristiestate.in/blog/"
+                  featuredImage={getBlogFeaturedImage(currentGuide)}
+                  ogImage={currentGuide.og_image}
+                  ogTitle={currentGuide.og_title}
+                  ogDescription={currentGuide.og_description}
+                  type="guide"
+                  entity={currentGuide}
+                />
+
+                <div className="space-y-4">
+                  {/* Article SEO Title */}
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                        Article SEO Meta Title
+                      </label>
+                      <span className={`text-[11px] font-mono ${
+                        (currentGuide.seo_title?.length || 0) > 60 ? 'text-amber-500 font-bold' : 'text-slate-400'
+                      }`}>
+                        {currentGuide.seo_title?.length || 0} / 60 chars
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Displayed in search engine results and browser tabs. If left blank, it automatically defaults to the article title.
+                    </p>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={currentGuide.seo_title || ''}
+                        onChange={(e) => setCurrentGuide(prev => ({ ...prev, seo_title: e.target.value }))}
+                        placeholder={currentGuide.title || 'e.g. Commercial Office Space in Sector 62 Noida | Shristi Estate'}
+                        className="glass-input flex-1 px-3 py-2 rounded-xl text-xs"
+                      />
+                      {currentGuide.title && (
+                        <button
+                          type="button"
+                          onClick={() => setCurrentGuide(prev => ({ ...prev, seo_title: `${prev.title} | Shristi Estate`.slice(0, 60) }))}
+                          className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 text-xs font-semibold flex items-center gap-1 shrink-0 cursor-pointer"
+                          title="Generate from Title"
+                        >
+                          <Sparkles className="w-3.5 h-3.5 text-brand-500" />
+                          <span>From Title</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Article SEO Meta Description */}
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                        Article SEO Meta Description
+                      </label>
+                      <span className={`text-[11px] font-mono ${
+                        (currentGuide.seo_description?.length || 0) > 160 ? 'text-amber-500 font-bold' : 'text-slate-400'
+                      }`}>
+                        {currentGuide.seo_description?.length || 0} / 160 chars
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Summary snippet displayed beneath the title in Google search results (SERPs).
+                    </p>
+                    <div className="space-y-1.5">
+                      <textarea
+                        rows={3}
+                        value={currentGuide.seo_description || ''}
+                        onChange={(e) => setCurrentGuide(prev => ({ ...prev, seo_description: e.target.value }))}
+                        placeholder={currentGuide.excerpt || 'e.g. Comprehensive guide to commercial office space, IT parks, and corporate leasing in Sector 62, Noida.'}
+                        className="glass-input w-full px-3 py-2 rounded-xl text-xs"
+                      />
+                      {currentGuide.excerpt && (
+                        <div className="flex justify-end">
+                          <button
+                            type="button"
+                            onClick={() => setCurrentGuide(prev => ({ ...prev, seo_description: prev.excerpt?.slice(0, 160) || '' }))}
+                            className="text-[11px] font-semibold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1 cursor-pointer"
+                          >
+                            <Sparkles className="w-3 h-3" />
+                            <span>Copy from Excerpt</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* SEO Target Keywords & Clean URL Slug */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2">
+                      <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                        Target SEO Keywords
+                      </label>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        Comma-separated target search phrases for this guide.
+                      </p>
+                      <input
+                        type="text"
+                        value={currentGuide.seo_keywords || ''}
+                        onChange={(e) => setCurrentGuide(prev => ({ ...prev, seo_keywords: e.target.value }))}
+                        placeholder="e.g. office space noida, sector 62 corporate guide, commercial lease"
+                        className="glass-input w-full px-3 py-2 rounded-xl text-xs"
+                      />
+                    </div>
+
+                    <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                          URL Permalink Slug *
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (currentGuide.title) {
+                              const autoSlug = generateBlogSlug(currentGuide.title);
+                              setCurrentGuide(prev => ({ ...prev, slug: autoSlug }));
+                            }
+                          }}
+                          className="text-[11px] text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1 cursor-pointer font-semibold"
+                        >
+                          <RefreshCw className="w-3 h-3" />
+                          <span>Generate from Title</span>
+                        </button>
+                      </div>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        Canonical path: /blog/{currentGuide.slug || 'slug'}
+                      </p>
+                      <input
+                        type="text"
+                        required
+                        value={currentGuide.slug || ''}
+                        onChange={(e) => setCurrentGuide(prev => ({ 
+                          ...prev, 
+                          slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') 
+                        }))}
+                        placeholder="e.g. commercial-office-space-sector-62-noida"
+                        className="glass-input w-full px-3 py-2 rounded-xl text-xs font-mono font-bold"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Canonical URL */}
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                        Canonical URL
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const canonical = `https://shristiestate.in/blog/${currentGuide.slug || ''}`;
+                          setCurrentGuide(prev => ({ ...prev, canonical_url: canonical }));
+                        }}
+                        className="text-[11px] text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1 cursor-pointer font-semibold"
+                      >
+                        <Sparkles className="w-3 h-3" />
+                        <span>Auto-Fill Default</span>
+                      </button>
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Tells Google the canonical indexing source to avoid duplicate content penalties.
+                    </p>
+                    <input
+                      type="text"
+                      value={currentGuide.canonical_url || ''}
+                      onChange={(e) => setCurrentGuide(prev => ({ ...prev, canonical_url: e.target.value }))}
+                      placeholder={`https://shristiestate.in/blog/${currentGuide.slug || 'article-slug'}`}
+                      className="glass-input w-full px-3 py-2 rounded-xl text-xs font-mono"
+                    />
+                  </div>
+
+                  {/* Open Graph & Social Previews (WhatsApp, LinkedIn, Twitter/X, Facebook) */}
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-3">
+                    <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                      <Share2 className="w-3.5 h-3.5 text-brand-500" />
+                      <span>Social Media & Open Graph Settings (WhatsApp, LinkedIn, X, Facebook)</span>
+                    </span>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="text-xs font-semibold">OG Social Title</label>
+                          {currentGuide.seo_title && (
+                            <button
+                              type="button"
+                              onClick={() => setCurrentGuide(prev => ({ ...prev, og_title: prev.seo_title }))}
+                              className="text-[10px] text-brand-600 dark:text-brand-400 hover:underline"
+                            >
+                              Use SEO Title
+                            </button>
+                          )}
+                        </div>
+                        <input
+                          type="text"
+                          value={currentGuide.og_title || ''}
+                          onChange={(e) => setCurrentGuide(prev => ({ ...prev, og_title: e.target.value }))}
+                          placeholder={currentGuide.seo_title || currentGuide.title || 'Social preview title'}
+                          className="glass-input w-full px-3 py-2 rounded-xl text-xs"
+                        />
+                      </div>
+
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="text-xs font-semibold flex items-center gap-1">
+                            <span>OG Image URL</span>
+                            <span className="text-[10px] text-slate-400 font-normal">(WhatsApp / Social Preview)</span>
+                          </label>
+                          <div className="flex items-center gap-2">
+                            {(currentGuide.featured_image_url || currentGuide.image) && (
+                              <button
+                                type="button"
+                                onClick={() => setCurrentGuide(prev => ({ 
+                                  ...prev, 
+                                  og_image: prev.featured_image_url || prev.image 
+                                }))}
+                                className="text-[10px] font-bold text-brand-600 dark:text-brand-400 hover:underline cursor-pointer"
+                              >
+                                Use Featured
+                              </button>
+                            )}
+                            {currentGuide.og_image && (
+                              <button
+                                type="button"
+                                onClick={() => setCurrentGuide(prev => ({ ...prev, og_image: '' }))}
+                                className="text-[10px] font-bold text-red-500 hover:underline cursor-pointer"
+                              >
+                                Clear
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={currentGuide.og_image || ''}
+                            onChange={(e) => setCurrentGuide(prev => ({ ...prev, og_image: e.target.value }))}
+                            placeholder={currentGuide.featured_image_url || currentGuide.image || 'Featured image fallback'}
+                            className="glass-input flex-1 px-3 py-2 rounded-xl text-xs font-mono"
+                          />
+                          <label className="cursor-pointer px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold flex items-center gap-1 shrink-0 border border-slate-200 dark:border-slate-700">
+                            {isUploadingGuideOgImg ? (
+                              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <UploadCloud className="w-3.5 h-3.5" />
+                            )}
+                            <span>{isUploadingGuideOgImg ? 'Uploading...' : 'Upload'}</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={handleGuideOgImageUpload}
+                              disabled={isUploadingGuideOgImg}
+                            />
+                          </label>
+                        </div>
+
+                        {/* Preview thumbnail */}
+                        <div className="mt-2 flex items-center gap-2">
+                          {currentGuide.og_image ? (
+                            <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/40 p-1.5 rounded-lg w-full">
+                              <img
+                                src={currentGuide.og_image}
+                                alt="OG Preview"
+                                className="w-10 h-10 object-cover rounded border border-emerald-300 dark:border-emerald-700 shrink-0"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 truncate">
+                                  Custom Social OG Image Active
+                                </p>
+                                <p className="text-[9px] text-slate-500 truncate font-mono">
+                                  {currentGuide.og_image.startsWith('data:') ? 'Custom Uploaded Image (Base64)' : currentGuide.og_image}
+                                </p>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setCurrentGuide(prev => ({ ...prev, og_image: '' }))}
+                                className="text-red-500 hover:text-red-700 p-1 cursor-pointer"
+                                title="Remove OG image (fall back to Featured Image)"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ) : (currentGuide.featured_image_url || currentGuide.image) ? (
+                            <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 p-1.5 rounded-lg w-full">
+                              <img
+                                src={getBlogFeaturedImage(currentGuide)}
+                                alt="Fallback Featured"
+                                className="w-10 h-10 object-cover rounded border border-slate-300 dark:border-slate-600 opacity-70 shrink-0"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-[10px] font-medium text-slate-600 dark:text-slate-400">
+                                  Using Featured Image as Social OG fallback
+                                </p>
+                              </div>
+                            </div>
+                          ) : null}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-xs font-semibold">OG Social Description</label>
+                        {currentGuide.seo_description && (
+                          <button
+                            type="button"
+                            onClick={() => setCurrentGuide(prev => ({ ...prev, og_description: prev.seo_description }))}
+                            className="text-[10px] text-brand-600 dark:text-brand-400 hover:underline"
+                          >
+                            Use Meta Description
+                          </button>
+                        )}
+                      </div>
+                      <textarea
+                        rows={2}
+                        value={currentGuide.og_description || ''}
+                        onChange={(e) => setCurrentGuide(prev => ({ ...prev, og_description: e.target.value }))}
+                        placeholder={currentGuide.seo_description || currentGuide.excerpt || 'Social sharing snippet description...'}
+                        className="glass-input w-full px-3 py-2 rounded-xl text-xs"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Form Actions inside SEO tab */}
+                <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => setShowGuideModal(false)}
+                    className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSaving || isUploadingGuideImage || isUploadingGuideOgImg}
+                    className="btn-glass-primary px-5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm disabled:opacity-50"
+                  >
+                    <Check className="w-4 h-4" />
+                    <span>{isSaving ? 'Saving...' : isEditingGuide ? 'Update Guide' : 'Save Guide'}</span>
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* TAB 3: LIVE ADMIN PREVIEW */}
             {guideModalTab === 'preview' && (
               <div className="space-y-4 overflow-y-auto pr-2 flex-1 -mr-1">
                 {/* Subtab Switcher */}

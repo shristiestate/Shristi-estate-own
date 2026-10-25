@@ -8,6 +8,7 @@
     "build": "tsc && vite build && node scripts/prerender.js && node scripts/generate-sitemap.js",
     "sitemap": "node scripts/generate-sitemap.js",
     "optimize:images": "node scripts/optimize-images.js",
+    "sync:buildings": "node scripts/sync-buildings-from-db.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

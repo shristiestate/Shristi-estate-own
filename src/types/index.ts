@@ -265,6 +265,11 @@ export interface MarketGuide {
   featured_image_caption?: string;
   seo_title?: string;
   seo_description?: string;
+  seo_keywords?: string;
+  canonical_url?: string;
+  og_title?: string;
+  og_description?: string;
+  og_image?: string;
   hyperlinks?: HyperlinkConfig[];
   published: boolean;
   featured?: boolean;

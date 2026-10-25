@@ -69,15 +69,18 @@ export const BlogDetailPage: React.FC<BlogDetailPageProps> = ({ onOpenEnquiry })
   useEffect(() => {
     if (!guide) return;
 
-    const featuredImg = getBlogFeaturedImage(guide);
+    const featuredImg = guide.og_image || getBlogFeaturedImage(guide);
     const seoTitle = guide.seo_title || guide.title;
     const seoDescription = guide.seo_description || guide.excerpt;
-    const canonicalUrl = `https://shristiestate.in/blog/${guide.slug}`;
+    const canonicalUrl = guide.canonical_url || `https://shristiestate.in/blog/${guide.slug}`;
 
     const cleanup = updatePageSeo({
       title: seoTitle,
       description: seoDescription,
+      keywords: guide.seo_keywords,
       canonicalUrl,
+      ogTitle: guide.og_title || seoTitle,
+      ogDescription: guide.og_description || seoDescription,
       ogImage: featuredImg,
       ogType: 'article',
       breadcrumbs: [

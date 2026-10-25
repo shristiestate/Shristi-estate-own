@@ -76,7 +76,7 @@ try {
 function isValidRoute(urlPath) {
   const cleanPath = urlPath.split('?')[0].split('#')[0].replace(/\/$/, '') || '/';
   if (validPaths.has(cleanPath)) return true;
-  
+
   // Dynamic prefixes
   const dynamicPrefixes = [
     '/category/',
@@ -118,10 +118,10 @@ app.get('*', (req, res) => {
         <head><title>${isKnown ? 'Shristi Estate Server' : '404 - Not Found'}</title></head>
         <body style="font-family: sans-serif; padding: 40px; text-align: center;">
           <h2>${isKnown ? 'Shristi Estate Local Server Active' : '404 - Page Not Found'}</h2>
-          <p>${isKnown 
-            ? `API endpoints running on port ${PORT}. Run <code>npm run dev</code> for Vite dev server or <code>npm run build</code> for production frontend.`
-            : `The requested URL <code>${req.path}</code> was not found on this server.`
-          }</p>
+          <p>${isKnown
+        ? `API endpoints running on port ${PORT}. Run <code>npm run dev</code> for Vite dev server or <code>npm run build</code> for production frontend.`
+        : `The requested URL <code>${req.path}</code> was not found on this server.`
+      }</p>
         </body>
       </html>
     `);

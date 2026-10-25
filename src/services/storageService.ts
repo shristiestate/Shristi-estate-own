@@ -2097,7 +2097,7 @@ export const StorageService = {
           try {
             const { data, error } = await withTimeout(
               supabase.from('guides')
-                .select('id, title, slug, excerpt, content, category, "readTime", published, featured, featured_image_url, image, hyperlinks, created_at, updated_at')
+                .select('*')
                 .order('featured', { ascending: false })
                 .order('created_at', { ascending: false }) as any
             );
@@ -2184,10 +2184,14 @@ export const StorageService = {
       localStorage.setItem(STORAGE_KEYS.GUIDES, JSON.stringify(updatedGuides));
     }
 
-    // Upsert to Supabase if configured
+    // Upsert to Supabase if configured (strip fields not present in Supabase schema)
     if (isSupabaseConfigured && supabase) {
       try {
-        await supabase.from('guides').upsert(sanitizedGuide);
+        const { seo_keywords, canonical_url, og_title, og_description, og_image, ...dbGuide } = sanitizedGuide;
+        const { error } = await supabase.from('guides').upsert(dbGuide);
+        if (error) {
+          console.warn('Supabase guides upsert error:', error.message);
+        }
       } catch (err) {
         console.warn('Supabase guides upsert fallback:', err);
       }

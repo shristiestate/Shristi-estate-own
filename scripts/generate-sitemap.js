@@ -50,8 +50,29 @@ try {
       console.log(`✓ Added ${addedCount} optimized building routes to sitemap.`);
     }
   }
+
+  // Extract all market guides / blogs from mockData.ts
+  const guidesMatch = mockContent.match(/export const INITIAL_MARKET_GUIDES: MarketGuide\[\] = \[([\s\S]*?)\];/);
+  if (guidesMatch) {
+    const guideSlugs = [...new Set([...guidesMatch[1].matchAll(/slug:\s*'([^']+)'/g)].map(m => m[1]))];
+    let addedGuideCount = 0;
+    let newGuideEntries = '';
+
+    guideSlugs.forEach(slug => {
+      const url = `https://shristiestate.in/blog/${slug}`;
+      if (!content.includes(url)) {
+        newGuideEntries += `  <url>\n    <loc>${url}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.85</priority>\n  </url>\n`;
+        addedGuideCount++;
+      }
+    });
+
+    if (newGuideEntries) {
+      content = content.replace('</urlset>', `${newGuideEntries}</urlset>`);
+      console.log(`✓ Added ${addedGuideCount} blog guide routes to sitemap.`);
+    }
+  }
 } catch (err) {
-  console.warn('Could not extract building slugs for sitemap:', err.message);
+  console.warn('Could not extract slugs for sitemap:', err.message);
 }
 
 fs.writeFileSync(sitemapPath, content, 'utf-8');

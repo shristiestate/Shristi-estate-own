@@ -1,4 +1,4 @@
-import { Location, Building, Property, Lead, LeadStatus, MarketGuide, ClientLogo, InstagramReel, HyperlinkConfig, ClientReview } from '../types';
+import { Location, Building, Property, Lead, LeadStatus, MarketGuide, ClientLogo, InstagramReel, HyperlinkConfig, ClientReview, PageSeoConfig } from '../types';
 import { INITIAL_LOCATIONS, INITIAL_BUILDINGS, INITIAL_PROPERTIES, INITIAL_LEADS, INITIAL_MARKET_GUIDES, INITIAL_CLIENTS, INITIAL_INSTAGRAM_REELS, INITIAL_REVIEWS } from '../data/mockData';
 import { supabase, isSupabaseConfigured } from './supabaseClient';
 import { getBuildingStructureDisplay } from '../utils/textFormat';
@@ -6,6 +6,7 @@ import { generateAvailablePropertiesForBuilding, STANDARD_BUILDING_UNITS } from 
 import { cleanPropertyAddress } from '../utils/propertyLocation';
 import { DEFAULT_GLOBAL_HYPERLINKS, GLOBAL_HYPERLINKS_STORAGE_KEY } from '../utils/hyperlinks';
 import { getSqFtImageForArea } from '../utils/unitSqftImages';
+import { getAllPagesSeo, savePageSeoConfig, saveAllPagesSeoConfigs, resetPageSeoToDefault, resetAllPagesSeoToDefaults } from '../utils/seo';
 
 const STORAGE_KEYS = {
   LOCATIONS: 'shristi_locations_v1',
@@ -659,6 +660,30 @@ export const StorageService = {
   async saveGlobalHyperlinks(hyperlinks: HyperlinkConfig[]): Promise<void> {
     _memGlobalHyperlinks = hyperlinks;
     safeSetItem(STORAGE_KEYS.HYPERLINKS, JSON.stringify(hyperlinks));
+  },
+
+  getInitialPagesSeo(): PageSeoConfig[] {
+    return getAllPagesSeo();
+  },
+
+  async getPagesSeo(): Promise<PageSeoConfig[]> {
+    return getAllPagesSeo();
+  },
+
+  async savePageSeo(config: PageSeoConfig): Promise<void> {
+    return savePageSeoConfig(config);
+  },
+
+  async saveAllPagesSeo(configs: PageSeoConfig[]): Promise<void> {
+    return saveAllPagesSeoConfigs(configs);
+  },
+
+  async resetPageSeo(idOrPath: string): Promise<void> {
+    return resetPageSeoToDefault(idOrPath);
+  },
+
+  async resetAllPagesSeo(): Promise<void> {
+    return resetAllPagesSeoToDefaults();
   },
 
   /**

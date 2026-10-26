@@ -333,3 +333,4 @@ export interface ClientReview {
   featured?: boolean;
 }
 
+export * from './seo';

@@ -73,6 +73,8 @@ import { AdminSeoPreviewSection } from '../components/common/AdminSeoPreviewSect
 import { AdminMediaManager } from '../components/common/AdminMediaManager';
 import { compressImageFile } from '../utils/imageCompression';
 import { AdminHyperlinksManager } from '../components/common/AdminHyperlinksManager';
+import { AdminPageSeoManager } from '../components/admin/AdminPageSeoManager';
+import { PageSeoConfig } from '../types/seo';
 import { CascadeDeleteConfirmationModal, CascadeDeleteTarget } from '../components/modals/CascadeDeleteConfirmationModal';
 import { 
   computeSeoStatus, 
@@ -264,7 +266,7 @@ export const AdminPage: React.FC = () => {
   const [authError, setAuthError] = useState('');
 
   // Active Tab
-  const [activeTab, setActiveTab] = useState<'leads' | 'properties' | 'buildings' | 'unit_images' | 'locations' | 'media' | 'guides' | 'clients' | 'reviews' | 'reels' | 'hyperlinks'>('properties');
+  const [activeTab, setActiveTab] = useState<'leads' | 'properties' | 'buildings' | 'unit_images' | 'locations' | 'media' | 'guides' | 'clients' | 'reviews' | 'reels' | 'hyperlinks' | 'page_seo'>('properties');
 
   // Data
   const [properties, setProperties] = useState<Property[]>(() => StorageService.getInitialProperties());
@@ -276,9 +278,26 @@ export const AdminPage: React.FC = () => {
   const [reviews, setReviews] = useState<ClientReview[]>(() => StorageService.getInitialReviews());
   const [reels, setReels] = useState<InstagramReel[]>(() => StorageService.getInitialInstagramReels());
   const [globalHyperlinks, setGlobalHyperlinks] = useState<HyperlinkConfig[]>(() => StorageService.getInitialGlobalHyperlinks());
+  const [pagesSeo, setPagesSeo] = useState<PageSeoConfig[]>(() => StorageService.getInitialPagesSeo());
   const [cascadeDeleteTarget, setCascadeDeleteTarget] = useState<CascadeDeleteTarget | null>(null);
   const [isDeletingCascade, setIsDeletingCascade] = useState(false);
   const [cascadeDeleteError, setCascadeDeleteError] = useState<string | null>(null);
+
+  // Page SEO Handlers
+  const handleSavePageSeo = async (config: PageSeoConfig) => {
+    await StorageService.savePageSeo(config);
+    setPagesSeo(StorageService.getInitialPagesSeo());
+  };
+
+  const handleResetPageSeo = async (idOrPath: string) => {
+    await StorageService.resetPageSeo(idOrPath);
+    setPagesSeo(StorageService.getInitialPagesSeo());
+  };
+
+  const handleResetAllPagesSeo = async () => {
+    await StorageService.resetAllPagesSeo();
+    setPagesSeo(StorageService.getInitialPagesSeo());
+  };
 
   // Market Guides Admin State
   const [guideSearch, setGuideSearch] = useState('');
@@ -2528,6 +2547,15 @@ export const AdminPage: React.FC = () => {
             <Link2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             <span>SEO Hyperlinks ({globalHyperlinks.length})</span>
           </button>
+          <button
+            onClick={() => setActiveTab('page_seo')}
+            className={`px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 sm:gap-2 ${
+              activeTab === 'page_seo' ? 'bg-emerald-600 text-white shadow-md' : 'glass-card hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <Globe className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" />
+            <span>Page SEO ({pagesSeo.length})</span>
+          </button>
         </div>
 
         <button
@@ -4320,6 +4348,16 @@ export const AdminPage: React.FC = () => {
             />
           </div>
         </div>
+      )}
+
+      {/* PAGE SEO & SEARCH ENGINE OPTIMIZATION TAB */}
+      {activeTab === 'page_seo' && (
+        <AdminPageSeoManager
+          pages={pagesSeo}
+          onSavePage={handleSavePageSeo}
+          onResetPage={handleResetPageSeo}
+          onResetAll={handleResetAllPagesSeo}
+        />
       )}
 
       {/* PROPERTY ADD / EDIT MODAL */}

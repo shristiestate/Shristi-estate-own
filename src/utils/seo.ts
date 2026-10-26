@@ -1,3 +1,6 @@
+import { PageSeoConfig } from '../types/seo';
+import { DEFAULT_PAGES_SEO, PAGES_SEO_STORAGE_KEY, PAGES_SEO_UPDATED_EVENT } from '../data/defaultPagesSeo';
+
 export interface BreadcrumbItem {
   name: string;
   url: string;
@@ -21,6 +24,181 @@ export interface SeoMetadata {
     author?: string;
     section?: string;
   };
+}
+
+let _memPagesSeo: PageSeoConfig[] | null = null;
+
+/**
+ * Normalizes a URL or path to a clean path (e.g. "https://shristiestate.in/office-space" -> "/office-space")
+ */
+export function normalizePathname(urlOrPath: string): string {
+  if (!urlOrPath) return '/';
+  try {
+    if (urlOrPath.startsWith('http://') || urlOrPath.startsWith('https://')) {
+      const u = new URL(urlOrPath);
+      return u.pathname.replace(/\/+$/, '') || '/';
+    }
+  } catch (e) {
+    // ignore
+  }
+  return urlOrPath.split('?')[0].split('#')[0].replace(/\/+$/, '') || '/';
+}
+
+/**
+ * Retrieves all PageSeoConfig items from memory/localStorage with fallback to DEFAULT_PAGES_SEO
+ */
+export function getAllPagesSeo(): PageSeoConfig[] {
+  if (_memPagesSeo && _memPagesSeo.length > 0) {
+    return _memPagesSeo;
+  }
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = localStorage.getItem(PAGES_SEO_STORAGE_KEY);
+      if (stored) {
+        const parsed: PageSeoConfig[] = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Merge with DEFAULT_PAGES_SEO to ensure newly added pages exist
+          const mergedMap = new Map<string, PageSeoConfig>();
+          DEFAULT_PAGES_SEO.forEach(d => mergedMap.set(d.path, { ...d }));
+          parsed.forEach(p => {
+            const existing = mergedMap.get(p.path);
+            if (existing) {
+              mergedMap.set(p.path, { ...existing, ...p, isCustom: true });
+            } else {
+              mergedMap.set(p.path, p);
+            }
+          });
+          _memPagesSeo = Array.from(mergedMap.values());
+          return _memPagesSeo;
+        }
+      }
+    } catch (e) {
+      console.warn('Error reading pages SEO from localStorage:', e);
+    }
+  }
+  _memPagesSeo = DEFAULT_PAGES_SEO.map(item => ({ ...item }));
+  return _memPagesSeo;
+}
+
+/**
+ * Retrieves the custom SEO configuration for a specific path or URL
+ */
+export function getStoredPageSeo(urlOrPath: string): PageSeoConfig | null {
+  const cleanPath = normalizePathname(urlOrPath);
+  const list = getAllPagesSeo();
+  const found = list.find(p => normalizePathname(p.path) === cleanPath);
+  return found || null;
+}
+
+/**
+ * Saves a page SEO configuration and broadcasts the update event
+ */
+export async function savePageSeoConfig(config: PageSeoConfig): Promise<void> {
+  const list = getAllPagesSeo().map(item => ({ ...item }));
+  const cleanPath = normalizePathname(config.path);
+  const idx = list.findIndex(p => normalizePathname(p.path) === cleanPath || p.id === config.id);
+
+  const updatedItem: PageSeoConfig = {
+    ...config,
+    path: cleanPath,
+    isCustom: true,
+    updatedAt: new Date().toISOString()
+  };
+
+  if (idx >= 0) {
+    list[idx] = { ...list[idx], ...updatedItem };
+  } else {
+    list.push(updatedItem);
+  }
+
+  _memPagesSeo = list;
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem(PAGES_SEO_STORAGE_KEY, JSON.stringify(list));
+      window.dispatchEvent(new CustomEvent(PAGES_SEO_UPDATED_EVENT, { detail: { path: cleanPath, config: updatedItem } }));
+    } catch (e) {
+      console.error('Failed to save pages SEO to localStorage:', e);
+    }
+
+    // Also sync to backend API in background if server is running
+    try {
+      fetch('/api/admin/pages-seo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedItem)
+      }).catch(() => {});
+    } catch (e) {}
+  }
+}
+
+/**
+ * Saves multiple page SEO configurations at once
+ */
+export async function saveAllPagesSeoConfigs(configs: PageSeoConfig[]): Promise<void> {
+  _memPagesSeo = configs;
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem(PAGES_SEO_STORAGE_KEY, JSON.stringify(configs));
+      window.dispatchEvent(new CustomEvent(PAGES_SEO_UPDATED_EVENT, { detail: { all: true } }));
+    } catch (e) {
+      console.error('Failed to save all pages SEO to localStorage:', e);
+    }
+    try {
+      fetch('/api/admin/pages-seo', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: configs })
+      }).catch(() => {});
+    } catch (e) {}
+  }
+}
+
+/**
+ * Resets a specific page or all pages to defaults
+ */
+export async function resetPageSeoToDefault(idOrPath: string): Promise<void> {
+  const clean = normalizePathname(idOrPath);
+  const defaultItem = DEFAULT_PAGES_SEO.find(d => normalizePathname(d.path) === clean || d.id === idOrPath);
+  
+  const list = getAllPagesSeo().map(item => {
+    if (normalizePathname(item.path) === clean || item.id === idOrPath) {
+      return defaultItem ? { ...defaultItem } : item;
+    }
+    return item;
+  });
+
+  _memPagesSeo = list;
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(PAGES_SEO_STORAGE_KEY, JSON.stringify(list));
+    window.dispatchEvent(new CustomEvent(PAGES_SEO_UPDATED_EVENT, { detail: { reset: idOrPath } }));
+    try {
+      if (defaultItem) {
+        fetch('/api/admin/pages-seo', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(defaultItem)
+        }).catch(() => {});
+      }
+    } catch (e) {}
+  }
+}
+
+/**
+ * Resets all pages to default SEO
+ */
+export async function resetAllPagesSeoToDefaults(): Promise<void> {
+  _memPagesSeo = DEFAULT_PAGES_SEO.map(d => ({ ...d }));
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem(PAGES_SEO_STORAGE_KEY);
+    window.dispatchEvent(new CustomEvent(PAGES_SEO_UPDATED_EVENT, { detail: { resetAll: true } }));
+    try {
+      fetch('/api/admin/pages-seo', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: DEFAULT_PAGES_SEO })
+      }).catch(() => {});
+    } catch (e) {}
+  }
 }
 
 /**
@@ -137,11 +315,24 @@ export function updatePageSeo(seo: SeoMetadata): () => void {
 
   const prevTitle = document.title;
 
+  // Check for admin-configured page override
+  const currentPath = window.location.pathname;
+  const pageOverride = getStoredPageSeo(currentPath) || (seo.canonicalUrl ? getStoredPageSeo(seo.canonicalUrl) : null);
+
+  const effectiveTitle = pageOverride?.title?.trim() || seo.title;
+  const effectiveDescription = pageOverride?.description?.trim() || seo.description;
+  const effectiveKeywords = pageOverride?.keywords?.trim() || seo.keywords;
+  const effectiveCanonical = pageOverride?.canonicalUrl?.trim() || seo.canonicalUrl || window.location.href;
+  const effectiveOgTitle = pageOverride?.ogTitle?.trim() || seo.ogTitle;
+  const effectiveOgDescription = pageOverride?.ogDescription?.trim() || seo.ogDescription || effectiveDescription;
+  const effectiveOgImage = pageOverride?.ogImage?.trim() || seo.ogImage || 'https://shristiestate.in/logo-light.png';
+  const effectiveNoindex = pageOverride?.noindex !== undefined ? pageOverride.noindex : seo.noindex;
+
   // 1. Update Title
-  if (seo.title) {
-    document.title = seo.title.includes('Shristi Estate') 
-      ? seo.title 
-      : `${seo.title} | Shristi Estate`;
+  if (effectiveTitle) {
+    document.title = effectiveTitle.includes('Shristi Estate') 
+      ? effectiveTitle 
+      : `${effectiveTitle} | Shristi Estate`;
   }
 
   // Helper to set or create meta tag
@@ -156,17 +347,17 @@ export function updatePageSeo(seo: SeoMetadata): () => void {
   };
 
   // 2. Standard Meta Description
-  if (seo.description) {
-    setMetaTag('meta[name="description"]', 'name', 'description', seo.description);
+  if (effectiveDescription) {
+    setMetaTag('meta[name="description"]', 'name', 'description', effectiveDescription);
   }
 
   // 3. Keywords
-  if (seo.keywords) {
-    setMetaTag('meta[name="keywords"]', 'name', 'keywords', seo.keywords);
+  if (effectiveKeywords) {
+    setMetaTag('meta[name="keywords"]', 'name', 'keywords', effectiveKeywords);
   }
 
   // 4. Robots
-  if (seo.noindex) {
+  if (effectiveNoindex) {
     setMetaTag('meta[name="robots"]', 'name', 'robots', 'noindex, nofollow');
   } else {
     setMetaTag('meta[name="robots"]', 'name', 'robots', 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1');
@@ -177,33 +368,30 @@ export function updatePageSeo(seo: SeoMetadata): () => void {
   setMetaTag('meta[property="og:site_name"]', 'property', 'og:site_name', 'Shristi Estate');
   setMetaTag('meta[property="og:type"]', 'property', 'og:type', seo.ogType || 'website');
   
-  const resolvedTitle = seo.ogTitle || (seo.title.includes('Shristi Estate') ? seo.title : `${seo.title} | Shristi Estate`);
+  const resolvedTitle = effectiveOgTitle || (effectiveTitle.includes('Shristi Estate') ? effectiveTitle : `${effectiveTitle} | Shristi Estate`);
   setMetaTag('meta[property="og:title"]', 'property', 'og:title', resolvedTitle);
   
-  const resolvedDesc = seo.ogDescription || seo.description || 'Specialist commercial real estate discovery and advisory across Noida, Greater Noida, and Delhi NCR.';
+  const resolvedDesc = effectiveOgDescription || 'Specialist commercial real estate discovery and advisory across Noida, Greater Noida, and Delhi NCR.';
   setMetaTag('meta[property="og:description"]', 'property', 'og:description', resolvedDesc);
   
-  const canonical = seo.canonicalUrl || window.location.href;
-  setMetaTag('meta[property="og:url"]', 'property', 'og:url', canonical);
-
-  const ogImg = seo.ogImage || 'https://shristiestate.in/logo-light.png';
-  setMetaTag('meta[property="og:image"]', 'property', 'og:image', ogImg);
+  setMetaTag('meta[property="og:url"]', 'property', 'og:url', effectiveCanonical);
+  setMetaTag('meta[property="og:image"]', 'property', 'og:image', effectiveOgImage);
 
   // 6. Twitter Card
   setMetaTag('meta[name="twitter:card"]', 'name', 'twitter:card', 'summary_large_image');
   setMetaTag('meta[name="twitter:title"]', 'name', 'twitter:title', resolvedTitle);
   setMetaTag('meta[name="twitter:description"]', 'name', 'twitter:description', resolvedDesc);
-  setMetaTag('meta[name="twitter:image"]', 'name', 'twitter:image', ogImg);
+  setMetaTag('meta[name="twitter:image"]', 'name', 'twitter:image', effectiveOgImage);
 
   // 7. Canonical Link
   let canonicalEl = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
-  if (canonical) {
+  if (effectiveCanonical) {
     if (!canonicalEl) {
       canonicalEl = document.createElement('link');
       canonicalEl.setAttribute('rel', 'canonical');
       document.head.appendChild(canonicalEl);
     }
-    canonicalEl.setAttribute('href', canonical);
+    canonicalEl.setAttribute('href', effectiveCanonical);
   }
 
   // 8. Structured Data (Schema.org)
@@ -220,10 +408,10 @@ export function updatePageSeo(seo: SeoMetadata): () => void {
       '@graph': [
         {
           '@type': 'BlogPosting',
-          '@id': `${canonical}#article`,
-          'headline': seo.title,
-          'description': seo.description || '',
-          'image': seo.ogImage ? [seo.ogImage] : ['https://shristiestate.in/hero-commercial-park.jpg'],
+          '@id': `${effectiveCanonical}#article`,
+          'headline': effectiveTitle || seo.title,
+          'description': effectiveDescription || seo.description || '',
+          'image': effectiveOgImage ? [effectiveOgImage] : ['https://shristiestate.in/hero-commercial-park.jpg'],
           'datePublished': seo.article?.publishedTime || new Date().toISOString(),
           'dateModified': seo.article?.modifiedTime || seo.article?.publishedTime || new Date().toISOString(),
           'author': {
@@ -236,7 +424,7 @@ export function updatePageSeo(seo: SeoMetadata): () => void {
           },
           'mainEntityOfPage': {
             '@type': 'WebPage',
-            '@id': canonical
+            '@id': effectiveCanonical
           }
         },
         ...(seo.breadcrumbs && seo.breadcrumbs.length > 0 ? [getBreadcrumbSchema(seo.breadcrumbs)] : [])
@@ -249,8 +437,8 @@ export function updatePageSeo(seo: SeoMetadata): () => void {
       '@graph': [
         {
           '@type': 'WebPage',
-          '@id': `${canonical}#webpage`,
-          'url': canonical,
+          '@id': `${effectiveCanonical}#webpage`,
+          'url': effectiveCanonical,
           'name': resolvedTitle,
           'description': resolvedDesc,
           'isPartOf': {

@@ -14,6 +14,8 @@ const siteImagesDataFile = path.join(projectRoot, 'data', 'site-images.json');
 const siteImagesSrcFile = path.join(projectRoot, 'src', 'data', 'site-images.json');
 const unitImagesDataFile = path.join(projectRoot, 'data', 'unit-sqft-images.json');
 const unitImagesSrcFile = path.join(projectRoot, 'src', 'data', 'unit-sqft-images.json');
+const pagesSeoDataFile = path.join(projectRoot, 'data', 'pages-seo.json');
+const pagesSeoSrcFile = path.join(projectRoot, 'src', 'data', 'pages-seo.json');
 
 // Ensure required directories exist
 [publicImagesDir, trashDir, path.join(projectRoot, 'data')].forEach(dir => {
@@ -423,6 +425,103 @@ router.delete('/unit-sqft-images', (req, res) => {
     });
 
     res.json({ success: true, data: finalMap });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ==========================================
+// Pages SEO Management Endpoints
+// ==========================================
+
+// GET /api/admin/pages-seo
+router.get('/pages-seo', (req, res) => {
+  try {
+    const file = fs.existsSync(pagesSeoDataFile) ? pagesSeoDataFile : pagesSeoSrcFile;
+    if (fs.existsSync(file)) {
+      const data = JSON.parse(fs.readFileSync(file, 'utf-8'));
+      return res.json({ success: true, data });
+    }
+    return res.json({ success: true, data: [] });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// PUT /api/admin/pages-seo (bulk update)
+router.put('/pages-seo', (req, res) => {
+  try {
+    const list = req.body?.data || req.body;
+    if (!Array.isArray(list)) {
+      return res.status(400).json({ success: false, error: 'Expected an array of page SEO configurations' });
+    }
+    const content = JSON.stringify(list, null, 2);
+    [pagesSeoDataFile, pagesSeoSrcFile].forEach(f => {
+      const dir = path.dirname(f);
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(f, content, 'utf-8');
+    });
+    res.json({ success: true, data: list });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/admin/pages-seo (upsert single)
+router.post('/pages-seo', (req, res) => {
+  try {
+    const item = req.body;
+    if (!item || !item.path) {
+      return res.status(400).json({ success: false, error: 'Path is required' });
+    }
+    let list = [];
+    const file = fs.existsSync(pagesSeoDataFile) ? pagesSeoDataFile : pagesSeoSrcFile;
+    if (fs.existsSync(file)) {
+      try {
+        list = JSON.parse(fs.readFileSync(file, 'utf-8'));
+      } catch (e) {
+        list = [];
+      }
+    }
+    const idx = list.findIndex(p => p.path === item.path || (item.id && p.id === item.id));
+    if (idx >= 0) {
+      list[idx] = { ...list[idx], ...item, updatedAt: new Date().toISOString() };
+    } else {
+      list.push({ ...item, id: item.id || `page-${Date.now()}`, updatedAt: new Date().toISOString() });
+    }
+    const content = JSON.stringify(list, null, 2);
+    [pagesSeoDataFile, pagesSeoSrcFile].forEach(f => {
+      const dir = path.dirname(f);
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(f, content, 'utf-8');
+    });
+    res.json({ success: true, data: list });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// DELETE /api/admin/pages-seo/:id
+router.delete('/pages-seo/:id', (req, res) => {
+  try {
+    const id = req.params.id;
+    let list = [];
+    const file = fs.existsSync(pagesSeoDataFile) ? pagesSeoDataFile : pagesSeoSrcFile;
+    if (fs.existsSync(file)) {
+      try {
+        list = JSON.parse(fs.readFileSync(file, 'utf-8'));
+      } catch (e) {
+        list = [];
+      }
+    }
+    list = list.filter(p => p.id !== id && p.path !== id);
+    const content = JSON.stringify(list, null, 2);
+    [pagesSeoDataFile, pagesSeoSrcFile].forEach(f => {
+      const dir = path.dirname(f);
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(f, content, 'utf-8');
+    });
+    res.json({ success: true, data: list });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }

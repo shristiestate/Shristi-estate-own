@@ -15,6 +15,23 @@ if (!fs.existsSync(distDir)) {
 const templatePath = path.join(distDir, 'index.html');
 const templateHtml = fs.readFileSync(templatePath, 'utf-8');
 
+// Load custom page SEO overrides from data/pages-seo.json if present
+const pagesSeoPath = path.join(rootDir, 'data', 'pages-seo.json');
+const customSeoMap = new Map();
+if (fs.existsSync(pagesSeoPath)) {
+  try {
+    const customList = JSON.parse(fs.readFileSync(pagesSeoPath, 'utf-8'));
+    if (Array.isArray(customList)) {
+      customList.forEach(item => {
+        if (item && item.path) customSeoMap.set(item.path, item);
+      });
+      console.log(`Loaded ${customSeoMap.size} custom page SEO configs from data/pages-seo.json`);
+    }
+  } catch (e) {
+    console.warn('Could not parse data/pages-seo.json:', e.message);
+  }
+}
+
 // Define static metadata and semantic fallback content for each key route
 const routesToPrerender = [
   {
@@ -215,34 +232,49 @@ const routesToPrerender = [
 function generatePreRenderedHtml(routeConfig) {
   let html = templateHtml;
 
+  const custom = customSeoMap.get(routeConfig.path);
+  const effectiveTitle = custom?.title || routeConfig.title;
+  const effectiveDescription = custom?.description || routeConfig.description;
+  const effectiveCanonical = custom?.canonicalUrl || routeConfig.canonical;
+  const effectiveOgTitle = custom?.ogTitle || effectiveTitle;
+  const effectiveOgDescription = custom?.ogDescription || effectiveDescription;
+  const effectiveOgImage = custom?.ogImage;
+
   // Replace Title
-  html = html.replace(/<title>.*?<\/title>/, `<title>${routeConfig.title}</title>`);
+  html = html.replace(/<title>.*?<\/title>/, `<title>${effectiveTitle}</title>`);
 
   // Replace Meta Description
   html = html.replace(
     /<meta name="description" content=".*?" \/>/,
-    `<meta name="description" content="${routeConfig.description}" />`
+    `<meta name="description" content="${effectiveDescription}" />`
   );
 
   // Replace Canonical Link
   html = html.replace(
     /<link rel="canonical" href=".*?" \/>/,
-    `<link rel="canonical" href="${routeConfig.canonical}" />`
+    `<link rel="canonical" href="${effectiveCanonical}" />`
   );
 
   // Replace OG Tags
   html = html.replace(
     /<meta property="og:title" content=".*?" \/>/,
-    `<meta property="og:title" content="${routeConfig.title}" />`
+    `<meta property="og:title" content="${effectiveOgTitle}" />`
   );
   html = html.replace(
     /<meta property="og:description" content=".*?" \/>/,
-    `<meta property="og:description" content="${routeConfig.description}" />`
+    `<meta property="og:description" content="${effectiveOgDescription}" />`
   );
   html = html.replace(
     /<meta property="og:url" content=".*?" \/>/,
-    `<meta property="og:url" content="${routeConfig.canonical}" />`
+    `<meta property="og:url" content="${effectiveCanonical}" />`
   );
+
+  if (effectiveOgImage) {
+    html = html.replace(
+      /<meta property="og:image" content=".*?" \/>/,
+      `<meta property="og:image" content="${effectiveOgImage}" />`
+    );
+  }
 
   // Replace Semantic Fallback inside #root
   const fallbackRegex = /<div style="display:none">[\s\S]*?<\/div>/;

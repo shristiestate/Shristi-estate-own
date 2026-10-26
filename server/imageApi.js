@@ -527,6 +527,46 @@ router.delete('/pages-seo/:id', (req, res) => {
   }
 });
 
+// POST /api/admin/save-local-bundle - saves complete state bundle to disk
+router.post('/save-local-bundle', (req, res) => {
+  try {
+    const bundle = req.body;
+    if (!bundle || typeof bundle !== 'object') {
+      return res.status(400).json({ success: false, error: 'Expected bundle object' });
+    }
+
+    const dataDir = path.join(projectRoot, 'data');
+    if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+
+    // 1. Save master backup bundle
+    const backupFile = path.join(dataDir, 'local-backup-bundle.json');
+    fs.writeFileSync(backupFile, JSON.stringify({ ...bundle, savedAt: new Date().toISOString() }, null, 2), 'utf-8');
+
+    // 2. Save individual JSON data files if provided
+    if (bundle.properties && Array.isArray(bundle.properties)) {
+      fs.writeFileSync(path.join(dataDir, 'properties.json'), JSON.stringify(bundle.properties, null, 2), 'utf-8');
+    }
+    if (bundle.buildings && Array.isArray(bundle.buildings)) {
+      fs.writeFileSync(path.join(dataDir, 'buildings.json'), JSON.stringify(bundle.buildings, null, 2), 'utf-8');
+    }
+    if (bundle.pagesSeo && Array.isArray(bundle.pagesSeo)) {
+      const seoContent = JSON.stringify(bundle.pagesSeo, null, 2);
+      [pagesSeoDataFile, pagesSeoSrcFile].forEach(f => {
+        const dir = path.dirname(f);
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(f, seoContent, 'utf-8');
+      });
+    }
+    if (bundle.guides && Array.isArray(bundle.guides)) {
+      fs.writeFileSync(path.join(dataDir, 'guides.json'), JSON.stringify(bundle.guides, null, 2), 'utf-8');
+    }
+
+    res.json({ success: true, message: 'All local data safely saved to disk', savedAt: new Date().toISOString() });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Main middleware adapter that handles both Express and Connect (Vite dev server)
 export async function imageApiMiddleware(req, res, next) {
   const url = req.url || '';

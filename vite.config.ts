@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import fs from 'fs';
 import { imageApiMiddleware } from './server/imageApi.js';
+import { validateSessionToken } from './server/auth.js';
 
 function localImageUploadPlugin(): Plugin {
   return {
@@ -27,6 +28,16 @@ function localImageUploadPlugin(): Plugin {
       server.middlewares.use('/api/upload-image', async (req, res, next) => {
         if (req.method !== 'POST') {
           return next();
+        }
+
+        // Security Guard: Check administrative authorization token
+        const authHeader = req.headers.authorization || (req.headers as any)['x-admin-token'] || '';
+        const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : authHeader.trim();
+        if (!token || !validateSessionToken(token)) {
+          res.statusCode = 401;
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({ error: 'Unauthorized: Admin authentication token required' }));
+          return;
         }
 
         try {
@@ -139,6 +150,7 @@ export default defineConfig({
   },
   build: {
     target: 'esnext',
+    sourcemap: false,
     cssCodeSplit: true,
     chunkSizeWarningLimit: 800,
     rollupOptions: {

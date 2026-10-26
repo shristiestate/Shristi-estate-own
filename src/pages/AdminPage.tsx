@@ -73,6 +73,7 @@ import { AdminSeoPreviewSection } from '../components/common/AdminSeoPreviewSect
 import { AdminMediaManager } from '../components/common/AdminMediaManager';
 import { compressImageFile } from '../utils/imageCompression';
 import { AdminHyperlinksManager } from '../components/common/AdminHyperlinksManager';
+import { getAdminToken, setAdminToken, clearAdminToken, verifyAdminSession } from '../utils/adminAuth';
 import { AdminPageSeoManager } from '../components/admin/AdminPageSeoManager';
 import { PageSeoConfig } from '../types/seo';
 import { CascadeDeleteConfirmationModal, CascadeDeleteTarget } from '../components/modals/CascadeDeleteConfirmationModal';
@@ -258,12 +259,22 @@ export const CATEGORY_CONFIG: Record<PropertyCategory, {
 };
 
 export const AdminPage: React.FC = () => {
-  // Simple administrative authorization
+  // Cryptographically verified administrative session
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return localStorage.getItem('shristi_admin_auth') === 'true';
+    return Boolean(getAdminToken());
   });
   const [passcode, setPasscode] = useState('');
   const [authError, setAuthError] = useState('');
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+
+  // Verify session validity on mount
+  useEffect(() => {
+    if (getAdminToken()) {
+      verifyAdminSession().then(valid => {
+        setIsAuthenticated(valid);
+      });
+    }
+  }, []);
 
   // Active Tab
   const [activeTab, setActiveTab] = useState<'leads' | 'properties' | 'buildings' | 'unit_images' | 'locations' | 'media' | 'guides' | 'clients' | 'reviews' | 'reels' | 'hyperlinks' | 'page_seo'>('properties');
@@ -1212,20 +1223,47 @@ export const AdminPage: React.FC = () => {
     }
   }, [isAuthenticated]);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (passcode === 'Govind@6125119603') {
-      setIsAuthenticated(true);
-      localStorage.setItem('shristi_admin_auth', 'true');
-      setAuthError('');
-    } else {
-      setAuthError('Invalid administrator passcode. Access denied.');
+    setAuthError('');
+    setIsAuthenticating(true);
+
+    try {
+      const res = await fetch('/api/admin/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ passcode })
+      });
+      const data = await res.json();
+      if (res.ok && data.success && data.token) {
+        setAdminToken(data.token);
+        setIsAuthenticated(true);
+        setPasscode('');
+        setAuthError('');
+      } else {
+        setAuthError(data.error || 'Invalid administrator passcode. Access denied.');
+      }
+    } catch {
+      setAuthError('Error communicating with security authentication service.');
+    } finally {
+      setIsAuthenticating(false);
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    const token = getAdminToken();
+    if (token) {
+      try {
+        await fetch('/api/admin/auth/logout', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      } catch {
+        // ignore
+      }
+    }
+    clearAdminToken();
     setIsAuthenticated(false);
-    localStorage.removeItem('shristi_admin_auth');
   };
 
   // Lead Status Update
@@ -2064,9 +2102,11 @@ export const AdminPage: React.FC = () => {
             </div>
             <button
               type="submit"
-              className="btn-glass-primary w-full py-2.5 rounded-xl font-semibold text-sm"
+              disabled={isAuthenticating}
+              className="btn-glass-primary w-full py-2.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
             >
-              Sign In to Admin
+              <Lock className={`w-4 h-4 ${isAuthenticating ? 'animate-spin text-brand-500' : ''}`} />
+              <span>{isAuthenticating ? 'Verifying Credentials...' : 'Sign In to Admin'}</span>
             </button>
           </form>
         </div>

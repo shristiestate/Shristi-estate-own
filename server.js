@@ -3,6 +3,12 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { imageApiMiddleware } from './server/imageApi.js';
+import {
+  securityHeadersMiddleware,
+  corsMiddleware,
+  safeFileGuardMiddleware,
+  apiRateLimiter
+} from './server/security.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -10,9 +16,18 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Parse JSON bodies
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+// Security Suite: Disable fingerprinted headers, enforce CSP, HSTS, and CORS
+app.disable('x-powered-by');
+app.use(securityHeadersMiddleware);
+app.use(corsMiddleware);
+app.use(safeFileGuardMiddleware);
+
+// Global API rate limiting
+app.use('/api', apiRateLimiter.middleware());
+
+// Parse JSON bodies with sensible max size
+app.use(express.json({ limit: '15mb' }));
+app.use(express.urlencoded({ extended: true, limit: '15mb' }));
 
 // Mount Image Management API routes
 // - POST /api/admin/images/upload

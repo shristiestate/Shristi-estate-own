@@ -1,8 +1,33 @@
 import { createClient } from '@supabase/supabase-js';
 import { INITIAL_LOCATIONS, INITIAL_BUILDINGS, INITIAL_PROPERTIES, INITIAL_LEADS } from '../src/data/mockData.js';
 
-const supabaseUrl = 'https://patsctxtcfnqllxrvulc.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhdHNjdHh0Y2ZucWxseHJ2dWxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4MDc3MzMsImV4cCI6MjEwODM4MzczM30.UqlHfp78_mFgG0JuZZTSfC4gZXy3W1vFcXTXJ4NBHi4';
+import fs from 'fs';
+import path from 'path';
+
+// Read credentials securely from environment variables or .env file (never hardcoded in source)
+let supabaseUrl = process.env.VITE_SUPABASE_URL || '';
+let supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || '';
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  try {
+    const envPath = path.resolve('.env');
+    if (fs.existsSync(envPath)) {
+      const envFile = fs.readFileSync(envPath, 'utf-8');
+      for (const line of envFile.split('\n')) {
+        const trimmed = line.trim();
+        if (trimmed.startsWith('VITE_SUPABASE_URL=')) supabaseUrl = trimmed.slice(18).trim();
+        if (trimmed.startsWith('VITE_SUPABASE_ANON_KEY=')) supabaseAnonKey = trimmed.slice(23).trim();
+      }
+    }
+  } catch {
+    // ignore
+  }
+}
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Security alert: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY must be configured in .env or environment.');
+  process.exit(1);
+}
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 

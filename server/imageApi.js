@@ -3,6 +3,13 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import multer from 'multer';
+import {
+  authenticateAdmin,
+  handleLoginEndpoint,
+  handleVerifyEndpoint,
+  handleLogoutEndpoint
+} from './auth.js';
+import { authRateLimiter } from './security.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -79,7 +86,21 @@ const storage = multer.diskStorage({
   }
 });
 
-const upload = multer({ storage });
+// Verified Image MIME filter to block executable uploads
+const imageFileFilter = (req, file, cb) => {
+  const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml', 'image/gif', 'image/avif'];
+  if (allowed.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Security error: Only verified image formats (JPG, PNG, WebP, SVG, AVIF, GIF) are allowed.'));
+  }
+};
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 15 * 1024 * 1024 }, // 15MB limit
+  fileFilter: imageFileFilter
+});
 
 // Single file replace storage
 const replaceStorage = multer.diskStorage({
@@ -104,7 +125,11 @@ const replaceStorage = multer.diskStorage({
   }
 });
 
-const uploadReplace = multer({ storage: replaceStorage });
+const uploadReplace = multer({
+  storage: replaceStorage,
+  limits: { fileSize: 15 * 1024 * 1024 },
+  fileFilter: imageFileFilter
+});
 
 const router = express.Router();
 
@@ -126,6 +151,14 @@ router.use((req, res, next) => {
   }
   next();
 });
+
+// --- 1. AUTHENTICATION ENDPOINTS (Public, Rate-Limited) ---
+router.post('/auth/login', authRateLimiter.middleware(), handleLoginEndpoint);
+router.post('/auth/verify', handleVerifyEndpoint);
+router.post('/auth/logout', handleLogoutEndpoint);
+
+// --- 2. SECURITY GUARD: ALL SUBSEQUENT ADMIN ROUTES REQUIRE VALID SESSION TOKEN ---
+router.use(authenticateAdmin);
 
 // Helper to scan directory recursively for images
 function scanImages(dir, baseDir = publicImagesDir) {

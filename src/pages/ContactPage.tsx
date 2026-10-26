@@ -7,6 +7,7 @@ import { generateGeneralEnquiryWhatsAppLink } from '../utils/whatsapp';
 import { handleOverviewPaste } from '../utils/textFormat';
 import { HyperlinkedText } from '../components/common/HyperlinkedText';
 import { updatePageSeo, getOrganizationSchema, getBreadcrumbSchema } from '../utils/seo';
+import { sanitizeText, sanitizePhone, sanitizeEmail } from '../utils/sanitize';
 
 export const ContactPage: React.FC = () => {
   useEffect(() => {
@@ -72,9 +73,15 @@ export const ContactPage: React.FC = () => {
     if (!formData.name || !formData.phone) return;
     setLoading(true);
 
+    const cleanName = sanitizeText(formData.name, 80);
+    const cleanPhone = sanitizePhone(formData.phone);
+    const cleanEmail = sanitizeEmail(formData.email);
+    const cleanSubject = sanitizeText(formData.subject, 100);
+    const cleanMessage = sanitizeText(formData.message, 1500);
+
     const waUrl = generateGeneralEnquiryWhatsAppLink({
-      propertyName: formData.subject || 'Commercial Space Enquiry',
-      clientName: formData.name,
+      propertyName: cleanSubject || 'Commercial Space Enquiry',
+      clientName: cleanName,
     });
 
     try {
@@ -86,11 +93,11 @@ export const ContactPage: React.FC = () => {
     try {
       await StorageService.createLead({
         lead_type: 'general',
-        name: formData.name,
-        email: formData.email || 'contact@shristiestate.in',
-        phone: formData.phone,
+        name: cleanName,
+        email: cleanEmail || 'contact@shristiestate.in',
+        phone: cleanPhone,
         preferred_contact_method: 'phone',
-        message: `${formData.subject}: ${formData.message}`,
+        message: `${cleanSubject}: ${cleanMessage}`,
         source_page: '/contact',
         lead_source: 'website',
       });

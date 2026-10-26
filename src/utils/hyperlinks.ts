@@ -1,4 +1,5 @@
 import { HyperlinkConfig } from '../types';
+import { sanitizeHtml } from './sanitize';
 
 export const INTERNAL_PAGE_PRESETS: Array<{ label: string; url: string; group: string }> = [
   { label: 'Home Page', url: '/', group: 'Main' },
@@ -459,13 +460,16 @@ function wrapPlainTextInParagraphs(text: string, inline: boolean = false): strin
     return text;
   }
 
+  // If content contains tags, sanitize first to prevent XSS
+  const safeText = sanitizeHtml(text);
+
   // Only wrap in <p> if there are actual paragraphs
-  if (!text.includes('\n\n')) {
-    return text.replace(/\n/g, '<br />');
+  if (!safeText.includes('\n\n')) {
+    return safeText.replace(/\n/g, '<br />');
   }
 
   // Split on double line breaks into paragraphs
-  return text
+  return safeText
     .split(/\n{2,}/)
     .map(p => p.trim())
     .filter(Boolean)
@@ -635,9 +639,9 @@ export function applyHyperlinksToContent(
       }
     }
 
-    return container.innerHTML;
+    return sanitizeHtml(container.innerHTML);
   } catch (err) {
     console.error('Failed to apply hyperlinks to content:', err);
-    return initialHtml;
+    return sanitizeHtml(initialHtml);
   }
 }

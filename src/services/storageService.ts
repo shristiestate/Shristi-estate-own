@@ -7,6 +7,7 @@ import { cleanPropertyAddress } from '../utils/propertyLocation';
 import { DEFAULT_GLOBAL_HYPERLINKS, GLOBAL_HYPERLINKS_STORAGE_KEY } from '../utils/hyperlinks';
 import { getSqFtImageForArea } from '../utils/unitSqftImages';
 import { getAllPagesSeo, savePageSeoConfig, saveAllPagesSeoConfigs, resetPageSeoToDefault, resetAllPagesSeoToDefaults } from '../utils/seo';
+import { sanitizeText, sanitizePhone, sanitizeEmail } from '../utils/sanitize';
 
 const STORAGE_KEYS = {
   LOCATIONS: 'shristi_locations_v1',
@@ -1981,6 +1982,10 @@ export const StorageService = {
     const newLead: Lead = {
       ...leadData,
       id: `lead-${Date.now()}`,
+      name: sanitizeText(leadData.name, 100),
+      phone: sanitizePhone(leadData.phone),
+      email: sanitizeEmail(leadData.email) || sanitizeText(leadData.email, 100),
+      message: leadData.message ? sanitizeText(leadData.message, 2500) : undefined,
       status: leadData.status || 'New',
       created_at: new Date().toISOString(),
     };

@@ -1,19 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-const envUrl = (import.meta.env.VITE_SUPABASE_URL || '').trim();
-const envKey = (import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim();
-
-// Treat template/placeholder strings as unconfigured to prevent network fetch failures to fake domains
-const isPlaceholderUrl = !envUrl || envUrl.includes('your-project.supabase.co');
-const isPlaceholderKey = !envKey || envKey === 'your-anon-key-here';
-
-const supabaseUrl = !isPlaceholderUrl 
-  ? envUrl 
-  : 'https://patsctxtcfnqllxrvulc.supabase.co';
-
-const supabaseAnonKey = !isPlaceholderKey 
-  ? envKey 
-  : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhdHNjdHh0Y2ZucWxseHJ2dWxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4MDc3MzMsImV4cCI6MjEwODM4MzczM30.UqlHfp78_mFgG0JuZZTSfC4gZXy3W1vFcXTXJ4NBHi4';
+// Read strictly from environment variables (hidden from public code repository)
+const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL || '').trim();
+const supabaseAnonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim();
 
 export const isSupabaseConfigured = Boolean(
   supabaseUrl && 

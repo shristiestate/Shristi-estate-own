@@ -135,8 +135,10 @@ export function securityHeadersMiddleware(req, res, next) {
   // Permissions Policy (limit sensors & camera)
   res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self)');
 
-  // Enforce HTTPS in production
-  if (process.env.NODE_ENV === 'production' || req.headers['x-forwarded-proto'] === 'https') {
+  // Enforce HTTPS strictly in real production, never on localhost/development
+  const host = req.headers.host || '';
+  const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1');
+  if (!isLocalhost && (process.env.NODE_ENV === 'production' || req.headers['x-forwarded-proto'] === 'https')) {
     res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
   }
 

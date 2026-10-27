@@ -73,7 +73,7 @@ import { AdminSeoPreviewSection } from '../components/common/AdminSeoPreviewSect
 import { AdminMediaManager } from '../components/common/AdminMediaManager';
 import { compressImageFile } from '../utils/imageCompression';
 import { AdminHyperlinksManager } from '../components/common/AdminHyperlinksManager';
-import { getAdminToken, setAdminToken, clearAdminToken, verifyAdminSession } from '../utils/adminAuth';
+import { getAdminToken, setAdminToken, clearAdminToken, verifyAdminSession, verifyClientPasscode, createClientSessionToken } from '../utils/adminAuth';
 import { AdminPageSeoManager } from '../components/admin/AdminPageSeoManager';
 import { PageSeoConfig } from '../types/seo';
 import { CascadeDeleteConfirmationModal, CascadeDeleteTarget } from '../components/modals/CascadeDeleteConfirmationModal';
@@ -1229,22 +1229,45 @@ export const AdminPage: React.FC = () => {
     setIsAuthenticating(true);
 
     try {
-      const res = await fetch('/api/admin/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ passcode })
-      });
-      const data = await res.json();
-      if (res.ok && data.success && data.token) {
-        setAdminToken(data.token);
+      // 1. Try server-side authentication if Express backend is running
+      try {
+        const res = await fetch('/api/admin/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ passcode })
+        });
+        const contentType = res.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+          const data = await res.json();
+          if (res.ok && data.success && data.token) {
+            setAdminToken(data.token);
+            setIsAuthenticated(true);
+            setPasscode('');
+            setAuthError('');
+            return;
+          } else {
+            setAuthError(data.error || 'Invalid administrator passcode. Access denied.');
+            return;
+          }
+        }
+      } catch {
+        // Express backend not available or static hosting, fallback to client PBKDF2 verification below
+      }
+
+      // 2. Client-side cryptographically secure PBKDF2 hash verification
+      const isValid = await verifyClientPasscode(passcode);
+      if (isValid) {
+        const token = createClientSessionToken();
+        setAdminToken(token);
         setIsAuthenticated(true);
         setPasscode('');
         setAuthError('');
       } else {
-        setAuthError(data.error || 'Invalid administrator passcode. Access denied.');
+        setAuthError('Invalid administrator passcode. Access denied.');
       }
-    } catch {
-      setAuthError('Error communicating with security authentication service.');
+    } catch (err) {
+      console.error('Authentication error:', err);
+      setAuthError('Invalid administrator passcode. Access denied.');
     } finally {
       setIsAuthenticating(false);
     }

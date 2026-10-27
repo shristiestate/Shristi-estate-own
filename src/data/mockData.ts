@@ -1618,8 +1618,11 @@ export const INITIAL_PROPERTIES: Property[] = [
     description: 'Cost-effective commercial office located 3 minutes from Delhi border and Sector 15 Metro. 20 workstations, 2 cabins, and pantry.',
     features: ['20 Workstations', '2 Cabins', '3 Min from Metro', 'Low Maintenance'],
     amenities: ['Power Backup', 'Security Guard', 'Fiber Internet Connectivity'],
-    primary_image: '/images/units/1500/unit-1500-1400-1600-sqft-conference-room-1792172020133.jpg',
-    gallery: [],
+    primary_image: '/images/units/1500/unit-1500-office-space-office-workspace-6-1792855223203.jpg',
+    gallery: [
+      '/images/units/1500/unit-1500-office-space-office-workspace-7-1792855223225.jpg',
+      '/images/units/1500/unit-1500-office-space-office-workspace-8-1792855223238.jpg'
+    ],
     featured: false,
     published: true,
     is_seed: true,

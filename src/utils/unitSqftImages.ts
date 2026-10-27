@@ -45,12 +45,41 @@ export function getSqFtImagesMap(): Record<string, SqFtImageEntry> {
 }
 
 /**
- * Returns matching image override entry for a given square footage
+ * Returns matching image override entry for a given square footage, with intelligent
+ * nearest-neighbor fallback so arbitrary unit sizes (e.g. 1,150 sq.ft. or 3,500 sq.ft.)
+ * always receive matching high-resolution commercial office unit images.
  */
 export function getSqFtImageForArea(area: number | string | undefined | null): SqFtImageEntry | undefined {
   if (!area) return undefined;
   const key = normalizeSqFtKey(area);
   const map = getSqFtImagesMap();
+  if (map[key] && map[key].primary_image) {
+    return map[key];
+  }
+
+  // Nearest-neighbor fallback for irregular sqft sizes
+  const numericArea = typeof area === 'number' ? area : parseInt(key, 10);
+  if (!isNaN(numericArea) && numericArea > 0) {
+    const availableKeys = Object.keys(map)
+      .map(k => parseInt(k, 10))
+      .filter(k => !isNaN(k) && k > 0 && map[String(k)]?.primary_image)
+      .sort((a, b) => a - b);
+
+    if (availableKeys.length > 0) {
+      let closestKey = availableKeys[0];
+      let minDiff = Math.abs(numericArea - closestKey);
+
+      for (const candidate of availableKeys) {
+        const diff = Math.abs(numericArea - candidate);
+        if (diff < minDiff) {
+          minDiff = diff;
+          closestKey = candidate;
+        }
+      }
+      return map[String(closestKey)];
+    }
+  }
+
   return map[key];
 }
 

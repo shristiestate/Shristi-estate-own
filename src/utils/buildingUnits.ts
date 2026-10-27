@@ -20,11 +20,11 @@ export const STANDARD_BUILDING_UNITS: UnitSpec[] = [
     furnishing: 'Furnished',
     floor: '1st Floor',
     features: ['4-6 Workstations', '1 Private Cabin', 'Reception Lounge', 'High-Speed Elevators', '100% DG Backup'],
-    image: '/images/units/250/unit-250-200-sqft-entrance-lobby-1792171053177.jpg',
+    image: '/images/units/250/unit-250-200-sqft-entrance-lobby-1792775088125.jpg',
     gallery: [
-      '/images/units/250/unit-250-200-sqft-exterior-facade-1792171053207.jpg',
-      '/images/units/250/unit-250-200-sqft-floor-plan-1792171053211.jpg',
-      '/images/units/250/unit-250-200-sqft-office-workspace-1792171053216.jpg'
+      '/images/units/250/unit-250-200-sqft-conference-room-1792775088105.jpg',
+      '/images/units/250/unit-250-200-sqft-floor-plan-1792775088141.jpg',
+      '/images/units/250/unit-250-200-sqft-office-workspace-1792775088157.jpg'
     ]
   },
   {
@@ -34,10 +34,11 @@ export const STANDARD_BUILDING_UNITS: UnitSpec[] = [
     furnishing: 'Furnished',
     floor: '2nd Floor',
     features: ['8-10 Workstations', '1 Executive Cabin', 'Reception Lounge', 'High-Speed Elevators', '100% DG Backup'],
-    image: '/images/units/600/unit-600-600-700-sqft-cafeteria-food-court-1792171140031.jpg',
+    image: '/images/units/600/unit-600-600-700-sqft-conference-room-1792854846473.jpg',
     gallery: [
-      '/images/units/600/unit-600-600-700-sqft-cafeteria-food-court-2-1792171140036.jpg',
-      '/images/units/600/unit-600-600-700-sqft-conference-room-1792171140047.jpg'
+      '/images/units/600/unit-600-600-700-sqft-entrance-lobby-1792854846501.jpg',
+      '/images/units/600/unit-600-600-700-sqft-exterior-facade-2-1792854846522.jpg',
+      '/images/units/600/unit-600-600-700-sqft-exterior-facade-3-1792854846531.jpg'
     ]
   },
   {
@@ -47,10 +48,11 @@ export const STANDARD_BUILDING_UNITS: UnitSpec[] = [
     furnishing: 'Plug-and-Play',
     floor: '3rd Floor',
     features: ['12-14 Modular Workstations', '1 Director Cabin', 'Conference Nook', 'Pantry Space', '24/7 Security'],
-    image: '/images/units/800/unit-800-800-900-sqft-exterior-facade-1792171284933.jpg',
+    image: '/images/units/800/unit-800-600-700-sqft-parking-facility-1792854926589.jpg',
     gallery: [
-      '/images/units/800/unit-800-800-900-sqft-floor-plan-1792171284937.jpg',
-      '/images/units/800/unit-800-800-900-sqft-office-workspace-1792171284941.jpg'
+      '/images/units/800/unit-800-600-700-sqft-parking-facility-2-1792854926617.jpg',
+      '/images/units/800/unit-800-800-900-sqft-exterior-facade-1792854926632.jpg',
+      '/images/units/800/unit-800-800-900-sqft-floor-plan-1792854926646.jpg'
     ]
   },
   {
@@ -60,10 +62,11 @@ export const STANDARD_BUILDING_UNITS: UnitSpec[] = [
     furnishing: 'Furnished',
     floor: '4th Floor',
     features: ['16 Workstations', '2 Cabins', '6-Seater Meeting Room', 'Server Rack', 'Central Air Conditioning'],
-    image: '/images/units/900/unit-900-office-space-entrance-lobby-3-1792171634697.jpg',
+    image: '/images/units/900/unit-900-600-700-sqft-conference-room-2-1792854988595.jpg',
     gallery: [
-      '/images/units/900/unit-900-office-space-entrance-lobby-4-1792171634700.jpg',
-      '/images/units/900/unit-900-office-space-entrance-lobby-5-1792171634705.jpg'
+      '/images/units/900/unit-900-600-700-sqft-entrance-lobby-2-1792854988612.jpg',
+      '/images/units/900/unit-900-600-700-sqft-high-speed-elevators-2-1792854988630.jpg',
+      '/images/units/900/unit-900-600-700-sqft-office-workspace-1792854988640.jpg'
     ]
   },
   {
@@ -73,11 +76,11 @@ export const STANDARD_BUILDING_UNITS: UnitSpec[] = [
     furnishing: 'Plug-and-Play',
     floor: '5th Floor',
     features: ['20 Workstations', '2 Executive Cabins', 'Conference Room', 'Reception Area', 'Reserved Parking'],
-    image: '/images/units/1000/unit-1000-office-space-conference-room-6-1792171704175.jpg',
+    image: '/images/units/1000/unit-1000-1400-1600-sqft-entrance-lobby-1792855037753.jpg',
     gallery: [
-      '/images/units/1000/unit-1000-office-space-conference-room-4-1792171704170.jpg',
-      '/images/units/1000/unit-1000-office-space-conference-room-7-1792171704178.jpg',
-      '/images/units/1000/unit-1000-office-space-entrance-lobby-5-1792171704183.jpg'
+      '/images/units/1000/unit-1000-1400-1600-sqft-exterior-facade-2-1792855037766.jpg',
+      '/images/units/1000/unit-1000-1400-1600-sqft-floor-plan-1792855037784.jpg',
+      '/images/units/1000/unit-1000-1400-1600-sqft-high-speed-elevators-1792855037794.jpg'
     ]
   },
   {
@@ -87,10 +90,11 @@ export const STANDARD_BUILDING_UNITS: UnitSpec[] = [
     furnishing: 'Furnished',
     floor: '6th Floor',
     features: ['24 Linear Workstations', '2 Director Cabins', '8-Seater Boardroom', 'Wet Pantry', 'Direct Lift Access'],
-    image: '/images/units/1200/unit-1200-office-space-high-speed-elevators-1792171811587.jpg',
+    image: '/images/units/1200/unit-1200-1000-1200-sqft-cafeteria-food-court-1792855075932.jpg',
     gallery: [
-      '/images/units/1200/unit-1200-office-space-floor-plan-5-1792171811583.jpg',
-      '/images/units/1200/unit-1200-office-space-high-speed-elevators-2-1792171811590.jpg'
+      '/images/units/1200/unit-1200-1000-1200-sqft-high-speed-elevators-1792855075949.jpg',
+      '/images/units/1200/unit-1200-1400-1600-sqft-cafeteria-food-court-1792855075971.jpg',
+      '/images/units/1200/unit-1200-1400-1600-sqft-conference-room-1792855075988.jpg'
     ]
   },
   {
@@ -100,11 +104,11 @@ export const STANDARD_BUILDING_UNITS: UnitSpec[] = [
     furnishing: 'Plug-and-Play',
     floor: '7th Floor',
     features: ['28-30 Modular Workstations', '3 Director Cabins', '10-Seater Conference Room', 'Wet Pantry & Server Room', '2 Covered Parking Bays'],
-    image: '/images/units/1500/unit-1500-1400-1600-sqft-conference-room-1792172020133.jpg',
+    image: '/images/units/1500/unit-1500-office-space-office-workspace-6-1792855223203.jpg',
     gallery: [
-      '/images/units/1500/unit-1500-1400-1600-sqft-entrance-lobby-1792172020136.jpg',
-      '/images/units/1500/unit-1500-1400-1600-sqft-exterior-facade-2-1792172020139.jpg',
-      '/images/units/1500/unit-1500-1400-1600-sqft-floor-plan-1792172020142.jpg'
+      '/images/units/1500/unit-1500-office-space-office-workspace-7-1792855223225.jpg',
+      '/images/units/1500/unit-1500-office-space-office-workspace-8-1792855223238.jpg',
+      '/images/units/1500/unit-1500-office-space-parking-facility-1792855223244.jpg'
     ]
   },
   {
@@ -114,10 +118,12 @@ export const STANDARD_BUILDING_UNITS: UnitSpec[] = [
     furnishing: 'Furnished',
     floor: '8th Floor',
     features: ['35 Workstations', '3 Director Cabins', '12-Seater Boardroom', 'Reception & Waiting Lounge', '2 Reserved Parking Bays'],
-    image: '/images/units/1800/unit-1800-office-space-office-workspace-6-1792238449643.jpg',
+    image: '/images/units/1800/unit-1800-office-space-entrance-lobby-1792855318004.jpg',
     gallery: [
-      '/images/units/1800/unit-1800-office-space-office-workspace-7-1792172368291.jpg',
-      '/images/units/1800/unit-1800-office-space-office-workspace-8-1792172368307.jpg'
+      '/images/units/1800/unit-1800-office-space-entrance-lobby-2-1792855318025.jpg',
+      '/images/units/1800/unit-1800-office-space-entrance-lobby-3-1792855318034.jpg',
+      '/images/units/1800/unit-1800-office-space-entrance-lobby-4-1792855318045.jpg',
+      '/images/units/1800/unit-1800-office-space-entrance-lobby-6-1792855318057.jpg'
     ]
   },
   {
@@ -127,11 +133,11 @@ export const STANDARD_BUILDING_UNITS: UnitSpec[] = [
     furnishing: 'Plug-and-Play',
     floor: '9th Floor',
     features: ['40-45 Workstations', '4 Executive Cabins', '14-Seater Conference Room', 'Dedicated Reception & Cafeteria', '3 Reserved Parking Bays'],
-    image: '/images/units/2000/unit-2000-2000-sqft-exterior-facade-1792493409027.jpg',
+    image: '/images/units/2000/unit-2000-office-space-conference-room-2-1792855427173.jpg',
     gallery: [
-      '/images/units/2000/unit-2000-2000-sqft-exterior-facade-1792493409027.jpg',
-      '/images/units/2000/unit-2000-2000-sqft-floor-plan-1792493409037.jpg',
-      '/images/units/2000/unit-2000-2000-sqft-office-workspace-1792493409038.jpg'
+      '/images/units/2000/unit-2000-office-space-conference-room-4-1792855427175.jpg',
+      '/images/units/2000/unit-2000-office-space-conference-room-6-1792855427194.jpg',
+      '/images/units/2000/unit-2000-office-space-conference-room-8-1792855427201.jpg'
     ]
   }
 ];

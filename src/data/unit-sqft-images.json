@@ -21,6 +21,15 @@
     "unit_count": 20,
     "updated_at": "2026-10-24T15:14:17.270Z"
   },
+  "700": {
+    "primary_image": "/images/units/700/unit-700-main.webp",
+    "gallery": [
+      "/images/units/700/unit-700-main.webp",
+      "/images/units/700/unit-700-gallery-1.webp"
+    ],
+    "unit_count": 0,
+    "updated_at": "2026-10-27T04:42:14.756Z"
+  },
   "750": {
     "primary_image": "/images/units/750/unit-750-600-700-sqft-exterior-facade-1792854889927.jpg",
     "gallery": [
@@ -128,6 +137,69 @@
     ],
     "unit_count": 21,
     "updated_at": "2026-10-24T15:23:59.583Z"
+  },
+  "2200": {
+    "primary_image": "/images/units/2200/unit-2200-main.webp",
+    "gallery": [
+      "/images/units/2200/unit-2200-main.webp",
+      "/images/units/2200/unit-2200-gallery-1.webp"
+    ],
+    "unit_count": 0,
+    "updated_at": "2026-10-27T04:42:14.758Z"
+  },
+  "2600": {
+    "primary_image": "/images/units/2600/unit-2600-main.webp",
+    "gallery": [
+      "/images/units/2600/unit-2600-main.webp",
+      "/images/units/2600/unit-2600-gallery-1.webp"
+    ],
+    "unit_count": 0,
+    "updated_at": "2026-10-27T04:42:14.758Z"
+  },
+  "5000": {
+    "primary_image": "/images/units/5000/unit-5000-main.webp",
+    "gallery": [
+      "/images/units/5000/unit-5000-main.webp",
+      "/images/units/5000/unit-5000-gallery-1.webp"
+    ],
+    "unit_count": 0,
+    "updated_at": "2026-10-27T04:42:14.758Z"
+  },
+  "10000": {
+    "primary_image": "/images/units/10000/unit-10000-main.webp",
+    "gallery": [
+      "/images/units/10000/unit-10000-main.webp",
+      "/images/units/10000/unit-10000-gallery-1.webp"
+    ],
+    "unit_count": 0,
+    "updated_at": "2026-10-27T04:42:14.758Z"
+  },
+  "20000": {
+    "primary_image": "/images/units/20000/unit-20000-main.webp",
+    "gallery": [
+      "/images/units/20000/unit-20000-main.webp",
+      "/images/units/20000/unit-20000-gallery-1.webp"
+    ],
+    "unit_count": 0,
+    "updated_at": "2026-10-27T04:42:14.758Z"
+  },
+  "25000": {
+    "primary_image": "/images/units/25000/unit-25000-main.webp",
+    "gallery": [
+      "/images/units/25000/unit-25000-main.webp",
+      "/images/units/25000/unit-25000-gallery-1.webp"
+    ],
+    "unit_count": 0,
+    "updated_at": "2026-10-27T04:42:14.758Z"
+  },
+  "30000": {
+    "primary_image": "/images/units/30000/unit-30000-main.webp",
+    "gallery": [
+      "/images/units/30000/unit-30000-main.webp",
+      "/images/units/30000/unit-30000-gallery-1.webp"
+    ],
+    "unit_count": 0,
+    "updated_at": "2026-10-27T04:42:14.758Z"
   },
   "100000": {
     "primary_image": "/images/units/100000/unit-100000-create_an_ultra-photorealistic_2-1792939142394.jpg",

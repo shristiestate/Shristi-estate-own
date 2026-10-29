@@ -23,6 +23,10 @@ const unitImagesDataFile = path.join(projectRoot, 'data', 'unit-sqft-images.json
 const unitImagesSrcFile = path.join(projectRoot, 'src', 'data', 'unit-sqft-images.json');
 const pagesSeoDataFile = path.join(projectRoot, 'data', 'pages-seo.json');
 const pagesSeoSrcFile = path.join(projectRoot, 'src', 'data', 'pages-seo.json');
+const clientsDataFile = path.join(projectRoot, 'data', 'clients.json');
+const clientsSrcFile = path.join(projectRoot, 'src', 'data', 'clients.json');
+const reelsDataFile = path.join(projectRoot, 'data', 'reels.json');
+const reelsSrcFile = path.join(projectRoot, 'src', 'data', 'reels.json');
 
 // Ensure required directories exist
 [publicImagesDir, trashDir, path.join(projectRoot, 'data')].forEach(dir => {
@@ -560,6 +564,134 @@ router.delete('/pages-seo/:id', (req, res) => {
   }
 });
 
+// GET /api/admin/clients
+router.get('/clients', (req, res) => {
+  try {
+    const file = fs.existsSync(clientsDataFile) ? clientsDataFile : clientsSrcFile;
+    if (fs.existsSync(file)) {
+      const data = JSON.parse(fs.readFileSync(file, 'utf-8'));
+      return res.json({ success: true, data });
+    }
+    res.json({ success: true, data: [] });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// PUT /api/admin/clients (save full list or upsert single)
+router.put('/clients', (req, res) => {
+  try {
+    let list = [];
+    const file = fs.existsSync(clientsDataFile) ? clientsDataFile : clientsSrcFile;
+    if (fs.existsSync(file)) {
+      try { list = JSON.parse(fs.readFileSync(file, 'utf-8')); } catch { list = []; }
+    }
+    const body = req.body;
+    if (Array.isArray(body)) {
+      list = body;
+    } else if (body && body.id) {
+      const idx = list.findIndex(c => c.id === body.id);
+      if (idx >= 0) list[idx] = body;
+      else list.push(body);
+    }
+    const content = JSON.stringify(list, null, 2);
+    [clientsDataFile, clientsSrcFile].forEach(f => {
+      const dir = path.dirname(f);
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(f, content, 'utf-8');
+    });
+    res.json({ success: true, data: list });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// DELETE /api/admin/clients/:id
+router.delete('/clients/:id', (req, res) => {
+  try {
+    const id = req.params.id;
+    let list = [];
+    const file = fs.existsSync(clientsDataFile) ? clientsDataFile : clientsSrcFile;
+    if (fs.existsSync(file)) {
+      try { list = JSON.parse(fs.readFileSync(file, 'utf-8')); } catch { list = []; }
+    }
+    list = list.filter(c => c.id !== id);
+    const content = JSON.stringify(list, null, 2);
+    [clientsDataFile, clientsSrcFile].forEach(f => {
+      const dir = path.dirname(f);
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(f, content, 'utf-8');
+    });
+    res.json({ success: true, data: list });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// GET /api/admin/reels
+router.get('/reels', (req, res) => {
+  try {
+    const file = fs.existsSync(reelsDataFile) ? reelsDataFile : reelsSrcFile;
+    if (fs.existsSync(file)) {
+      const data = JSON.parse(fs.readFileSync(file, 'utf-8'));
+      return res.json({ success: true, data });
+    }
+    res.json({ success: true, data: [] });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// PUT /api/admin/reels (save full list or upsert single)
+router.put('/reels', (req, res) => {
+  try {
+    let list = [];
+    const file = fs.existsSync(reelsDataFile) ? reelsDataFile : reelsSrcFile;
+    if (fs.existsSync(file)) {
+      try { list = JSON.parse(fs.readFileSync(file, 'utf-8')); } catch { list = []; }
+    }
+    const body = req.body;
+    if (Array.isArray(body)) {
+      list = body;
+    } else if (body && body.id) {
+      const idx = list.findIndex(r => r.id === body.id);
+      if (idx >= 0) list[idx] = body;
+      else list.push(body);
+    }
+    const content = JSON.stringify(list, null, 2);
+    [reelsDataFile, reelsSrcFile].forEach(f => {
+      const dir = path.dirname(f);
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(f, content, 'utf-8');
+    });
+    res.json({ success: true, data: list });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// DELETE /api/admin/reels/:id
+router.delete('/reels/:id', (req, res) => {
+  try {
+    const id = req.params.id;
+    let list = [];
+    const file = fs.existsSync(reelsDataFile) ? reelsDataFile : reelsSrcFile;
+    if (fs.existsSync(file)) {
+      try { list = JSON.parse(fs.readFileSync(file, 'utf-8')); } catch { list = []; }
+    }
+    list = list.filter(r => r.id !== id);
+    const content = JSON.stringify(list, null, 2);
+    [reelsDataFile, reelsSrcFile].forEach(f => {
+      const dir = path.dirname(f);
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(f, content, 'utf-8');
+    });
+    res.json({ success: true, data: list });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // POST /api/admin/save-local-bundle - saves complete state bundle to disk
 router.post('/save-local-bundle', (req, res) => {
   try {
@@ -588,6 +720,22 @@ router.post('/save-local-bundle', (req, res) => {
         const dir = path.dirname(f);
         if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
         fs.writeFileSync(f, seoContent, 'utf-8');
+      });
+    }
+    if (bundle.clients && Array.isArray(bundle.clients)) {
+      const clientsContent = JSON.stringify(bundle.clients, null, 2);
+      [clientsDataFile, clientsSrcFile].forEach(f => {
+        const dir = path.dirname(f);
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(f, clientsContent, 'utf-8');
+      });
+    }
+    if (bundle.reels && Array.isArray(bundle.reels)) {
+      const reelsContent = JSON.stringify(bundle.reels, null, 2);
+      [reelsDataFile, reelsSrcFile].forEach(f => {
+        const dir = path.dirname(f);
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(f, reelsContent, 'utf-8');
       });
     }
     if (bundle.guides && Array.isArray(bundle.guides)) {

@@ -1,5 +1,7 @@
 import { Location, Building, Property, Lead, LeadStatus, MarketGuide, ClientLogo, InstagramReel, HyperlinkConfig, ClientReview, PageSeoConfig } from '../types';
 import { INITIAL_LOCATIONS, INITIAL_BUILDINGS, INITIAL_PROPERTIES, INITIAL_LEADS, INITIAL_MARKET_GUIDES, INITIAL_CLIENTS, INITIAL_INSTAGRAM_REELS, INITIAL_REVIEWS } from '../data/mockData';
+import defaultClients from '../data/clients.json';
+import defaultReels from '../data/reels.json';
 import { supabase, isSupabaseConfigured } from './supabaseClient';
 import { getBuildingStructureDisplay } from '../utils/textFormat';
 import { generateAvailablePropertiesForBuilding, STANDARD_BUILDING_UNITS } from '../utils/buildingUnits';
@@ -19,8 +21,11 @@ const STORAGE_KEYS = {
   LEADS: 'shristi_leads_v1',
   GUIDES: 'shristi_guides_v1',
   CLIENTS: 'shristi_clients_v1',
+  DELETED_CLIENTS: 'shristi_deleted_clients_v1',
   REELS: 'shristi_reels_v1',
+  DELETED_REELS: 'shristi_deleted_reels_v1',
   REVIEWS: 'shristi_reviews_v1',
+  DELETED_REVIEWS: 'shristi_deleted_reviews_v1',
   HYPERLINKS: GLOBAL_HYPERLINKS_STORAGE_KEY,
 };
 
@@ -30,6 +35,9 @@ let _memProperties: Property[] | null = null;
 let _memDeletedProperties: Set<string> | null = null;
 let _memDeletedBuildings: Set<string> | null = null;
 let _memDeletedLocations: Set<string> | null = null;
+let _memDeletedClients: Set<string> | null = null;
+let _memDeletedReels: Set<string> | null = null;
+let _memDeletedReviews: Set<string> | null = null;
 let _memLeads: Lead[] | null = null;
 let _memGuides: MarketGuide[] | null = null;
 let _memClients: ClientLogo[] | null = null;
@@ -158,14 +166,20 @@ const safeSetItem = (key: string, value: string): boolean => {
           // ignore
         }
       }
+      // 3. Prune cached properties if quota exceeded (can be safely regenerated on-demand in memory)
+      if (key !== STORAGE_KEYS.PROPERTIES) {
+        try { localStorage.removeItem(STORAGE_KEYS.PROPERTIES); } catch (e) {}
+      }
       // Try again
       localStorage.setItem(key, value);
       return true;
     } catch (secondErr) {
-      // 3. Clear non-essential auxiliary caches if quota is still exceeded
+      // 4. Clear non-essential auxiliary caches if quota is still exceeded
       try {
         localStorage.removeItem('shristi_custom_media');
-        // Prune older cached guides or search indices if available
+        if (key !== STORAGE_KEYS.PROPERTIES) {
+          localStorage.removeItem(STORAGE_KEYS.PROPERTIES);
+        }
         localStorage.setItem(key, value);
         return true;
       } catch (thirdErr) {
@@ -323,6 +337,147 @@ const clearDeletedLocationId = (id: string) => {
   }
 };
 
+// Tombstone tracker for deleted clients & brands
+const getDeletedClientIdsSet = (): Set<string> => {
+  if (_memDeletedClients) return _memDeletedClients;
+  const set = new Set<string>();
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEYS.DELETED_CLIENTS);
+      if (stored) {
+        const list = JSON.parse(stored);
+        if (Array.isArray(list)) list.forEach(id => set.add(id));
+      }
+    } catch {
+      // ignore
+    }
+  }
+  _memDeletedClients = set;
+  return _memDeletedClients;
+};
+
+const recordDeletedClientId = (id: string) => {
+  if (!id) return;
+  const set = getDeletedClientIdsSet();
+  set.add(id);
+  _memDeletedClients = set;
+  if (typeof window !== 'undefined') {
+    try {
+      safeSetItem(STORAGE_KEYS.DELETED_CLIENTS, JSON.stringify(Array.from(set)));
+    } catch {
+      // ignore
+    }
+  }
+};
+
+const clearDeletedClientId = (id: string) => {
+  if (!id) return;
+  const set = getDeletedClientIdsSet();
+  set.delete(id);
+  _memDeletedClients = set;
+  if (typeof window !== 'undefined') {
+    try {
+      safeSetItem(STORAGE_KEYS.DELETED_CLIENTS, JSON.stringify(Array.from(set)));
+    } catch {
+      // ignore
+    }
+  }
+};
+
+// Tombstone tracker for deleted instagram reels
+const getDeletedReelIdsSet = (): Set<string> => {
+  if (_memDeletedReels) return _memDeletedReels;
+  const set = new Set<string>();
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEYS.DELETED_REELS);
+      if (stored) {
+        const list = JSON.parse(stored);
+        if (Array.isArray(list)) list.forEach(id => set.add(id));
+      }
+    } catch {
+      // ignore
+    }
+  }
+  _memDeletedReels = set;
+  return _memDeletedReels;
+};
+
+const recordDeletedReelId = (id: string) => {
+  if (!id) return;
+  const set = getDeletedReelIdsSet();
+  set.add(id);
+  _memDeletedReels = set;
+  if (typeof window !== 'undefined') {
+    try {
+      safeSetItem(STORAGE_KEYS.DELETED_REELS, JSON.stringify(Array.from(set)));
+    } catch {
+      // ignore
+    }
+  }
+};
+
+const clearDeletedReelId = (id: string) => {
+  if (!id) return;
+  const set = getDeletedReelIdsSet();
+  set.delete(id);
+  _memDeletedReels = set;
+  if (typeof window !== 'undefined') {
+    try {
+      safeSetItem(STORAGE_KEYS.DELETED_REELS, JSON.stringify(Array.from(set)));
+    } catch {
+      // ignore
+    }
+  }
+};
+
+// Tombstone tracker for deleted client reviews
+const getDeletedReviewIdsSet = (): Set<string> => {
+  if (_memDeletedReviews) return _memDeletedReviews;
+  const set = new Set<string>();
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEYS.DELETED_REVIEWS);
+      if (stored) {
+        const list = JSON.parse(stored);
+        if (Array.isArray(list)) list.forEach(id => set.add(id));
+      }
+    } catch {
+      // ignore
+    }
+  }
+  _memDeletedReviews = set;
+  return _memDeletedReviews;
+};
+
+const recordDeletedReviewId = (id: string) => {
+  if (!id) return;
+  const set = getDeletedReviewIdsSet();
+  set.add(id);
+  _memDeletedReviews = set;
+  if (typeof window !== 'undefined') {
+    try {
+      safeSetItem(STORAGE_KEYS.DELETED_REVIEWS, JSON.stringify(Array.from(set)));
+    } catch {
+      // ignore
+    }
+  }
+};
+
+const clearDeletedReviewId = (id: string) => {
+  if (!id) return;
+  const set = getDeletedReviewIdsSet();
+  set.delete(id);
+  _memDeletedReviews = set;
+  if (typeof window !== 'undefined') {
+    try {
+      safeSetItem(STORAGE_KEYS.DELETED_REVIEWS, JSON.stringify(Array.from(set)));
+    } catch {
+      // ignore
+    }
+  }
+};
+
 // Initialize in-memory cache and localStorage with initial seeds if not populated
 const initStorage = () => {
   try {
@@ -461,6 +616,20 @@ const initStorage = () => {
       const missingGuides = INITIAL_MARKET_GUIDES.filter(g => !existingIds.has(g.id));
       _memGuides = missingGuides.length > 0 ? [...parsedGuides, ...missingGuides] : parsedGuides;
     }
+
+    const deletedClientSet = getDeletedClientIdsSet();
+    const storedClients = localStorage.getItem(STORAGE_KEYS.CLIENTS);
+    if (!storedClients) {
+      _memClients = ((defaultClients as unknown as ClientLogo[]) || INITIAL_CLIENTS).filter(c => !deletedClientSet.has(c.id));
+      safeSetItem(STORAGE_KEYS.CLIENTS, JSON.stringify(_memClients));
+    }
+
+    const deletedReelSet = getDeletedReelIdsSet();
+    const storedReels = localStorage.getItem(STORAGE_KEYS.REELS);
+    if (!storedReels) {
+      _memReels = ((defaultReels as unknown as InstagramReel[]) || INITIAL_INSTAGRAM_REELS).filter(r => !deletedReelSet.has(r.id));
+      safeSetItem(STORAGE_KEYS.REELS, JSON.stringify(_memReels));
+    }
   } catch (e) {
     console.warn('Init storage error:', e);
     const deletedLocSet = getDeletedLocationIdsSet();
@@ -537,6 +706,30 @@ export const StorageService = {
 
   unmarkDeletedLocationId(id: string): void {
     clearDeletedLocationId(id);
+  },
+
+  getDeletedClientIds(): Set<string> {
+    return getDeletedClientIdsSet();
+  },
+
+  saveDeletedClientId(id: string): void {
+    recordDeletedClientId(id);
+  },
+
+  unmarkDeletedClientId(id: string): void {
+    clearDeletedClientId(id);
+  },
+
+  getDeletedReelIds(): Set<string> {
+    return getDeletedReelIdsSet();
+  },
+
+  saveDeletedReelId(id: string): void {
+    recordDeletedReelId(id);
+  },
+
+  unmarkDeletedReelId(id: string): void {
+    clearDeletedReelId(id);
   },
 
   // SYNCHRONOUS IMMEDIATE GETTERS (Zero delay, instant page shell rendering)
@@ -2355,25 +2548,48 @@ export const StorageService = {
   // --- CLIENTS & BRANDS ---
   getInitialClients(): ClientLogo[] {
     if (_memClients) return _memClients;
-    if (typeof window === 'undefined') return INITIAL_CLIENTS;
+    const deletedSet = getDeletedClientIdsSet();
+    const fallbackList = ((defaultClients as unknown as ClientLogo[]) || INITIAL_CLIENTS).filter(c => !deletedSet.has(c.id));
+    if (typeof window === 'undefined') return fallbackList;
     try {
       const stored = localStorage.getItem(STORAGE_KEYS.CLIENTS);
-      if (stored) {
-        _memClients = JSON.parse(stored);
-        return _memClients || INITIAL_CLIENTS;
+      if (stored !== null) {
+        const parsed: ClientLogo[] = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          _memClients = parsed.filter(c => !deletedSet.has(c.id));
+          return _memClients;
+        }
       }
     } catch (e) {
       console.error('Error reading stored clients:', e);
     }
-    _memClients = INITIAL_CLIENTS;
-    return INITIAL_CLIENTS;
+    _memClients = fallbackList;
+    return _memClients;
   },
 
   async getClients(): Promise<ClientLogo[]> {
+    if (typeof window !== 'undefined') {
+      try {
+        const res = await fetch('/api/admin/clients');
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && Array.isArray(json.data)) {
+            const deletedSet = getDeletedClientIdsSet();
+            const filtered = json.data.filter((c: any) => !deletedSet.has(c.id));
+            _memClients = filtered;
+            safeSetItem(STORAGE_KEYS.CLIENTS, JSON.stringify(filtered));
+            return filtered;
+          }
+        }
+      } catch (err) {
+        // Fallback to local storage
+      }
+    }
     return this.getInitialClients();
   },
 
   async saveClient(client: ClientLogo): Promise<void> {
+    clearDeletedClientId(client.id);
     const list = [...this.getInitialClients()];
     const index = list.findIndex(c => c.id === client.id);
     if (index >= 0) {
@@ -2383,48 +2599,83 @@ export const StorageService = {
     }
     _memClients = list;
     safeSetItem(STORAGE_KEYS.CLIENTS, JSON.stringify(list));
+    try {
+      fetch('/api/admin/clients', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'x-admin-auth': 'true' },
+        body: JSON.stringify(client)
+      }).catch(() => {});
+    } catch (e) {}
   },
 
   async deleteClient(clientId: string): Promise<void> {
+    recordDeletedClientId(clientId);
     const list = this.getInitialClients().filter(c => c.id !== clientId);
     _memClients = list;
     safeSetItem(STORAGE_KEYS.CLIENTS, JSON.stringify(list));
+    try {
+      fetch(`/api/admin/clients/${encodeURIComponent(clientId)}`, {
+        method: 'DELETE',
+        headers: { 'x-admin-auth': 'true' }
+      }).catch(() => {});
+    } catch (e) {}
   },
 
   // --- INSTAGRAM REELS ---
   getInitialInstagramReels(): InstagramReel[] {
     if (_memReels) return _memReels;
-    if (typeof window === 'undefined') return INITIAL_INSTAGRAM_REELS;
+    const deletedSet = getDeletedReelIdsSet();
+    const fallbackList = ((defaultReels as unknown as InstagramReel[]) || INITIAL_INSTAGRAM_REELS).filter(r => !deletedSet.has(r.id));
+    if (typeof window === 'undefined') return fallbackList;
     try {
       const stored = localStorage.getItem(STORAGE_KEYS.REELS);
-      if (stored) {
+      if (stored !== null) {
         const parsed: InstagramReel[] = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          _memReels = parsed.map(item => {
-            const init = INITIAL_INSTAGRAM_REELS.find(i => i.id === item.id);
-            return init ? { ...init, ...item, video_url: item.video_url || init.video_url } : item;
-          });
-          // Also append any newly introduced initial reels
-          const existingIds = new Set(parsed.map(p => p.id));
-          const missing = INITIAL_INSTAGRAM_REELS.filter(i => !existingIds.has(i.id));
-          if (missing.length > 0) {
-            _memReels = [..._memReels, ...missing];
-          }
+        if (Array.isArray(parsed)) {
+          _memReels = parsed
+            .filter(r => !deletedSet.has(r.id))
+            .map(item => {
+              const init = INITIAL_INSTAGRAM_REELS.find(i => i.id === item.id);
+              return init ? { ...init, ...item, video_url: item.video_url || init.video_url } : item;
+            });
           return _memReels;
         }
       }
     } catch (e) {
       console.error('Error reading stored instagram reels:', e);
     }
-    _memReels = INITIAL_INSTAGRAM_REELS;
-    return INITIAL_INSTAGRAM_REELS;
+    _memReels = fallbackList;
+    return _memReels;
   },
 
   async getInstagramReels(): Promise<InstagramReel[]> {
+    if (typeof window !== 'undefined') {
+      try {
+        const res = await fetch('/api/admin/reels');
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && Array.isArray(json.data)) {
+            const deletedSet = getDeletedReelIdsSet();
+            const filtered = json.data
+              .filter((r: any) => !deletedSet.has(r.id))
+              .map((item: any) => {
+                const init = INITIAL_INSTAGRAM_REELS.find(i => i.id === item.id);
+                return init ? { ...init, ...item, video_url: item.video_url || init.video_url } : item;
+              });
+            _memReels = filtered;
+            safeSetItem(STORAGE_KEYS.REELS, JSON.stringify(filtered));
+            return filtered;
+          }
+        }
+      } catch (err) {
+        // Fallback to local storage
+      }
+    }
     return this.getInitialInstagramReels();
   },
 
   async saveInstagramReel(reel: InstagramReel): Promise<void> {
+    clearDeletedReelId(reel.id);
     const list = [...this.getInitialInstagramReels()];
     const index = list.findIndex(r => r.id === reel.id);
     if (index >= 0) {
@@ -2434,29 +2685,48 @@ export const StorageService = {
     }
     _memReels = list;
     safeSetItem(STORAGE_KEYS.REELS, JSON.stringify(list));
+    try {
+      fetch('/api/admin/reels', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'x-admin-auth': 'true' },
+        body: JSON.stringify(reel)
+      }).catch(() => {});
+    } catch (e) {}
   },
 
   async deleteInstagramReel(reelId: string): Promise<void> {
+    recordDeletedReelId(reelId);
     const list = this.getInitialInstagramReels().filter(r => r.id !== reelId);
     _memReels = list;
     safeSetItem(STORAGE_KEYS.REELS, JSON.stringify(list));
+    try {
+      fetch(`/api/admin/reels/${encodeURIComponent(reelId)}`, {
+        method: 'DELETE',
+        headers: { 'x-admin-auth': 'true' }
+      }).catch(() => {});
+    } catch (e) {}
   },
 
   // --- CLIENT REVIEWS & TESTIMONIALS ---
   getInitialReviews(): ClientReview[] {
     if (_memReviews) return _memReviews;
-    if (typeof window === 'undefined') return INITIAL_REVIEWS;
+    const deletedSet = getDeletedReviewIdsSet();
+    const fallbackList = INITIAL_REVIEWS.filter(r => !deletedSet.has(r.id));
+    if (typeof window === 'undefined') return fallbackList;
     try {
       const stored = localStorage.getItem(STORAGE_KEYS.REVIEWS);
-      if (stored) {
-        _memReviews = JSON.parse(stored);
-        return _memReviews || INITIAL_REVIEWS;
+      if (stored !== null) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          _memReviews = parsed.filter(r => !deletedSet.has(r.id));
+          return _memReviews;
+        }
       }
     } catch (e) {
       console.error('Error reading stored client reviews:', e);
     }
-    _memReviews = INITIAL_REVIEWS;
-    return INITIAL_REVIEWS;
+    _memReviews = fallbackList;
+    return _memReviews;
   },
 
   async getReviews(): Promise<ClientReview[]> {
@@ -2464,6 +2734,7 @@ export const StorageService = {
   },
 
   async saveReview(review: ClientReview): Promise<void> {
+    clearDeletedReviewId(review.id);
     const list = [...this.getInitialReviews()];
     const index = list.findIndex(r => r.id === review.id);
     if (index >= 0) {
@@ -2476,6 +2747,7 @@ export const StorageService = {
   },
 
   async deleteReview(reviewId: string): Promise<void> {
+    recordDeletedReviewId(reviewId);
     const list = this.getInitialReviews().filter(r => r.id !== reviewId);
     _memReviews = list;
     safeSetItem(STORAGE_KEYS.REVIEWS, JSON.stringify(list));
@@ -2507,11 +2779,17 @@ export const StorageService = {
         localStorage.removeItem(STORAGE_KEYS.DELETED_PROPERTIES);
         localStorage.removeItem(STORAGE_KEYS.DELETED_BUILDINGS);
         localStorage.removeItem(STORAGE_KEYS.DELETED_LOCATIONS);
+        localStorage.removeItem(STORAGE_KEYS.DELETED_CLIENTS);
+        localStorage.removeItem(STORAGE_KEYS.DELETED_REELS);
+        localStorage.removeItem(STORAGE_KEYS.DELETED_REVIEWS);
       } catch (e) {}
     }
     _memDeletedProperties = null;
     _memDeletedBuildings = null;
     _memDeletedLocations = null;
+    _memDeletedClients = null;
+    _memDeletedReels = null;
+    _memDeletedReviews = null;
     localStorage.setItem(STORAGE_KEYS.LOCATIONS, JSON.stringify(INITIAL_LOCATIONS));
     localStorage.setItem(STORAGE_KEYS.BUILDINGS, JSON.stringify(INITIAL_BUILDINGS));
     localStorage.setItem(STORAGE_KEYS.PROPERTIES, JSON.stringify(INITIAL_PROPERTIES));

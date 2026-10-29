@@ -1,0 +1,16 @@
+{
+  "specVersion": "1.0",
+  "entries": [
+    {
+      "identifier": "urn:air:shristiestate.in:advisory:commercial-inventory",
+      "displayName": "Shristi Estate Commercial Real Estate Advisory",
+      "type": "text/markdown; profile=\"urn:air:agent-skills\"",
+      "url": "https://shristiestate.in/llms.txt",
+      "representativeQueries": [
+        "office space for rent sector 62 noida",
+        "furnished commercial office noida expressway",
+        "warehouse logistics space sector 83 noida"
+      ]
+    }
+  ]
+}

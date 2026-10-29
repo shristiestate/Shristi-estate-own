@@ -21,7 +21,7 @@ export const ClientsMarquee: React.FC = () => {
 
   useEffect(() => {
     StorageService.getClients().then((data) => {
-      if (data && data.length > 0) {
+      if (Array.isArray(data)) {
         setClients(data.filter(c => c.published !== false));
       }
     });

@@ -25,3 +25,4 @@ Allow: /
 Disallow: /admin
 
 Sitemap: https://shristiestate.in/sitemap.xml
+Agentmap: https://shristiestate.in/.well-known/ai-catalog.json

@@ -87,8 +87,8 @@ export const InstagramReelsShowcase: React.FC = () => {
 
   useEffect(() => {
     StorageService.getInstagramReels().then((data) => {
-      const pub = data.filter(r => r.published);
-      if (pub.length > 0) setReels(pub);
+      const pub = (data || []).filter(r => r.published);
+      setReels(pub);
     });
   }, []);
 

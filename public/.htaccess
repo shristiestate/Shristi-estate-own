@@ -1,19 +1,40 @@
+ErrorDocument 404 /404.html
+
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
+
+  # 1. Allow existing files, directories, and symlinks to pass through untouched
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d [OR]
+  RewriteCond %{REQUEST_FILENAME} -l
+  RewriteRule ^ - [L]
+
+  # 2. Return true 404 for missing static assets (eliminates soft-404 traps for crawlers)
+  RewriteCond %{REQUEST_URI} \.(png|jpe?g|webp|gif|svg|ico|css|js|woff2?|map|pdf|xml|json|txt)$ [NC]
+  RewriteRule ^ - [R=404,L]
+
+  # 3. Return true 404 for unhandled .well-known requests (eliminates soft-404 in Lighthouse/ARD)
+  RewriteCond %{REQUEST_URI} ^/\.well-known/ [NC]
+  RewriteRule ^ - [R=404,L]
+
+  # 4. Canonical HTML Single Page App routing for genuine page routes
   RewriteRule ^index\.html$ - [L]
-  RewriteCond %{REQUEST_FILENAME} !-f
-  RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteCond %{REQUEST_FILENAME} !-l
   RewriteRule . /index.html [L]
 </IfModule>
 
-# Cache-Control headers for static assets
+# Security & Cache-Control headers for static assets
 <IfModule mod_headers.c>
   <FilesMatch "\.(html|htm)$">
     Header set Cache-Control "max-age=0, no-cache, no-store, must-revalidate"
   </FilesMatch>
   <FilesMatch "\.(js|css|webp|png|jpg|jpeg|svg|woff2)$">
     Header set Cache-Control "max-age=31536000, public, immutable"
+  </FilesMatch>
+  <FilesMatch "llms\.txt$">
+    Header set Content-Type "text/plain; charset=utf-8"
+  </FilesMatch>
+  <FilesMatch "ai-catalog\.json$">
+    Header set Content-Type "application/ai-catalog+json; charset=utf-8"
   </FilesMatch>
 </IfModule>

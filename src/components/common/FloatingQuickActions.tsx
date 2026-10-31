@@ -7,7 +7,8 @@ import {
   ChevronRight, 
   Headphones, 
   Sparkles, 
-  ArrowUpRight 
+  ArrowUpRight,
+  MapPin 
 } from 'lucide-react';
 import { WhatsAppIcon } from './SocialIcons';
 import { generateGeneralEnquiryWhatsAppLink, WHATSAPP_NUMBER } from '../../utils/whatsapp';
@@ -231,6 +232,35 @@ export const FloatingQuickActions: React.FC<FloatingQuickActionsProps> = ({ onOp
                 </div>
                 <ArrowUpRight className="w-4 h-4 text-sky-500 opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
               </a>
+
+              {/* ACTION 4: GOOGLE MAPS DIRECTION */}
+              <a
+                href="https://share.google/qyAztCr1jSJFCEGX4"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setIsOpen(false)}
+                className="group w-full flex items-center justify-between p-3.5 bg-gradient-to-r from-white via-white to-rose-50/60 dark:from-[#0B132B] dark:via-[#1e1014] dark:to-[#881337]/30 border border-slate-200 dark:border-rose-500/30 hover:border-rose-500 shadow-glass dark:shadow-glass-dark backdrop-blur-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-glow-cyan text-left"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 flex items-center justify-center bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 group-hover:bg-rose-500 group-hover:text-white transition-colors duration-200">
+                    <MapPin className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-bold text-sm text-slate-900 dark:text-white tracking-tight">
+                        Map &amp; Directions
+                      </span>
+                      <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+                        Directions
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Navigate to office • Sector-62 Noida
+                    </p>
+                  </div>
+                </div>
+                <ArrowUpRight className="w-4 h-4 text-rose-500 opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+              </a>
             </div>
           )}
 
@@ -242,7 +272,7 @@ export const FloatingQuickActions: React.FC<FloatingQuickActionsProps> = ({ onOp
                 className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-white/95 dark:bg-[#0B132B]/95 text-slate-900 dark:text-white text-xs font-semibold shadow-glass border border-slate-200 dark:border-brand-500/40 backdrop-blur-md animate-popup-spring"
               >
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span>Enquire or Chat</span>
+                <span>Enquire, Chat or Visit</span>
                 <button 
                   onClick={(e) => {
                     e.stopPropagation();
@@ -266,7 +296,7 @@ export const FloatingQuickActions: React.FC<FloatingQuickActionsProps> = ({ onOp
                   ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 rotate-90 border border-slate-700 dark:border-white' 
                   : 'bg-gradient-to-br from-brand-500 via-brand-600 to-sky-700 text-white border border-brand-400/50 hover:scale-105 active:scale-95 shadow-glow-cyan'
               }`}
-              title={isOpen ? 'Close menu' : 'Quick Connect: Enquiry, WhatsApp, Call'}
+              title={isOpen ? 'Close menu' : 'Quick Connect: Enquiry, WhatsApp, Call, Map Directions'}
               aria-label={isOpen ? 'Close contact options' : 'Open contact options'}
             >
               {/* Subtle outer pulsing aura ring when closed */}

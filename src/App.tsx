@@ -8,6 +8,7 @@ import { Header } from './components/layout/Header';
 import { Footer } from './components/layout/Footer';
 import { Property } from './types';
 import { SmokeBackground } from './components/common/SmokeBackground';
+import { FloatingQuickActions } from './components/common/FloatingQuickActions';
 import { updatePageSeo } from './utils/seo';
 
 // Lazy-load modals so their forms and logic don't bloat the critical initial JS bundle
@@ -182,6 +183,9 @@ export const AppContent: React.FC = () => {
           <span>Enquire</span>
         </button>
       </div>
+
+      {/* Floating Speed-Dial Quick Connect: Enquiries, WhatsApp & Call across all pages */}
+      <FloatingQuickActions onOpenEnquiry={() => handleOpenEnquiry()} />
 
       {/* Global Modals (Lazy Loaded on Demand) */}
       {isSearchOpen && (

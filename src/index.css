@@ -447,4 +447,38 @@
   .group:hover .pause-on-hover {
     animation-play-state: paused !important;
   }
+
+  /* Floating Action Button (FAB) Modern Animations */
+  @keyframes fabSpringUp {
+    0% {
+      opacity: 0;
+      transform: translate3d(0, 18px, 0) scale(0.92);
+    }
+    60% {
+      opacity: 1;
+      transform: translate3d(0, -3px, 0) scale(1.02);
+    }
+    100% {
+      opacity: 1;
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+  }
+
+  .animate-fab-spring-up {
+    animation: fabSpringUp 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes fabPhoneWiggle {
+    0%, 100% { transform: rotate(0deg); }
+    15% { transform: rotate(-14deg); }
+    30% { transform: rotate(14deg); }
+    45% { transform: rotate(-8deg); }
+    60% { transform: rotate(8deg); }
+    75% { transform: rotate(0deg); }
+  }
+
+  .animate-fab-phone-wiggle {
+    animation: fabPhoneWiggle 0.65s ease-in-out infinite;
+  }
 }
+

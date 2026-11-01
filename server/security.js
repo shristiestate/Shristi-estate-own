@@ -142,15 +142,17 @@ export function securityHeadersMiddleware(req, res, next) {
     res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
   }
 
-  // Content-Security-Policy (Allow GTM, GA, doubleclick, maps, fonts, and supabase)
+  // Content-Security-Policy (Allow GTM, GA, Google Ads, DoubleClick, Maps, Fonts, and Supabase)
   const csp = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://www.googleadservices.com https://googleads.g.doubleclick.net",
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "img-src 'self' data: blob: https: https://www.googletagmanager.com https://www.google-analytics.com https://googleads.g.doubleclick.net https://images.unsplash.com",
-    "font-src 'self' data: https://fonts.gstatic.com",
-    "connect-src 'self' https://*.supabase.co https://www.google-analytics.com https://www.googletagmanager.com https://stats.g.doubleclick.net https://googleads.g.doubleclick.net https://images.unsplash.com",
-    "frame-src 'self' https://www.googletagmanager.com https://www.google.com https://maps.google.com https://www.youtube.com",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.googletagmanager.com https://googletagmanager.com https://tagmanager.google.com https://*.google-analytics.com https://google-analytics.com https://ssl.google-analytics.com https://*.googleadservices.com https://googleadservices.com https://*.doubleclick.net https://googleads.g.doubleclick.net https://*.google.com https://google.com https://*.gstatic.com",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.googletagmanager.com https://tagmanager.google.com https://*.google.com https://*.gstatic.com",
+    "img-src 'self' data: blob: https: https://*.googletagmanager.com https://googletagmanager.com https://*.google-analytics.com https://google-analytics.com https://*.google.com https://google.com https://*.google.co.in https://*.googleadservices.com https://googleadservices.com https://*.doubleclick.net https://*.g.doubleclick.net https://*.gstatic.com https://images.unsplash.com",
+    "font-src 'self' data: https://fonts.gstatic.com https://*.gstatic.com",
+    "connect-src 'self' https://*.supabase.co https://*.google-analytics.com https://google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://googletagmanager.com https://tagmanager.google.com https://*.google.com https://google.com https://*.google.co.in https://*.googleadservices.com https://googleadservices.com https://*.doubleclick.net https://*.g.doubleclick.net https://stats.g.doubleclick.net https://googleads.g.doubleclick.net https://images.unsplash.com",
+    "frame-src 'self' https://*.googletagmanager.com https://googletagmanager.com https://tagmanager.google.com https://*.google.com https://google.com https://maps.google.com https://*.doubleclick.net https://*.googleadservices.com https://www.youtube.com https://*.youtube.com",
+    "child-src 'self' blob: https://*.googletagmanager.com https://googletagmanager.com",
+    "worker-src 'self' blob:",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'"

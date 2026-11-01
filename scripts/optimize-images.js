@@ -17,6 +17,16 @@ const imagesToConvert = [
   'public/images/founder.jpg',
   'public/hero-commercial-park.jpg',
   'public/hero-commercial-park-mobile.jpg',
+  'public/images/blogs/commercial-buildings-sector-62-noida.jpg',
+  'public/images/blogs/furnished-vs-bare-shell-office-space-noida.jpg',
+  'public/images/blogs/how-to-choose-commercial-property-in-noida.jpg',
+  'public/images/blogs/office-space-for-rent-in-sector-62-noida.jpg',
+  'public/images/blogs/office-space-for-rent-sector-62-noida.jpg',
+  'public/images/blogs/office-space-for-rent-sector-73-noida.jpg',
+  'public/images/blogs/office-space-in-noida.jpg',
+  'public/images/blogs/sector-62-vs-sector-73-noida-office-space.jpg',
+  'public/images/blogs/warehouse-for-rent-noida-greater-noida.jpg',
+  'public/images/units/100000/unit-100000-oneshotseo_1792855883337-1792939142353.png',
 ];
 
 async function convertImages() {

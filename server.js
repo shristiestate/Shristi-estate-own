@@ -2,6 +2,7 @@ import express from 'express';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import compression from 'compression';
 import { imageApiMiddleware } from './server/imageApi.js';
 import {
   securityHeadersMiddleware,
@@ -22,6 +23,16 @@ app.use(securityHeadersMiddleware);
 app.use(corsMiddleware);
 app.use(safeFileGuardMiddleware);
 
+// High-Performance Compression: Gzip/Deflate on-the-fly for HTML, JSON, CSS, JS, SVG
+app.use(compression({
+  level: 6,
+  threshold: 1024,
+  filter: (req, res) => {
+    if (req.headers['x-no-compression']) return false;
+    return compression.filter(req, res);
+  }
+}));
+
 // Global API rate limiting
 app.use('/api', apiRateLimiter.middleware());
 
@@ -37,17 +48,34 @@ app.use(express.urlencoded({ extended: true, limit: '15mb' }));
 // - GET/PUT /api/admin/site-images
 app.use(imageApiMiddleware);
 
-// Guard: Ensure any unhandled /api/* call returns JSON 404 instead of falling through to index.html
-app.all('/api/*', (req, res) => {
+// Guard: Ensure any unhandled /api call returns JSON 404 instead of falling through to index.html
+app.use('/api', (req, res) => {
   res.status(404).json({ success: false, error: `API endpoint ${req.method} ${req.path} not found` });
 });
 
+// Cache-Control Strategy for Max Speed and Instant Updates
+const staticCacheOptions = {
+  maxAge: '1d',
+  setHeaders: (res, filePath) => {
+    // Vite hashed assets (immutable for 1 year)
+    if (filePath.includes(`${path.sep}assets${path.sep}`) || filePath.includes('/assets/')) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    } else if (/\.(woff2?|ttf|eot)$/i.test(filePath)) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    } else if (/\.(webp|jpg|jpeg|png|svg|ico|avif)$/i.test(filePath)) {
+      res.setHeader('Cache-Control', 'public, max-age=2592000, stale-while-revalidate=86400');
+    } else if (/\.html$/i.test(filePath)) {
+      res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+    }
+  }
+};
+
 // Serve static assets from public/ (including /images/...)
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), staticCacheOptions));
 
 // Serve production frontend bundle if built
 const distPath = path.join(__dirname, 'dist');
-app.use(express.static(distPath));
+app.use(express.static(distPath, staticCacheOptions));
 
 // Build set of valid routes from sitemap.xml and app routing
 const validPaths = new Set([
@@ -108,9 +136,11 @@ function isValidRoute(urlPath) {
 }
 
 // Edge Fallback: Return HTTP 200 for valid routes and true HTTP 404 for invalid routes
-app.get('*', (req, res) => {
+app.use((req, res) => {
   const isKnown = isValidRoute(req.path);
   const statusCode = isKnown ? 200 : 404;
+
+  res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
 
   if (!isKnown) {
     const dist404 = path.join(distPath, '404.html');
@@ -120,6 +150,15 @@ app.get('*', (req, res) => {
     }
     if (fs.existsSync(public404)) {
       return res.status(404).sendFile(public404);
+    }
+  }
+
+  // Instant First Contentful Paint: Serve pre-rendered SSG HTML snapshot if it exists for this route
+  const cleanPath = req.path.replace(/^\/+|\/+$/g, '');
+  if (cleanPath) {
+    const prerenderedPath = path.join(distPath, cleanPath, 'index.html');
+    if (fs.existsSync(prerenderedPath)) {
+      return res.status(statusCode).sendFile(prerenderedPath);
     }
   }
 

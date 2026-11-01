@@ -117,8 +117,15 @@
 
     <!-- Performance Resource Hints -->
     <meta http-equiv="x-dns-prefetch-control" content="on">
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+    <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin>
     <link rel="dns-prefetch" href="https://images.unsplash.com">
     <link rel="preconnect" href="https://images.unsplash.com" crossorigin>
+
+    <!-- Critical Typography Preload (Eliminates FOIT/FOUT and layout shifts) -->
+    <link rel="preload" href="/fonts/space-grotesk-latin-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/fonts/space-grotesk-latin-600.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/fonts/space-grotesk-latin-700.woff2" as="font" type="font/woff2" crossorigin>
 
     <!-- Preload Desktop Hero Texture with High Fetch Priority (WebP) -->
     <link rel="preload" as="image" href="/hero-commercial-park.webp" type="image/webp" media="(min-width: 769px)" fetchpriority="high">
